@@ -9,11 +9,11 @@ import axios from 'axios';
 // Get the base URL from environment variables
 const getBaseURL = () => {
   if (import.meta.env.DEV) {
-    // Local development server
-    return import.meta.env.VITE_API_URL || 'http://localhost:5001/YOUR_PROJECT_ID/us-central1/api';
+    // Local development - Standalone Express server
+    return import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
   } else {
-    // Production server
-    return import.meta.env.VITE_API_URL || 'http://localhost:5001/YOUR_PROJECT_ID/us-central1/api';
+    // Production - Firebase Functions
+    return import.meta.env.VITE_API_URL || 'https://us-central1-artisan-connect-marketplace.cloudfunctions.net/api';
   }
 };
 
