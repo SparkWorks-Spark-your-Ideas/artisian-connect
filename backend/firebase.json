@@ -1,0 +1,39 @@
+{
+  "projects": {
+    "default": "your-project-id"
+  },
+  "functions": {
+    "source": ".",
+    "runtime": "nodejs18",
+    "predeploy": ["npm run lint"],
+    "env": {
+      "NODE_ENV": "production"
+    }
+  },
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "storage": {
+    "rules": "storage.rules"
+  },
+  "emulators": {
+    "functions": {
+      "port": 5001
+    },
+    "firestore": {
+      "port": 8080
+    },
+    "auth": {
+      "port": 9099
+    },
+    "storage": {
+      "port": 9199
+    },
+    "ui": {
+      "enabled": true,
+      "port": 4000
+    },
+    "singleProjectMode": true
+  }
+}

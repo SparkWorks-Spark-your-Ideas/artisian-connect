@@ -1,0 +1,93 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users collection - users can read/write their own data
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if request.auth != null && resource.data.userType == 'artisan';
+    }
+    
+    // Products collection - artisans can create/update their own, everyone can read active products
+    match /products/{productId} {
+      allow read: if resource.data.isActive == true;
+      allow create: if request.auth != null && 
+                   request.auth.uid == request.resource.data.artisanId &&
+                   request.resource.data.keys().hasAll(['name', 'description', 'price', 'category']);
+      allow update, delete: if request.auth != null && 
+                           request.auth.uid == resource.data.artisanId;
+    }
+    
+    // Orders collection - customers and involved artisans can read, customers can create
+    match /orders/{orderId} {
+      allow read: if request.auth != null && 
+                 (request.auth.uid == resource.data.customerId ||
+                  request.auth.uid in resource.data.artisanIds);
+      allow create: if request.auth != null && 
+                   request.auth.uid == request.resource.data.customerId;
+      allow update: if request.auth != null && 
+                   request.auth.uid in resource.data.artisanIds;
+    }
+    
+    // Posts collection - authenticated users can create, everyone can read active posts
+    match /posts/{postId} {
+      allow read: if resource.data.isActive == true;
+      allow create: if request.auth != null && 
+                   request.auth.uid == request.resource.data.authorId;
+      allow update, delete: if request.auth != null && 
+                           request.auth.uid == resource.data.authorId;
+    }
+    
+    // Comments collection - authenticated users can create, everyone can read active comments
+    match /comments/{commentId} {
+      allow read: if resource.data.isActive == true;
+      allow create: if request.auth != null && 
+                   request.auth.uid == request.resource.data.authorId;
+      allow update, delete: if request.auth != null && 
+                           request.auth.uid == resource.data.authorId;
+    }
+    
+    // Reviews collection - customers can create reviews for delivered orders
+    match /reviews/{reviewId} {
+      allow read: if resource.data.isActive == true;
+      allow create: if request.auth != null && 
+                   request.auth.uid == request.resource.data.customerId;
+      allow update: if request.auth != null && 
+                   request.auth.uid == resource.data.customerId;
+    }
+    
+    // Groups collection - everyone can read, authenticated users can join
+    match /groups/{groupId} {
+      allow read: if resource.data.isActive == true;
+      allow update: if request.auth != null;
+    }
+    
+    // Notifications collection - users can read their own notifications
+    match /notifications/{notificationId} {
+      allow read, update: if request.auth != null && 
+                         request.auth.uid == resource.data.userId;
+    }
+    
+    // Marketing content - artisans can read/write their own content
+    match /marketingContent/{contentId} {
+      allow read, write: if request.auth != null && 
+                        request.auth.uid == resource.data.artisanId;
+    }
+    
+    // Marketing tips - artisans can read their own tips
+    match /marketingTips/{tipId} {
+      allow read: if request.auth != null && 
+                 request.auth.uid == resource.data.artisanId;
+    }
+    
+    // Poster designs - artisans can read/write their own designs
+    match /posterDesigns/{designId} {
+      allow read, write: if request.auth != null && 
+                        request.auth.uid == resource.data.artisanId;
+    }
+    
+    // Default deny rule
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
