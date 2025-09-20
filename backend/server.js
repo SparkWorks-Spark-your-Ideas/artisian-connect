@@ -74,6 +74,60 @@ app.get('/health', (req, res) => {
   });
 });
 
+// API information endpoint
+app.get('/api', (req, res) => {
+  res.json({
+    name: 'Artisan Marketplace API',
+    version: '1.0.0',
+    description: 'AI-Powered Marketplace Backend for Local Artisans',
+    baseUrl: `http://localhost:${PORT}/api`,
+    endpoints: {
+      authentication: {
+        path: '/api/auth',
+        description: 'User authentication and authorization',
+        methods: ['POST']
+      },
+      users: {
+        path: '/api/user',
+        description: 'User profile management',
+        methods: ['GET', 'POST', 'PUT', 'DELETE']
+      },
+      products: {
+        path: '/api/products',
+        description: 'Product catalog and management',
+        methods: ['GET', 'POST', 'PUT', 'DELETE']
+      },
+      orders: {
+        path: '/api/orders',
+        description: 'Order processing and management',
+        methods: ['GET', 'POST', 'PUT', 'DELETE']
+      },
+      social: {
+        path: '/api/social',
+        description: 'Social features and interactions',
+        methods: ['GET', 'POST', 'PUT', 'DELETE']
+      },
+      marketing: {
+        path: '/api/marketing',
+        description: 'AI-powered marketing and content generation',
+        methods: ['GET', 'POST']
+      },
+      analytics: {
+        path: '/api/analytics',
+        description: 'Business analytics and insights',
+        methods: ['GET']
+      },
+      localization: {
+        path: '/api/localization',
+        description: 'Multi-language support and translations',
+        methods: ['GET', 'POST']
+      }
+    },
+    status: 'Active',
+    timestamp: new Date().toISOString()
+  });
+});
+
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
