@@ -505,11 +505,42 @@ function calculateFavoriteCategories(orders) {
 }
 
 function groupSalesByPeriod(orders, groupBy) {
-  // Implementation for grouping sales by day/week/month
-  return orders.map(order => ({
-    date: order.createdAt.toDate().toISOString().split('T')[0],
-    revenue: order.totalAmount
-  }));
+  // Group sales data by specified period
+  const groupedData = {};
+  
+  orders.forEach(order => {
+    let key;
+    const date = order.createdAt.toDate ? order.createdAt.toDate() : new Date(order.createdAt);
+    
+    switch (groupBy) {
+      case 'day':
+        key = date.toISOString().split('T')[0];
+        break;
+      case 'week':
+        const weekStart = new Date(date);
+        weekStart.setDate(date.getDate() - date.getDay());
+        key = weekStart.toISOString().split('T')[0];
+        break;
+      case 'month':
+        key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        break;
+      default:
+        key = date.toISOString().split('T')[0];
+    }
+    
+    if (!groupedData[key]) {
+      groupedData[key] = {
+        date: key,
+        revenue: 0,
+        orderCount: 0
+      };
+    }
+    
+    groupedData[key].revenue += order.totalAmount || 0;
+    groupedData[key].orderCount += 1;
+  });
+  
+  return Object.values(groupedData).sort((a, b) => a.date.localeCompare(b.date));
 }
 
 async function calculateGrowthIndicators() {
@@ -524,11 +555,12 @@ async function calculateGrowthIndicators() {
   ]);
 
   const productGrowth = previousProducts.size > 0 ? 
-    ((currentProducts.size - previousProducts.size) / previousProducts.size * 100).toFixed(1) : 0;
+    ((currentProducts.size - previousProducts.size) / previousProducts.size * 100).toFixed(1) : 
+    currentProducts.size > 0 ? '100.0' : '0.0';
 
   return {
     productGrowth: `${productGrowth}%`,
-    trendDirection: productGrowth > 0 ? 'up' : productGrowth < 0 ? 'down' : 'stable'
+    trendDirection: parseFloat(productGrowth) > 0 ? 'up' : parseFloat(productGrowth) < 0 ? 'down' : 'stable'
   };
 }
 

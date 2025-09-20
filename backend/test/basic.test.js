@@ -50,9 +50,9 @@ describe('API Health Check', () => {
   });
 });
 
-// Mock authentication tests
-describe('Authentication Flow', () => {
-  it('should have proper user registration structure', () => {
+// Schema validation tests
+describe('Data Schema Validation', () => {
+  it('should validate user registration structure', () => {
     const userRegistration = {
       email: 'artisan@example.com',
       password: 'securePassword123',
@@ -73,11 +73,8 @@ describe('Authentication Flow', () => {
     expect(userRegistration.location).to.have.property('city');
     expect(userRegistration.location).to.have.property('state');
   });
-});
 
-// Product structure tests
-describe('Product Management', () => {
-  it('should have proper product structure', () => {
+  it('should validate product structure', () => {
     const product = {
       name: 'Handwoven Silk Saree',
       description: 'Traditional Banarasi silk saree with intricate gold work',
@@ -97,11 +94,8 @@ describe('Product Management', () => {
     expect(product.materials).to.be.an('array');
     expect(product.tags).to.be.an('array');
   });
-});
 
-// Order structure tests
-describe('Order Management', () => {
-  it('should have proper order structure', () => {
+  it('should validate order structure', () => {
     const order = {
       items: [{
         productId: 'prod_123',

@@ -205,13 +205,25 @@ router.post('/product',
     }
 
     try {
-      // Get product from database (mock implementation)
-      const product = {
-        name: 'Sample Product',
-        description: 'This is a sample product description',
-        category: 'Handicrafts',
-        tags: ['handmade', 'traditional', 'authentic']
-      };
+      // Get product from Firestore
+      const productDoc = await db.collection('products').doc(productId).get();
+      
+      if (!productDoc.exists) {
+        return res.status(404).json({
+          error: 'Product Not Found',
+          message: 'Product does not exist'
+        });
+      }
+      
+      const product = productDoc.data();
+      
+      // Check if user owns this product
+      if (product.artisanId !== req.user.uid) {
+        return res.status(403).json({
+          error: 'Access Denied',
+          message: 'You can only translate your own products'
+        });
+      }
 
       // Translate product fields
       const translations = {};
@@ -224,7 +236,7 @@ router.post('/product',
         ]);
 
         // Translate tags in batch
-        const tagTranslations = await translateBatch(product.tags, language);
+        const tagTranslations = product.tags ? await translateBatch(product.tags, language) : [];
 
         translations[language] = {
           name: nameTranslation.translatedText,
@@ -232,6 +244,15 @@ router.post('/product',
           category: categoryTranslation.translatedText,
           tags: tagTranslations.map(t => t.translatedText)
         };
+        
+        // Save translation to database for statistics
+        await db.collection('translations').add({
+          userId: req.user.uid,
+          productId,
+          targetLanguage: language,
+          contentType: 'product',
+          createdAt: new Date()
+        });
       }
 
       res.json({
@@ -239,7 +260,12 @@ router.post('/product',
         message: 'Product translated successfully',
         data: {
           productId,
-          originalProduct: product,
+          originalProduct: {
+            name: product.name,
+            description: product.description,
+            category: product.category,
+            tags: product.tags || []
+          },
           translations
         }
       });
@@ -449,21 +475,49 @@ router.post('/conversation',
 router.get('/stats', 
   verifyToken,
   asyncHandler(async (req, res) => {
-    // In a real implementation, this would track translation usage
-    // For now, return mock statistics
+    // Get actual translation statistics from database
+    const translationsSnapshot = await db.collection('translations')
+      .where('userId', '==', req.user.uid)
+      .get();
+
+    const translations = translationsSnapshot.docs.map(doc => doc.data());
+    
+    // Calculate statistics
+    const languagesUsed = [...new Set(translations.map(t => t.targetLanguage))];
+    const thisMonth = new Date();
+    thisMonth.setDate(1);
+    thisMonth.setHours(0, 0, 0, 0);
+    
+    const thisMonthTranslations = translations.filter(t => 
+      new Date(t.createdAt.toDate()) >= thisMonth
+    );
+    
+    const contentTypeCounts = translations.reduce((acc, t) => {
+      acc[t.contentType || 'general'] = (acc[t.contentType || 'general'] || 0) + 1;
+      return acc;
+    }, {});
+    
+    const popularContent = Object.entries(contentTypeCounts)
+      .map(([type, count]) => ({ type, count }))
+      .sort((a, b) => b.count - a.count);
+    
+    const languageCounts = translations.reduce((acc, t) => {
+      acc[t.targetLanguage] = (acc[t.targetLanguage] || 0) + 1;
+      return acc;
+    }, {});
+    
+    const mostUsedLanguage = Object.entries(languageCounts)
+      .sort(([,a], [,b]) => b - a)[0]?.[0] || null;
+
     const stats = {
-      totalTranslations: 45,
-      languagesUsed: ['hi', 'bn', 'te', 'fr', 'es'],
-      mostUsedLanguage: 'hi',
+      totalTranslations: translations.length,
+      languagesUsed,
+      mostUsedLanguage,
       thisMonth: {
-        translations: 12,
-        languages: 3
+        translations: thisMonthTranslations.length,
+        languages: [...new Set(thisMonthTranslations.map(t => t.targetLanguage))].length
       },
-      popularContent: [
-        { type: 'product_description', count: 15 },
-        { type: 'marketing_content', count: 10 },
-        { type: 'conversation', count: 20 }
-      ]
+      popularContent
     };
 
     res.json({

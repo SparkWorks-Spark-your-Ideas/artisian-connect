@@ -70,7 +70,13 @@ backend/
 └── README.md           # This file
 ```
 
-## API Endpoints
+### Base URL
+
+**Production**: `https://us-central1-YOUR_PROJECT_ID.cloudfunctions.net/api`
+
+**Local Development**: `http://localhost:5001/YOUR_PROJECT_ID/us-central1/api`
+
+> Replace `YOUR_PROJECT_ID` with your actual Firebase project ID
 
 ### Authentication
 - `POST /api/auth/register` - Register new user

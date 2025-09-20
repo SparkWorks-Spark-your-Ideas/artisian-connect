@@ -495,6 +495,15 @@ router.get('/groups/:groupId/posts',
     const { groupId } = req.params;
     const { page = 1, limit = 10 } = req.query;
     
+    // Check if group exists
+    const groupDoc = await db.collection('groups').doc(groupId).get();
+    if (!groupDoc.exists) {
+      return res.status(404).json({
+        error: 'Group Not Found',
+        message: 'Group does not exist'
+      });
+    }
+    
     const postsSnapshot = await db.collection('posts')
       .where('groupId', '==', groupId)
       .where('isActive', '==', true)
@@ -528,7 +537,12 @@ router.get('/groups/:groupId/posts',
       success: true,
       message: 'Group posts retrieved successfully',
       data: {
-        posts
+        posts,
+        groupId,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit)
+        }
       }
     });
   })

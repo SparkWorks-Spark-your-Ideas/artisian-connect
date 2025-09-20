@@ -545,19 +545,27 @@ router.post('/:id/favorite',
  * Get list of product categories
  */
 router.get('/categories', asyncHandler(async (req, res) => {
-  const categories = [
-    { id: 'textiles', name: 'Textiles & Fabrics', description: 'Handwoven fabrics, embroidery, traditional clothing' },
-    { id: 'pottery', name: 'Pottery & Ceramics', description: 'Clay pots, decorative ceramics, terracotta items' },
-    { id: 'jewelry', name: 'Jewelry & Accessories', description: 'Traditional jewelry, handmade accessories' },
-    { id: 'woodwork', name: 'Woodwork & Carving', description: 'Wooden crafts, sculptures, furniture' },
-    { id: 'metalwork', name: 'Metalwork', description: 'Brass items, copper crafts, traditional metalwork' },
-    { id: 'painting', name: 'Painting & Art', description: 'Traditional paintings, folk art, canvas work' },
-    { id: 'leather', name: 'Leather Goods', description: 'Handmade leather products, bags, accessories' },
-    { id: 'bamboo', name: 'Bamboo & Cane', description: 'Bamboo crafts, cane furniture, eco-friendly products' },
-    { id: 'stone', name: 'Stone Carving', description: 'Stone sculptures, decorative items, traditional carvings' },
-    { id: 'glass', name: 'Glass Work', description: 'Handmade glass items, decorative pieces' },
-    { id: 'other', name: 'Other Crafts', description: 'Various other traditional crafts and handmade items' }
-  ];
+  // Get categories from Firestore collection
+  const categoriesSnapshot = await db.collection('categories').where('isActive', '==', true).get();
+  
+  let categories = [];
+  if (!categoriesSnapshot.empty) {
+    categories = categoriesSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+  } else {
+    // Default categories if none exist in database
+    categories = [
+      { id: 'textiles', name: 'Textiles & Fabrics', description: 'Handwoven fabrics, embroidery, traditional clothing' },
+      { id: 'pottery', name: 'Pottery & Ceramics', description: 'Clay pots, decorative ceramics, terracotta items' },
+      { id: 'jewelry', name: 'Jewelry & Accessories', description: 'Traditional jewelry, handmade accessories' },
+      { id: 'woodwork', name: 'Woodwork & Carving', description: 'Wooden crafts, sculptures, furniture' },
+      { id: 'metalwork', name: 'Metalwork', description: 'Brass items, copper crafts, traditional metalwork' },
+      { id: 'painting', name: 'Painting & Art', description: 'Traditional paintings, folk art, canvas work' },
+      { id: 'other', name: 'Other Crafts', description: 'Various other traditional crafts and handmade items' }
+    ];
+  }
 
   res.json({
     success: true,
