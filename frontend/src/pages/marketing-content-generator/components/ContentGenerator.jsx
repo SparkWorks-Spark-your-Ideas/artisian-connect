@@ -1,51 +1,83 @@
 import React, { useState } from 'react';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
-import { api } from '../../../utils/api';
+import Select from '../../../components/ui/Select';
+import { generateMarketingContent } from '../../../utils/geminiAPI';
 
-const ContentGenerator = ({ selectedProducts, selectedPlatform, onContentGenerated }) => {
+const ContentGenerator = ({ selectedProducts, selectedPlatform, onContentGenerated, products = [] }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedContent, setGeneratedContent] = useState(null);
   const [error, setError] = useState(null);
+  const [contentTone, setContentTone] = useState('enthusiastic');
+  const [progress, setProgress] = useState(0);
+
+  // Get selected product objects from their IDs
+  const getSelectedProductObjects = () => {
+    return products.filter(product => selectedProducts.includes(product.id));
+  };
 
   const generateContent = async () => {
+    if (!selectedProducts.length) {
+      setError('Please select at least one product to generate content.');
+      return;
+    }
+
+    if (!selectedPlatform) {
+      setError('Please select a platform for content generation.');
+      return;
+    }
+
     setIsGenerating(true);
     setError(null);
+    setProgress(0);
     
     try {
-      const contentData = {
-        productIds: selectedProducts,
+      // Simulate progress updates
+      const progressInterval = setInterval(() => {
+        setProgress(prev => Math.min(prev + 10, 90));
+      }, 200);
+
+      // Get selected product objects
+      const selectedProductObjects = getSelectedProductObjects();
+      
+      console.log('Generating content for:', {
+        products: selectedProductObjects,
         platform: selectedPlatform,
-        contentType: 'marketing_post'
+        tone: contentTone
+      });
+
+      // Generate content using Gemini API
+      const generatedContentData = await generateMarketingContent(
+        selectedProductObjects, 
+        selectedPlatform, 
+        contentTone
+      );
+
+      clearInterval(progressInterval);
+      setProgress(100);
+
+      // Add some additional metadata
+      const enrichedContent = {
+        ...generatedContentData,
+        selectedProducts: selectedProducts,
+        platform: selectedPlatform,
+        tone: contentTone,
+        generatedAt: new Date().toISOString()
       };
 
-      const response = await api.marketing.generateContent(contentData);
-      const generatedContentData = response.data;
+      setGeneratedContent(enrichedContent);
+      onContentGenerated(enrichedContent);
 
-      setGeneratedContent(generatedContentData);
-      onContentGenerated(generatedContentData);
+      // Reset progress after a brief moment
+      setTimeout(() => setProgress(0), 1000);
+
     } catch (error) {
       console.error('Error generating content:', error);
       setError('Failed to generate content. Please try again.');
-      
-      // Fallback to basic content
-      const fallbackContent = generateFallbackContent(selectedPlatform);
-      setGeneratedContent(fallbackContent);
-      onContentGenerated(fallbackContent);
+      setProgress(0);
     } finally {
       setIsGenerating(false);
     }
-  };
-
-  const generateFallbackContent = (platform) => {
-    const baseContent = {
-      caption: `✨ Discover the beauty of handcrafted artistry! ✨\n\nEach piece tells a story of tradition, skill, and passion. Our artisans pour their heart into every creation.\n\n🎨 Handmade with love\n🌟 Supporting local artisans\n💫 Preserving cultural heritage`,
-      hashtags: ['#HandmadeInIndia', '#ArtisanCrafts', '#TraditionalArt', '#SupportLocal'],
-      bestTime: '7:00 PM - 9:00 PM',
-      engagement: 'High visual appeal expected'
-    };
-    
-    return baseContent;
   };
 
   const copyToClipboard = (text) => {

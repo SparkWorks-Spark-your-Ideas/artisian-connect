@@ -19,8 +19,99 @@ const ProductSelector = ({ selectedProducts, onProductToggle }) => {
       setLoading(true);
       setError(null);
       
-      const response = await api.products.list({ status: 'published' });
-      setProducts(response.data.products || []);
+      // Mock data matching the Product Catalog
+      const mockProducts = [
+        {
+          id: 'mock_1',
+          name: 'Handwoven Silk Saree',
+          description: 'Beautiful traditional silk saree with intricate golden border work. Made with pure silk threads and traditional weaving techniques.',
+          category: 'Textiles',
+          price: 15000,
+          currency: 'INR',
+          tags: ['silk', 'traditional', 'handwoven', 'saree'],
+          materials: ['Pure Silk', 'Gold Thread'],
+          stockQuantity: 5,
+          imageUrls: ['https://picsum.photos/400/400?random=1'],
+          thumbnailUrl: 'https://picsum.photos/400/400?random=1',
+          artisan: { 
+            firstName: 'Priya', 
+            lastName: 'Sharma',
+            location: { city: 'Varanasi', state: 'Uttar Pradesh' }
+          },
+          rating: 4.8,
+          reviewsCount: 24,
+          sales: 45,
+          views: 1240,
+          status: 'published',
+          createdAt: new Date().toISOString(),
+          isActive: true,
+          isFeatured: true
+        },
+        {
+          id: 'mock_2',
+          name: 'Ceramic Tea Set',
+          description: 'Hand-painted ceramic tea set with traditional blue pottery designs. Perfect for serving tea in authentic Indian style.',
+          category: 'Pottery',
+          price: 2500,
+          currency: 'INR',
+          tags: ['ceramic', 'handpainted', 'tea set', 'blue pottery'],
+          materials: ['Ceramic', 'Natural Paint'],
+          stockQuantity: 10,
+          imageUrls: ['https://picsum.photos/400/400?random=2'],
+          thumbnailUrl: 'https://picsum.photos/400/400?random=2',
+          artisan: { 
+            firstName: 'Rajesh', 
+            lastName: 'Kumar',
+            location: { city: 'Jaipur', state: 'Rajasthan' }
+          },
+          rating: 4.6,
+          reviewsCount: 18,
+          sales: 32,
+          views: 890,
+          status: 'published',
+          createdAt: new Date(Date.now() - 86400000).toISOString(),
+          isActive: true,
+          isFeatured: false
+        },
+        {
+          id: 'mock_3',
+          name: 'Wooden Jewelry Box',
+          description: 'Intricately carved wooden jewelry box with traditional motifs. Features multiple compartments and velvet lining.',
+          category: 'Woodwork',
+          price: 3200,
+          currency: 'INR',
+          tags: ['wood', 'carved', 'jewelry box', 'storage'],
+          materials: ['Sheesham Wood', 'Velvet'],
+          stockQuantity: 8,
+          imageUrls: ['https://picsum.photos/400/400?random=3'],
+          thumbnailUrl: 'https://picsum.photos/400/400?random=3',
+          artisan: { 
+            firstName: 'Anita', 
+            lastName: 'Devi',
+            location: { city: 'Jodhpur', state: 'Rajasthan' }
+          },
+          rating: 4.9,
+          reviewsCount: 31,
+          sales: 67,
+          views: 1560,
+          status: 'published',
+          createdAt: new Date(Date.now() - 172800000).toISOString(),
+          isActive: true,
+          isFeatured: true
+        }
+      ];
+      
+      // Map the data to ensure components get the right image property
+      const mappedProducts = mockProducts.map(product => ({
+        ...product,
+        image: product.thumbnailUrl || product.imageUrls?.[0] || '/assets/images/no_image.png'
+      }));
+      
+      setProducts(mappedProducts);
+      
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
     } catch (error) {
       console.error('Error loading products:', error);
       setError('Failed to load products');

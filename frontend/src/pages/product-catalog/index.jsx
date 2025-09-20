@@ -43,22 +43,150 @@ const ProductCatalog = () => {
       setLoading(true);
       setError(null);
       
-      const params = {
-        search: filters.search,
-        category: filters.category !== 'All Categories' ? filters.category : undefined,
-        priceMin: filters.priceMin,
-        priceMax: filters.priceMax,
-        status: filters.status !== 'All Status' ? filters.status : undefined,
-        sortBy: filters.sortBy,
-        highPerformance: filters.highPerformance,
-        trending: filters.trending
-      };
+      // Mock data for demonstration
+      const mockProducts = [
+        {
+          id: 'mock_1',
+          name: 'Handwoven Silk Saree',
+          description: 'Beautiful traditional silk saree with intricate golden border work. Made with pure silk threads and traditional weaving techniques.',
+          category: 'Textiles',
+          price: 15000,
+          currency: 'INR',
+          tags: ['silk', 'traditional', 'handwoven', 'saree'],
+          materials: ['Pure Silk', 'Gold Thread'],
+          stockQuantity: 5,
+          imageUrls: ['https://picsum.photos/400/400?random=1'],
+          thumbnailUrl: 'https://picsum.photos/400/400?random=1',
+          artisan: { 
+            firstName: 'Priya', 
+            lastName: 'Sharma',
+            location: { city: 'Varanasi', state: 'Uttar Pradesh' }
+          },
+          rating: 4.8,
+          reviewsCount: 24,
+          sales: 45,
+          views: 1240,
+          status: 'published',
+          createdAt: new Date().toISOString(),
+          isActive: true,
+          isFeatured: true
+        },
+        {
+          id: 'mock_2',
+          name: 'Ceramic Tea Set',
+          description: 'Hand-painted ceramic tea set with traditional blue pottery designs. Perfect for serving tea in authentic Indian style.',
+          category: 'Pottery',
+          price: 2500,
+          currency: 'INR',
+          tags: ['ceramic', 'handpainted', 'tea set', 'blue pottery'],
+          materials: ['Ceramic', 'Natural Paint'],
+          stockQuantity: 10,
+          imageUrls: ['https://picsum.photos/400/400?random=2'],
+          thumbnailUrl: 'https://picsum.photos/400/400?random=2',
+          artisan: { 
+            firstName: 'Rajesh', 
+            lastName: 'Kumar',
+            location: { city: 'Jaipur', state: 'Rajasthan' }
+          },
+          rating: 4.6,
+          reviewsCount: 18,
+          sales: 32,
+          views: 890,
+          status: 'published',
+          createdAt: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
+          isActive: true,
+          isFeatured: false
+        },
+        {
+          id: 'mock_3',
+          name: 'Wooden Jewelry Box',
+          description: 'Intricately carved wooden jewelry box with traditional motifs. Features multiple compartments and velvet lining.',
+          category: 'Woodwork',
+          price: 3200,
+          currency: 'INR',
+          tags: ['wood', 'carved', 'jewelry box', 'storage'],
+          materials: ['Sheesham Wood', 'Velvet'],
+          stockQuantity: 8,
+          imageUrls: ['https://picsum.photos/400/400?random=3'],
+          thumbnailUrl: 'https://picsum.photos/400/400?random=3',
+          artisan: { 
+            firstName: 'Anita', 
+            lastName: 'Devi',
+            location: { city: 'Jodhpur', state: 'Rajasthan' }
+          },
+          rating: 4.9,
+          reviewsCount: 31,
+          sales: 67,
+          views: 1560,
+          status: 'published',
+          createdAt: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
+          isActive: true,
+          isFeatured: true
+        }
+      ];
+
+      // Apply filters to mock data
+      let filteredProducts = mockProducts.filter(product => {
+        // Search filter
+        if (filters.search) {
+          const searchLower = filters.search.toLowerCase();
+          const searchableText = `${product.name} ${product.description} ${product.tags.join(' ')}`.toLowerCase();
+          if (!searchableText.includes(searchLower)) return false;
+        }
+        
+        // Category filter
+        if (filters.category !== 'All Categories' && product.category !== filters.category) {
+          return false;
+        }
+        
+        // Price filters
+        if (filters.priceMin && product.price < parseInt(filters.priceMin)) return false;
+        if (filters.priceMax && product.price > parseInt(filters.priceMax)) return false;
+        
+        // Status filter
+        if (filters.status !== 'All Status' && product.status !== filters.status.toLowerCase()) {
+          return false;
+        }
+        
+        return true;
+      });
+
+      // Apply sorting
+      filteredProducts.sort((a, b) => {
+        switch (filters.sortBy) {
+          case 'name-asc':
+            return a.name.localeCompare(b.name);
+          case 'name-desc':
+            return b.name.localeCompare(a.name);
+          case 'price-asc':
+            return a.price - b.price;
+          case 'price-desc':
+            return b.price - a.price;
+          case 'newest':
+            return new Date(b.createdAt) - new Date(a.createdAt);
+          case 'oldest':
+            return new Date(a.createdAt) - new Date(b.createdAt);
+          default:
+            return 0;
+        }
+      });
+
+      // Map the data to ensure ProductCard gets the right image property
+      const mappedProducts = filteredProducts.map(product => ({
+        ...product,
+        image: product.thumbnailUrl || product.imageUrls?.[0] || '/assets/images/no_image.png',
+        sku: product.sku || `SKU-${product.id}`,
+        stock: product.stockQuantity || 0,
+        favorites: product.favorites || Math.floor(Math.random() * 50) + 10,
+        conversionRate: product.conversionRate || (Math.random() * 5 + 2).toFixed(1),
+        trend: product.trend || (Math.random() * 10 - 5).toFixed(1)
+      }));
+
+      setProducts(mappedProducts);
       
-      // Remove undefined values
-      Object.keys(params).forEach(key => params[key] === undefined && delete params[key]);
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 500));
       
-      const response = await api.products.list(params);
-      setProducts(response.data.products || []);
     } catch (error) {
       console.error('Error loading products:', error);
       setError('Failed to load products. Please try again.');
@@ -70,8 +198,27 @@ const ProductCatalog = () => {
 
   const loadAnalytics = async () => {
     try {
-      const response = await api.analytics.getProducts();
-      setAnalytics(response.data);
+      // Mock analytics data based on our sample products
+      const mockAnalytics = {
+        totalProducts: 3,
+        inStock: 3,
+        lowStock: 0,
+        outOfStock: 0,
+        totalValue: '₹20,700',
+        averagePrice: '₹6,900',
+        topCategory: 'Textiles',
+        monthlyGrowth: 15.4,
+        salesThisMonth: 8,
+        viewsThisMonth: 3690,
+        conversionRate: 4.2,
+        topPerformer: 'Handwoven Silk Saree'
+      };
+      
+      setAnalytics(mockAnalytics);
+      
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
     } catch (error) {
       console.error('Error loading analytics:', error);
       // Fallback analytics data
