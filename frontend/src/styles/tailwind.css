@@ -1,0 +1,114 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Core System Colors */
+    --color-background: #FFF8F0; /* warm off-white */
+    --color-foreground: #2F2F2F; /* deep charcoal */
+    --color-border: rgba(139, 69, 19, 0.2); /* saddle brown with opacity */
+    --color-input: #FFFFFF; /* pure white */
+    --color-ring: #D2691E; /* terracotta */
+    
+    /* Card Colors */
+    --color-card: #FFFFFF; /* pure white */
+    --color-card-foreground: #2F2F2F; /* deep charcoal */
+    
+    /* Popover Colors */
+    --color-popover: #FFFFFF; /* pure white */
+    --color-popover-foreground: #2F2F2F; /* deep charcoal */
+    
+    /* Muted Colors */
+    --color-muted: #FFF8F0; /* warm off-white */
+    --color-muted-foreground: #666666; /* medium gray */
+    
+    /* Primary Colors */
+    --color-primary: #D2691E; /* terracotta */
+    --color-primary-foreground: #FFFFFF; /* white */
+    
+    /* Secondary Colors */
+    --color-secondary: #8B4513; /* saddle brown */
+    --color-secondary-foreground: #FFFFFF; /* white */
+    
+    /* Accent Colors */
+    --color-accent: #FF8C00; /* saffron */
+    --color-accent-foreground: #FFFFFF; /* white */
+    
+    /* Destructive Colors */
+    --color-destructive: #DC143C; /* crimson */
+    --color-destructive-foreground: #FFFFFF; /* white */
+    
+    /* Success Colors */
+    --color-success: #228B22; /* forest green */
+    --color-success-foreground: #FFFFFF; /* white */
+    
+    /* Warning Colors */
+    --color-warning: #FF6347; /* tomato */
+    --color-warning-foreground: #FFFFFF; /* white */
+    
+    /* Error Colors */
+    --color-error: #DC143C; /* crimson */
+    --color-error-foreground: #FFFFFF; /* white */
+    
+    /* Shadow Variables */
+    --shadow-color: rgba(210, 105, 30, 0.1); /* terracotta with opacity */
+    
+    /* Border Radius */
+    --radius: 8px;
+  }
+  
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Poppins', sans-serif;
+  }
+  
+  body, p, span, div {
+    font-family: 'Inter', sans-serif;
+  }
+  
+  .font-caption {
+    font-family: 'Source Sans Pro', sans-serif;
+  }
+  
+  .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+@layer components {
+  .shadow-warm {
+    box-shadow: 0 2px 4px var(--shadow-color);
+  }
+  
+  .shadow-warm-md {
+    box-shadow: 0 4px 8px var(--shadow-color);
+  }
+  
+  .shadow-warm-lg {
+    box-shadow: 0 8px 16px var(--shadow-color);
+  }
+  
+  .shadow-warm-xl {
+    box-shadow: 0 16px 32px var(--shadow-color);
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
