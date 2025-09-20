@@ -1,0 +1,48 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Allow authenticated users to upload files to their own directories
+    match /uploads/{userId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Allow users to upload avatars
+    match /avatars/{fileName} {
+      allow read: if true;
+      allow write: if request.auth != null && 
+                  request.resource.size < 5 * 1024 * 1024 && // 5MB limit
+                  request.resource.contentType.matches('image/.*');
+    }
+    
+    // Allow artisans to upload product images
+    match /products/{fileName} {
+      allow read: if true;
+      allow write: if request.auth != null && 
+                  request.resource.size < 10 * 1024 * 1024 && // 10MB limit
+                  request.resource.contentType.matches('image/.*');
+    }
+    
+    // Allow users to upload post images
+    match /posts/{fileName} {
+      allow read: if true;
+      allow write: if request.auth != null && 
+                  request.resource.size < 10 * 1024 * 1024 && // 10MB limit
+                  request.resource.contentType.matches('image/.*');
+    }
+    
+    // Allow artisans to upload certification documents
+    match /certifications/{fileName} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && 
+                  request.resource.size < 20 * 1024 * 1024 && // 20MB limit
+                  (request.resource.contentType.matches('image/.*') || 
+                   request.resource.contentType.matches('application/pdf'));
+    }
+    
+    // Default deny rule
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
