@@ -11,6 +11,7 @@ import PortfolioShowcase from './components/PortfolioShowcase';
 import ContactInformationSection from './components/ContactInformationSection';
 import SkillsAndTechniquesSection from './components/SkillsAndTechniquesSection';
 import ProgressIndicator from './components/ProgressIndicator';
+import { api } from '../../utils/api';
 
 const ArtisanProfileSetup = () => {
   const navigate = useNavigate();
@@ -45,6 +46,62 @@ const ArtisanProfileSetup = () => {
     tools: '',
     awards: ''
   });
+  const [error, setError] = useState(null);
+
+  // Load existing profile data
+  useEffect(() => {
+    loadExistingProfile();
+  }, []);
+
+  const loadExistingProfile = async () => {
+    try {
+      const response = await api.user.getProfile();
+      const profile = response.data;
+      
+      if (profile) {
+        setProfilePhoto(profile.profilePhoto);
+        setSelectedCrafts(profile.crafts || []);
+        setBio(profile.bio || '');
+        setLocationData(profile.location || {
+          city: '',
+          district: '',
+          state: '',
+          pinCode: ''
+        });
+        setPortfolioImages(profile.portfolio || []);
+        setContactData(profile.contact || {
+          phone: '',
+          email: '',
+          whatsapp: '',
+          website: '',
+          instagram: '',
+          facebook: ''
+        });
+        setSkillsData(profile.skills || {
+          experienceLevel: '',
+          yearsOfPractice: '',
+          specialization: '',
+          techniques: [],
+          tools: '',
+          awards: ''
+        });
+      }
+    } catch (error) {
+      console.error('Error loading profile:', error);
+      // Load from localStorage as fallback
+      const draftData = localStorage.getItem('artisan-profile-draft');
+      if (draftData) {
+        const draft = JSON.parse(draftData);
+        setProfilePhoto(draft.profilePhoto);
+        setSelectedCrafts(draft.selectedCrafts || []);
+        setBio(draft.bio || '');
+        setLocationData(draft.locationData || {});
+        setPortfolioImages(draft.portfolioImages || []);
+        setContactData(draft.contactData || {});
+        setSkillsData(draft.skillsData || {});
+      }
+    }
+  };
 
   // Calculate completion percentage
   const calculateCompletionPercentage = () => {
@@ -119,27 +176,32 @@ const ArtisanProfileSetup = () => {
 
   const handleSaveProfile = async () => {
     setIsSaving(true);
+    setError(null);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    const profileData = {
-      profilePhoto,
-      selectedCrafts,
-      bio,
-      locationData,
-      portfolioImages,
-      contactData,
-      skillsData,
-      completedAt: new Date()?.toISOString()
-    };
+    try {
+      const profileData = {
+        profilePhoto,
+        crafts: selectedCrafts,
+        bio,
+        location: locationData,
+        portfolio: portfolioImages,
+        contact: contactData,
+        skills: skillsData,
+        completedAt: new Date().toISOString()
+      };
 
-    // Save to localStorage (in real app, this would be an API call)
-    localStorage.setItem('artisan-profile-complete', JSON.stringify(profileData));
-    localStorage.removeItem('artisan-profile-draft');
-    
-    setIsSaving(false);
-    navigate('/artisan-dashboard');
+      await api.user.updateArtisanProfile(profileData);
+      
+      // Clear draft data
+      localStorage.removeItem('artisan-profile-draft');
+      
+      setIsSaving(false);
+      navigate('/artisan-dashboard');
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      setError('Failed to save profile. Please try again.');
+      setIsSaving(false);
+    }
   };
 
   const handleSkipForNow = () => {

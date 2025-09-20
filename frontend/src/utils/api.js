@@ -8,12 +8,12 @@ import axios from 'axios';
 
 // Get the base URL from environment variables
 const getBaseURL = () => {
-  if (process.env.NODE_ENV === 'development') {
-    // Local Firebase Emulator
-    return process.env.REACT_APP_API_URL || 'http://localhost:5001/YOUR_PROJECT_ID/us-central1/api';
+  if (import.meta.env.DEV) {
+    // Local development server
+    return import.meta.env.VITE_API_URL || 'http://localhost:5001/YOUR_PROJECT_ID/us-central1/api';
   } else {
-    // Production Firebase Functions
-    return process.env.REACT_APP_API_URL || 'https://us-central1-YOUR_PROJECT_ID.cloudfunctions.net/api';
+    // Production server
+    return import.meta.env.VITE_API_URL || 'http://localhost:5001/YOUR_PROJECT_ID/us-central1/api';
   }
 };
 
@@ -62,6 +62,7 @@ export const api = {
     register: (userData) => apiClient.post('/auth/register', userData),
     login: (credentials) => apiClient.post('/auth/login', credentials),
     logout: () => apiClient.post('/auth/logout'),
+    verifyEmail: (verificationData) => apiClient.post('/auth/verify-email', verificationData),
     resetPassword: (email) => apiClient.post('/auth/reset-password', { email }),
   },
 
@@ -72,6 +73,7 @@ export const api = {
     uploadAvatar: (formData) => apiClient.post('/user/profile/avatar', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     }),
+    getPublicProfile: (uid) => apiClient.get(`/user/profile/${uid}`),
     getDashboard: () => apiClient.get('/user/dashboard'),
     updateArtisanProfile: (profileData) => apiClient.put('/user/artisan-profile', profileData),
   },

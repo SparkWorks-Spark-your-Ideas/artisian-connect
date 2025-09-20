@@ -9,6 +9,7 @@ import AIDescriptionPanel from './components/AIDescriptionPanel';
 import SEOOptimizationSection from './components/SEOOptimizationSection';
 import PreviewSection from './components/PreviewSection';
 import ProgressIndicator from './components/ProgressIndicator';
+import { api } from '../../utils/api';
 
 const ProductUploadWizard = () => {
   const navigate = useNavigate();
@@ -115,28 +116,25 @@ const ProductUploadWizard = () => {
 
     setIsPublishing(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Mock product creation
       const productData = {
-        id: `product_${Date.now()}`,
         photos,
         ...formData,
         description: aiDescription,
         seo: seoData,
         status: 'published',
-        publishedAt: new Date()?.toISOString(),
-        artisanId: 'current_user_id'
+        publishedAt: new Date().toISOString()
       };
 
-      console.log('Product published:', productData);
+      const response = await api.products.create(productData);
+      
+      // Clear any saved draft
+      localStorage.removeItem('product-draft');
       
       // Navigate to product catalog with success message
       navigate('/product-catalog', { 
         state: { 
           message: 'Product published successfully!',
-          newProduct: productData
+          newProduct: response.data
         }
       });
     } catch (error) {

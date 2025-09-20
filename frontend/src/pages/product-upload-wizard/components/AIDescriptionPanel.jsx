@@ -1,46 +1,49 @@
 import React, { useState } from 'react';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
+import { api } from '../../../utils/api';
 
 const AIDescriptionPanel = ({ formData, photos, onDescriptionChange, aiDescription, onGenerateDescription }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [editedDescription, setEditedDescription] = useState(aiDescription || '');
+  const [error, setError] = useState(null);
 
   const handleGenerateDescription = async () => {
     setIsGenerating(true);
+    setError(null);
+    
     try {
-      // Simulate AI generation delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const productData = {
+        name: formData?.name,
+        category: formData?.category,
+        materials: formData?.materials,
+        dimensions: formData?.dimensions,
+        price: formData?.price,
+        photoCount: photos?.length,
+        tags: formData?.tags
+      };
+
+      const response = await api.products.generateDescription(productData);
+      const generatedDescription = response.data.description;
       
-      // Mock AI-generated description based on category and basic info
-      const mockDescription = generateMockDescription(formData, photos?.length);
-      onGenerateDescription(mockDescription);
-      setEditedDescription(mockDescription);
+      onGenerateDescription(generatedDescription);
+      setEditedDescription(generatedDescription);
     } catch (error) {
       console.error('Error generating description:', error);
+      setError('Failed to generate description. Please try again.');
+      
+      // Fallback to a basic description
+      const fallbackDescription = generateFallbackDescription(formData, photos?.length);
+      onGenerateDescription(fallbackDescription);
+      setEditedDescription(fallbackDescription);
     } finally {
       setIsGenerating(false);
     }
   };
 
-  const generateMockDescription = (data, photoCount) => {
-    const categoryDescriptions = {
-      pottery: `Exquisite handcrafted pottery piece showcasing traditional Indian ceramic artistry. Each piece is meticulously shaped and fired using time-honored techniques passed down through generations. The unique texture and earthy tones reflect the authentic craftsmanship of skilled artisans.\n\nThis beautiful ${data?.name || 'ceramic creation'} represents the rich cultural heritage of Indian pottery making. Perfect for both decorative and functional use, it brings warmth and authenticity to any space.`,
-      textiles: `Stunning handwoven textile crafted with traditional Indian weaving techniques. This ${data?.name || 'fabric masterpiece'} showcases intricate patterns and vibrant colors that tell the story of our rich textile heritage.\n\nMade with premium quality materials and attention to detail, this piece represents hours of skilled craftsmanship. The traditional motifs and contemporary appeal make it perfect for modern homes while preserving cultural authenticity.`,
-      jewelry: `Elegant handcrafted jewelry piece that embodies the timeless beauty of Indian ornamental art. This ${data?.name || 'jewelry creation'} features intricate detailing and traditional design elements that have been cherished for centuries.\n\nCrafted with precision and artistic flair, each piece tells a unique story of cultural heritage and skilled craftsmanship. Perfect for special occasions or as a treasured addition to your jewelry collection.`,
-      woodwork: `Masterfully carved wooden artifact showcasing the exceptional skill of traditional Indian woodworkers. This ${data?.name || 'wooden creation'} demonstrates the perfect harmony between functionality and artistic expression.\n\nCrafted from premium quality wood using traditional tools and techniques, this piece reflects the deep-rooted woodworking traditions of India. The intricate details and smooth finish make it a perfect addition to any home or office space.`,
-      default: `Beautiful handcrafted ${data?.name || 'artisan creation'} that represents the finest traditions of Indian craftsmanship. This unique piece showcases the skill and dedication of talented artisans who have preserved ancient techniques through generations.\n\nEach detail has been carefully crafted to ensure both beauty and quality. This authentic piece brings the warmth of traditional Indian artistry to your collection.`
-    };
-
-    const baseDescription = categoryDescriptions?.[data?.category] || categoryDescriptions?.default;
-    
-    // Add photo-based enhancement
-    const photoEnhancement = photoCount > 0 
-      ? `\n\n✨ Features:\n• Authentic handcrafted design\n• Traditional techniques and materials\n• Unique piece with cultural significance\n• Perfect for gifting or personal collection\n• Supports local artisan communities`
-      : '';
-
-    return baseDescription + photoEnhancement;
+  const generateFallbackDescription = (data, photoCount) => {
+    return `Beautifully handcrafted ${data?.name || 'item'} showcasing traditional artistry and skilled craftsmanship. This unique piece reflects the rich cultural heritage and attention to detail that defines authentic handmade products.\n\nPerfect for both decorative and functional use, bringing authenticity and charm to any space.`;
   };
 
   const handleSaveEdit = () => {
@@ -79,6 +82,18 @@ const AIDescriptionPanel = ({ formData, photos, onDescriptionChange, aiDescripti
           {isGenerating ? 'Generating...' : 'Generate Description'}
         </Button>
       </div>
+      
+      {/* Error Display */}
+      {error && (
+        <div className="flex items-start space-x-3 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <Icon name="AlertCircle" size={20} className="text-red-500 mt-0.5" />
+          <div>
+            <h4 className="font-medium text-red-700 mb-1">Error</h4>
+            <p className="text-sm text-red-600">{error}</p>
+          </div>
+        </div>
+      )}
+      
       {/* Requirements */}
       {(!formData?.name || photos?.length === 0) && (
         <div className="flex items-start space-x-3 p-4 bg-warning/10 border border-warning/20 rounded-lg">

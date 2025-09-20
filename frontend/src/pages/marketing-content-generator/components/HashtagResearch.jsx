@@ -5,8 +5,10 @@ import { Checkbox } from '../../../components/ui/Checkbox';
 
 const HashtagResearch = ({ selectedHashtags, onHashtagToggle }) => {
   const [activeTab, setActiveTab] = useState('trending');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const mockHashtags = {
+  // This could be moved to API in the future
+  const hashtagData = {
     trending: [
       { tag: '#HandmadeInIndia', posts: '2.3M', engagement: 'High', trend: 'up' },
       { tag: '#ArtisanCrafts', posts: '890K', engagement: 'High', trend: 'up' },
@@ -102,7 +104,7 @@ const HashtagResearch = ({ selectedHashtags, onHashtagToggle }) => {
       </div>
       {/* Hashtag List */}
       <div className="space-y-3 max-h-96 overflow-y-auto">
-        {mockHashtags?.[activeTab]?.map((hashtag, index) => (
+        {hashtagData?.[activeTab]?.map((hashtag, index) => (
           <div
             key={index}
             className={`flex items-center justify-between p-4 bg-background rounded-lg border transition-all duration-200 ${
@@ -144,7 +146,7 @@ const HashtagResearch = ({ selectedHashtags, onHashtagToggle }) => {
           variant="outline"
           size="sm"
           onClick={() => {
-            const allHashtags = mockHashtags?.[activeTab]?.map(h => h?.tag);
+            const allHashtags = hashtagData?.[activeTab]?.map(h => h?.tag);
             allHashtags?.forEach(tag => {
               if (!isSelected(tag)) {
                 onHashtagToggle(tag, true);

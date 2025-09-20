@@ -1,67 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from '../../../components/AppImage';
 import Icon from '../../../components/AppIcon';
 import { Checkbox } from '../../../components/ui/Checkbox';
+import { api } from '../../../utils/api';
 
 const ProductSelector = ({ selectedProducts, onProductToggle }) => {
   const [viewMode, setViewMode] = useState('grid');
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const mockProducts = [
-    {
-      id: 1,
-      name: "Handwoven Silk Saree",
-      image: "https://images.pexels.com/photos/8832878/pexels-photo-8832878.jpeg?auto=compress&cs=tinysrgb&w=400",
-      price: 8500,
-      category: "Textiles",
-      description: "Traditional Banarasi silk saree with intricate gold thread work",
-      tags: ["silk", "handwoven", "traditional", "banarasi"]
-    },
-    {
-      id: 2,
-      name: "Terracotta Pottery Set",
-      image: "https://images.pexels.com/photos/6195125/pexels-photo-6195125.jpeg?auto=compress&cs=tinysrgb&w=400",
-      price: 1200,
-      category: "Pottery",
-      description: "Eco-friendly terracotta dinnerware set with traditional motifs",
-      tags: ["pottery", "terracotta", "eco-friendly", "dinnerware"]
-    },
-    {
-      id: 3,
-      name: "Silver Jhumka Earrings",
-      image: "https://images.pexels.com/photos/1454171/pexels-photo-1454171.jpeg?auto=compress&cs=tinysrgb&w=400",
-      price: 2800,
-      category: "Jewelry",
-      description: "Handcrafted silver jhumkas with traditional Indian design",
-      tags: ["silver", "jewelry", "handcrafted", "jhumka"]
-    },
-    {
-      id: 4,
-      name: "Wooden Carved Box",
-      image: "https://images.pexels.com/photos/6195093/pexels-photo-6195093.jpeg?auto=compress&cs=tinysrgb&w=400",
-      price: 1500,
-      category: "Woodwork",
-      description: "Intricately carved wooden jewelry box with brass fittings",
-      tags: ["woodwork", "carved", "handmade", "storage"]
-    },
-    {
-      id: 5,
-      name: "Brass Diya Set",
-      image: "https://images.pexels.com/photos/6195089/pexels-photo-6195089.jpeg?auto=compress&cs=tinysrgb&w=400",
-      price: 800,
-      category: "Metalwork",
-      description: "Traditional brass oil lamps perfect for festivals",
-      tags: ["brass", "diya", "festival", "traditional"]
-    },
-    {
-      id: 6,
-      name: "Embroidered Cushion Covers",
-      image: "https://images.pexels.com/photos/6195127/pexels-photo-6195127.jpeg?auto=compress&cs=tinysrgb&w=400",
-      price: 600,
-      category: "Textiles",
-      description: "Hand-embroidered cotton cushion covers with mirror work",
-      tags: ["embroidery", "cotton", "home-decor", "mirror-work"]
+  useEffect(() => {
+    loadProducts();
+  }, []);
+
+  const loadProducts = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await api.products.list({ status: 'published' });
+      setProducts(response.data.products || []);
+    } catch (error) {
+      console.error('Error loading products:', error);
+      setError('Failed to load products');
+      setProducts([]);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
   const isSelected = (productId) => selectedProducts?.includes(productId);
 
@@ -93,24 +60,41 @@ const ProductSelector = ({ selectedProducts, onProductToggle }) => {
       </div>
       <div className="mb-4 flex items-center justify-between">
         <span className="text-sm text-muted-foreground">
-          {selectedProducts?.length} of {mockProducts?.length} products selected
+          {selectedProducts?.length} of {products?.length} products selected
         </span>
         <button
           onClick={() => {
-            if (selectedProducts?.length === mockProducts?.length) {
-              mockProducts?.forEach(product => onProductToggle(product?.id, false));
+            if (selectedProducts?.length === products?.length) {
+              products?.forEach(product => onProductToggle(product?.id, false));
             } else {
-              mockProducts?.forEach(product => onProductToggle(product?.id, true));
+              products?.forEach(product => onProductToggle(product?.id, true));
             }
           }}
           className="text-sm text-primary hover:text-primary/80 font-medium"
         >
-          {selectedProducts?.length === mockProducts?.length ? 'Deselect All' : 'Select All'}
+          {selectedProducts?.length === products?.length ? 'Deselect All' : 'Select All'}
         </button>
       </div>
-      {viewMode === 'grid' ? (
+      {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {mockProducts?.map((product) => (
+          {Array.from({ length: 6 }).map((_, index) => (
+            <div key={index} className="animate-pulse bg-gray-200 h-40 rounded-lg"></div>
+          ))}
+        </div>
+      ) : error ? (
+        <div className="text-center py-8">
+          <Icon name="AlertCircle" size={48} className="text-red-500 mx-auto mb-4" />
+          <p className="text-red-600 mb-4">{error}</p>
+          <button 
+            onClick={loadProducts}
+            className="px-4 py-2 bg-red-100 text-red-700 rounded hover:bg-red-200"
+          >
+            Retry
+          </button>
+        </div>
+      ) : viewMode === 'grid' ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {products?.map((product) => (
             <div
               key={product?.id}
               className={`relative bg-background rounded-lg border-2 transition-all duration-200 cursor-pointer ${
@@ -155,7 +139,7 @@ const ProductSelector = ({ selectedProducts, onProductToggle }) => {
         </div>
       ) : (
         <div className="space-y-3">
-          {mockProducts?.map((product) => (
+          {products?.map((product) => (
             <div
               key={product?.id}
               className={`flex items-center space-x-4 p-4 bg-background rounded-lg border-2 transition-all duration-200 cursor-pointer ${

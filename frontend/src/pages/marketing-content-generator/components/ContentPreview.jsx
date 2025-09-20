@@ -15,10 +15,7 @@ const ContentPreview = ({ content, platform, selectedProducts }) => {
     );
   }
 
-  const mockProduct = selectedProducts?.length > 0 ? {
-    name: "Handwoven Silk Saree",
-    image: "https://images.pexels.com/photos/8832878/pexels-photo-8832878.jpeg?auto=compress&cs=tinysrgb&w=400"
-  } : null;
+  const previewProduct = selectedProducts?.length > 0 ? selectedProducts[0] : null;
 
   const renderInstagramPreview = () => (
     <div className="max-w-sm mx-auto bg-white rounded-lg shadow-warm-md overflow-hidden">
@@ -35,11 +32,11 @@ const ContentPreview = ({ content, platform, selectedProducts }) => {
       </div>
 
       {/* Image */}
-      {mockProduct && (
+      {previewProduct && (
         <div className="aspect-square">
           <Image
-            src={mockProduct?.image}
-            alt={mockProduct?.name}
+            src={previewProduct?.image}
+            alt={previewProduct?.name}
             className="w-full h-full object-cover"
           />
         </div>
@@ -90,11 +87,11 @@ const ContentPreview = ({ content, platform, selectedProducts }) => {
         <p className="text-sm text-gray-900 mb-3">
           {content?.caption?.substring(0, 150)}...
         </p>
-        {mockProduct && (
+        {previewProduct && (
           <div className="aspect-video rounded-lg overflow-hidden">
             <Image
-              src={mockProduct?.image}
-              alt={mockProduct?.name}
+              src={previewProduct?.image}
+              alt={previewProduct?.name}
               className="w-full h-full object-cover"
             />
           </div>
@@ -140,11 +137,11 @@ const ContentPreview = ({ content, platform, selectedProducts }) => {
       {/* Message */}
       <div className="p-4">
         <div className="bg-white rounded-lg p-3 shadow-sm">
-          {mockProduct && (
+          {previewProduct && (
             <div className="aspect-square rounded-lg overflow-hidden mb-3">
               <Image
-                src={mockProduct?.image}
-                alt={mockProduct?.name}
+                src={previewProduct?.image}
+                alt={previewProduct?.name}
                 className="w-full h-full object-cover"
               />
             </div>

@@ -1,39 +1,51 @@
 import React, { useState } from 'react';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
+import { api } from '../../../utils/api';
 
 const ContentGenerator = ({ selectedProducts, selectedPlatform, onContentGenerated }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedContent, setGeneratedContent] = useState(null);
+  const [error, setError] = useState(null);
 
   const generateContent = async () => {
     setIsGenerating(true);
+    setError(null);
     
-    // Simulate AI content generation
-    setTimeout(() => {
-      const mockContent = {
-        instagram: {
-          caption: `✨ Discover the beauty of handcrafted artistry! ✨\n\nEach piece tells a story of tradition, skill, and passion. From intricate silk sarees to elegant terracotta pottery, our artisans pour their heart into every creation.\n\n🎨 Handmade with love\n🌟 Supporting local artisans\n💫 Preserving cultural heritage\n\n#HandmadeInIndia #ArtisanCrafts #TraditionalArt #SupportLocal #HandcraftedWithLove #IndianHeritage #ArtisanMade #CulturalCrafts #AuthenticDesign #MadeInIndia`,
-          hashtags: ['#HandmadeInIndia', '#ArtisanCrafts', '#TraditionalArt', '#SupportLocal', '#HandcraftedWithLove', '#IndianHeritage', '#ArtisanMade', '#CulturalCrafts', '#AuthenticDesign', '#MadeInIndia'],
-          bestTime: '7:00 PM - 9:00 PM',
-          engagement: 'High visual appeal expected'
-        },
-        facebook: {
-          caption: `🌟 Celebrating the Timeless Art of Indian Craftsmanship 🌟\n\nBehind every handcrafted piece lies a story of dedication, skill passed down through generations, and the unwavering commitment to preserving our rich cultural heritage.\n\nOur artisans don't just create products – they weave dreams, mold traditions, and craft legacies. From the intricate patterns of our handwoven textiles to the elegant curves of our pottery, each item represents hours of meticulous work and centuries of inherited wisdom.\n\nWhen you choose handmade, you're not just buying a product – you're:\n✅ Supporting local communities\n✅ Preserving traditional techniques\n✅ Investing in sustainable practices\n✅ Owning a piece of authentic Indian culture\n\nExplore our collection and become part of this beautiful journey of craftsmanship and culture.\n\n#HandmadeInIndia #ArtisanSupport #CulturalHeritage #TraditionalCrafts #SustainableLiving`,
-          hashtags: ['#HandmadeInIndia', '#ArtisanSupport', '#CulturalHeritage', '#TraditionalCrafts', '#SustainableLiving'],
-          bestTime: '1:00 PM - 3:00 PM',engagement: 'Story-driven content performs well'
-        },
-        whatsapp: {
-          caption: `🎨 *New Collection Alert!* 🎨\n\n✨ Handcrafted treasures now available\n🏺 Traditional pottery & textiles\n💎 Authentic Indian artisan work\n\n*Special Launch Offer:*\n• Free shipping on orders above ₹2000\n• 10% off for first-time buyers\n\nView our catalog & place orders directly!\n\n_Supporting local artisans, one craft at a time_ 🙏`,
-          hashtags: ['#HandmadeIndia', '#ArtisanCrafts', '#NewCollection'],
-          bestTime: 'Throughout the day',engagement: 'Direct customer communication'
-        }
+    try {
+      const contentData = {
+        productIds: selectedProducts,
+        platform: selectedPlatform,
+        contentType: 'marketing_post'
       };
 
-      setGeneratedContent(mockContent?.[selectedPlatform]);
-      onContentGenerated(mockContent?.[selectedPlatform]);
+      const response = await api.marketing.generateContent(contentData);
+      const generatedContentData = response.data;
+
+      setGeneratedContent(generatedContentData);
+      onContentGenerated(generatedContentData);
+    } catch (error) {
+      console.error('Error generating content:', error);
+      setError('Failed to generate content. Please try again.');
+      
+      // Fallback to basic content
+      const fallbackContent = generateFallbackContent(selectedPlatform);
+      setGeneratedContent(fallbackContent);
+      onContentGenerated(fallbackContent);
+    } finally {
       setIsGenerating(false);
-    }, 2000);
+    }
+  };
+
+  const generateFallbackContent = (platform) => {
+    const baseContent = {
+      caption: `✨ Discover the beauty of handcrafted artistry! ✨\n\nEach piece tells a story of tradition, skill, and passion. Our artisans pour their heart into every creation.\n\n🎨 Handmade with love\n🌟 Supporting local artisans\n💫 Preserving cultural heritage`,
+      hashtags: ['#HandmadeInIndia', '#ArtisanCrafts', '#TraditionalArt', '#SupportLocal'],
+      bestTime: '7:00 PM - 9:00 PM',
+      engagement: 'High visual appeal expected'
+    };
+    
+    return baseContent;
   };
 
   const copyToClipboard = (text) => {
@@ -58,6 +70,18 @@ const ContentGenerator = ({ selectedProducts, selectedPlatform, onContentGenerat
           {isGenerating ? 'Generating...' : 'Generate Content'}
         </Button>
       </div>
+      
+      {/* Error Display */}
+      {error && (
+        <div className="mb-6 flex items-start space-x-3 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <Icon name="AlertCircle" size={20} className="text-red-500 mt-0.5" />
+          <div>
+            <h4 className="font-medium text-red-700 mb-1">Error</h4>
+            <p className="text-sm text-red-600">{error}</p>
+          </div>
+        </div>
+      )}
+      
       {selectedProducts?.length === 0 && (
         <div className="text-center py-8">
           <Icon name="Package" size={48} className="text-muted-foreground mx-auto mb-4" />
