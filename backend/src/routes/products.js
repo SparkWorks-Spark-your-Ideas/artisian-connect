@@ -1,5 +1,6 @@
 import express from 'express';
-import { getFirestore } from 'firebase-admin/firestore';
+import { Router } from 'express';
+import { db } from '../config/firebase.js';
 import { verifyToken, verifyArtisan, optionalAuth } from '../middleware/auth.js';
 import { validate, schemas } from '../middleware/validation.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
@@ -7,8 +8,7 @@ import { uploadMultiple, processUpload } from '../middleware/upload.js';
 import { uploadMultipleFiles } from '../services/firebaseStorage.js';
 import { generateProductDescription, analyzeProductImage } from '../services/geminiAI.js';
 
-const router = express.Router();
-const db = getFirestore();
+const router = Router();
 
 /**
  * POST /api/products/create
@@ -17,7 +17,6 @@ const db = getFirestore();
 router.post('/create', 
   verifyToken,
   verifyArtisan,
-  uploadMultiple('images', 10),
   validate(schemas.productCreation),
   asyncHandler(async (req, res) => {
     const {
@@ -31,17 +30,9 @@ router.post('/create',
       dimensions,
       customizable = false,
       stockQuantity,
-      shippingInfo
+      shippingInfo,
+      imageUrls = [] // Accept image URLs instead of file uploads
     } = req.body;
-
-    let imageUrls = [];
-    
-    // Upload product images if provided
-    if (req.files && req.files.length > 0) {
-      const processedFiles = req.files.map(file => processUpload(file, 'products'));
-      const uploadResults = await uploadMultipleFiles(processedFiles, 'products');
-      imageUrls = uploadResults.map(result => result.publicUrl);
-    }
 
     // Create product document
     const productData = {

@@ -1,11 +1,10 @@
-import express from 'express';
-import { getFirestore } from 'firebase-admin/firestore';
+import { Router } from 'express';
+import { db } from '../config/firebase.js';
 import { verifyToken, verifyArtisan } from '../middleware/auth.js';
 import { validate, schemas } from '../middleware/validation.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 
-const router = express.Router();
-const db = getFirestore();
+const router = Router();
 
 /**
  * POST /api/orders/create

@@ -1,13 +1,12 @@
-import express from 'express';
-import { getFirestore } from 'firebase-admin/firestore';
+import { Router } from 'express';
+import { db } from '../config/firebase.js';
 import { verifyToken, optionalAuth } from '../middleware/auth.js';
 import { validate, schemas } from '../middleware/validation.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import { uploadMultiple, processUpload } from '../middleware/upload.js';
 import { uploadMultipleFiles } from '../services/firebaseStorage.js';
 
-const router = express.Router();
-const db = getFirestore();
+const router = Router();
 
 /**
  * GET /api/social/feed
@@ -91,20 +90,10 @@ router.get('/feed',
  */
 router.post('/post', 
   verifyToken,
-  uploadMultiple('images', 5),
   validate(schemas.socialPost),
   asyncHandler(async (req, res) => {
-    const { content, type = 'text', tags = [], groupId } = req.body;
+    const { content, type = 'text', tags = [], groupId, imageUrls = [] } = req.body;
     
-    let imageUrls = [];
-    
-    // Upload images if provided
-    if (req.files && req.files.length > 0) {
-      const processedFiles = req.files.map(file => processUpload(file, 'posts'));
-      const uploadResults = await uploadMultipleFiles(processedFiles, 'posts');
-      imageUrls = uploadResults.map(result => result.publicUrl);
-    }
-
     // Create post document
     const postData = {
       authorId: req.user.uid,

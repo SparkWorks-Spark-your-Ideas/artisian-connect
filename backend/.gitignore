@@ -1,9 +1,11 @@
 # Logs
+# Logs
 logs
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+lerna-debug.log*
 
 # Runtime data
 pids
@@ -16,6 +18,7 @@ lib-cov
 
 # Coverage directory used by tools like istanbul
 coverage
+*.lcov
 
 # nyc test coverage
 .nyc_output
@@ -39,11 +42,20 @@ jspm_packages/
 # TypeScript v1 declaration files
 typings/
 
+# TypeScript cache
+*.tsbuildinfo
+
 # Optional npm cache directory
 .npm
 
 # Optional eslint cache
 .eslintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
 
 # Optional REPL history
 .node_repl_history
@@ -60,22 +72,29 @@ typings/
 .env.development.local
 .env.test.local
 .env.production.local
+.env.*.local
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache
 .parcel-cache
 
-# next.js build output
+# Next.js build output
 .next
+out/
 
-# nuxt.js build output
+# Nuxt.js build / generate output
 .nuxt
+dist
+
+# Gatsby files
+.cache/
+public
 
 # vuepress build output
 .vuepress/dist
 
 # Serverless directories
-.serverless
+.serverless/
 
 # FuseBox cache
 .fusebox/
@@ -83,42 +102,111 @@ typings/
 # DynamoDB Local files
 .dynamodb/
 
-# Firebase
+# TernJS port file
+.tern-port
+
+# Stores VSCode versions used for testing VSCode extensions
+.vscode-test
+
+# yarn v2
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+# =================
+# FIREBASE & GOOGLE CLOUD (CRITICAL SECURITY)
+# =================
 .firebase/
 .firebaserc
-
-# Firebase Functions
 firebase-debug.log
 firebase-debug.*.log
 
-# Google Cloud
-serviceAccount.json
+# Service Account Keys (NEVER COMMIT THESE!)
+*.json
+!package.json
+!package-lock.json
+!firebase.json
+!firestore.indexes.json
+!.eslintrc.json
+serviceAccount*.json
 gcloud-key.json
+artisan-connect-marketplace-*.json
 
-# IDE
+# Google Cloud credentials
+.gcloud/
+key.json
+credentials.json
+
+# =================
+# DEVELOPMENT & TESTING
+# =================
+# Test files (keep example files)
+test-*.js
+!test-server.js
+!test-apis.js
+
+# Documentation (keep essential docs)
+*.md
+!README.md
+!DEPLOYMENT_CHECKLIST.md
+
+# Setup guides (these are project-specific)
+CURRENT_SETUP_GUIDE.md
+FREE_DEPLOYMENT_GUIDE.md
+GEMINI_SETUP_GUIDE.md
+GOOGLE_CLOUD_SETUP_LINKS.md
+SERVICE_ACCOUNT_GUIDE.md
+SETUP_CHECKLIST.md
+
+# Temporary test files
+test-user.json
+
+# =================
+# IDE & EDITORS
+# =================
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
+.history/
 
-# OS
+# =================
+# OPERATING SYSTEMS
+# =================
+# macOS
 .DS_Store
 .DS_Store?
 ._*
 .Spotlight-V100
 .Trashes
+
+# Windows
 ehthumbs.db
 Thumbs.db
+Desktop.ini
 
-# Testing
+# Linux
+.fuse_hidden*
+.directory
+.Trash-*
+
+# =================
+# BUILD & DEPLOYMENT
+# =================
 coverage/
 .nyc_output/
-
-# Build outputs
 dist/
 build/
+out/
 
-# Temporary files
+# Temporary directories
 tmp/
 temp/
+.temp/
+
+# Deployment scripts (keep essential ones)
+deploy.sh
+!deploy.sh

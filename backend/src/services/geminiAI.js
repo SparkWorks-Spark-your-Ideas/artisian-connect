@@ -176,3 +176,108 @@ export const analyzeProductImage = async (imageUrl) => {
     throw new Error('Failed to analyze product image');
   }
 };
+
+/**
+ * Generate image using Gemini AI (Image generation prompt)
+ * Note: Gemini currently doesn't support direct image generation
+ * This function generates detailed image prompts for use with image generation services
+ */
+export const generateImagePrompt = async (productInfo, style = 'realistic', purpose = 'marketing') => {
+  try {
+    const model = genAI.getGenerativeModel({ model: config.gemini.model });
+    
+    const prompt = `
+      Create a detailed image generation prompt for an Indian artisan product.
+      
+      Product: ${productInfo.name}
+      Category: ${productInfo.category}
+      Materials: ${productInfo.materials?.join(', ') || 'Traditional materials'}
+      Style: ${style}
+      Purpose: ${purpose}
+      
+      Generate a comprehensive image prompt that includes:
+      1. Detailed visual description of the product
+      2. Setting and background (Indian cultural context)
+      3. Lighting and mood specifications
+      4. Color palette suggestions
+      5. Composition and framing details
+      6. Cultural elements to include
+      7. Quality and style specifications
+      
+      The prompt should be suitable for AI image generation tools like DALL-E, Midjourney, or Stable Diffusion.
+      Make it specific enough to generate high-quality, culturally authentic images.
+      
+      Format the output as a single, detailed prompt that can be directly used with image generation APIs.
+    `;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    return response.text();
+  } catch (error) {
+    console.error('Image prompt generation error:', error);
+    throw new Error('Failed to generate image prompt');
+  }
+};
+
+/**
+ * Generate marketing images concept using Gemini AI
+ * Creates detailed concepts and prompts for marketing visuals
+ */
+export const generateMarketingImageConcept = async (productInfo, campaign = 'general', platform = 'social') => {
+  try {
+    const model = genAI.getGenerativeModel({ model: config.gemini.model });
+    
+    const prompt = `
+      Create a marketing image concept for an Indian artisan product.
+      
+      Product: ${productInfo.name}
+      Category: ${productInfo.category}
+      Price: ₹${productInfo.price}
+      Campaign Type: ${campaign}
+      Platform: ${platform}
+      
+      Generate a complete marketing image concept including:
+      
+      1. MAIN CONCEPT: Overall theme and visual approach
+      2. COMPOSITION: Layout and element arrangement
+      3. VISUAL ELEMENTS: 
+         - Product positioning and styling
+         - Background and setting
+         - Props and complementary items
+         - Cultural elements and motifs
+      
+      4. COLOR SCHEME: 
+         - Primary colors
+         - Accent colors
+         - Cultural color significance
+      
+      5. TEXT OVERLAY:
+         - Main headline
+         - Supporting text
+         - Call-to-action
+         - Font style suggestions
+      
+      6. MOOD & STYLE:
+         - Photography style (lifestyle, product, artistic)
+         - Lighting mood
+         - Cultural authenticity level
+      
+      7. PLATFORM OPTIMIZATION:
+         - Dimensions for ${platform}
+         - Visual hierarchy
+         - Mobile-friendly considerations
+      
+      8. DETAILED IMAGE PROMPT:
+         A comprehensive prompt for AI image generation
+      
+      Make it suitable for Indian handicraft marketing and ${platform} platform.
+    `;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    return response.text();
+  } catch (error) {
+    console.error('Marketing image concept generation error:', error);
+    throw new Error('Failed to generate marketing image concept');
+  }
+};
