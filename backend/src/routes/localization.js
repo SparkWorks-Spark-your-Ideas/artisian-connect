@@ -1,4 +1,4 @@
-import express from 'express';
+import { Router } from 'express';
 import { verifyToken, optionalAuth } from '../middleware/auth.js';
 import { validate, schemas } from '../middleware/validation.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
@@ -9,7 +9,7 @@ import {
   translateBatch 
 } from '../services/translation.js';
 
-const router = express.Router();
+const router = Router();
 
 /**
  * POST /api/translate

@@ -1,8 +1,4 @@
-import { getAuth } from 'firebase-admin/auth';
-import { getFirestore } from 'firebase-admin/firestore';
-
-const auth = getAuth();
-const db = getFirestore();
+import { db, auth } from '../config/firebase.js';
 
 /**
  * Middleware to verify Firebase JWT token

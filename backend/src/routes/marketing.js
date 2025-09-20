@@ -1,16 +1,17 @@
-import express from 'express';
-import { getFirestore } from 'firebase-admin/firestore';
+import { Router } from 'express';
+import { db } from '../config/firebase.js';
 import { verifyToken, verifyArtisan } from '../middleware/auth.js';
 import { validate, schemas } from '../middleware/validation.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import { 
   generateMarketingContent, 
   generateMarketingTips,
-  generateProductDescription 
+  generateProductDescription,
+  generateImagePrompt,
+  generateMarketingImageConcept
 } from '../services/geminiAI.js';
 
-const router = express.Router();
-const db = getFirestore();
+const router = Router();
 
 /**
  * POST /api/marketing/generate-content
@@ -525,5 +526,149 @@ function getPlatformUsage(usedContent) {
     .sort(([,a], [,b]) => b - a)
     .map(([platform, count]) => ({ platform, count }));
 }
+
+/**
+ * POST /api/marketing/testing/generate-content
+ * Testing endpoint for generating various types of marketing content including images
+ */
+router.post('/testing/generate-content', 
+  verifyToken,
+  verifyArtisan,
+  asyncHandler(async (req, res) => {
+    const { 
+      type, 
+      productId, 
+      style = 'realistic',
+      platform = 'social',
+      campaign = 'general',
+      customPrompt
+    } = req.body;
+
+    try {
+      let productInfo = null;
+      
+      // Get product information if productId is provided
+      if (productId) {
+        const productDoc = await db.collection('products').doc(productId).get();
+        
+        if (!productDoc.exists) {
+          return res.status(404).json({
+            error: 'Product Not Found',
+            message: 'Product does not exist'
+          });
+        }
+
+        const productData = productDoc.data();
+        
+        // Check if user owns this product
+        if (productData.artisanId !== req.user.uid) {
+          return res.status(403).json({
+            error: 'Access Denied',
+            message: 'You can only generate content for your own products'
+          });
+        }
+
+        productInfo = {
+          name: productData.name,
+          description: productData.description,
+          category: productData.category,
+          price: productData.price,
+          materials: productData.materials || [],
+          features: productData.tags || []
+        };
+      } else {
+        // Use default product info for testing
+        productInfo = {
+          name: 'Handcrafted Pottery Vase',
+          description: 'Beautiful traditional pottery vase made with local clay',
+          category: 'Pottery',
+          price: 1500,
+          materials: ['Clay', 'Natural glazes'],
+          features: ['Handmade', 'Traditional technique', 'Unique design']
+        };
+      }
+
+      let generatedContent = null;
+      let contentType = type || 'image-prompt';
+
+      switch (contentType) {
+        case 'image-prompt':
+          generatedContent = await generateImagePrompt(productInfo, style, 'marketing');
+          break;
+          
+        case 'marketing-image-concept':
+          generatedContent = await generateMarketingImageConcept(productInfo, campaign, platform);
+          break;
+          
+        case 'text-content':
+          generatedContent = await generateMarketingContent('social', productInfo, 'art enthusiasts', 'engaging', platform);
+          break;
+          
+        case 'product-description':
+          generatedContent = await generateProductDescription(
+            productInfo.name,
+            productInfo.category,
+            productInfo.materials,
+            productInfo.features
+          );
+          break;
+          
+        default:
+          return res.status(400).json({
+            error: 'Invalid Content Type',
+            message: 'Supported types: image-prompt, marketing-image-concept, text-content, product-description'
+          });
+      }
+
+      // Save generated content for testing purposes
+      const testContentData = {
+        artisanId: req.user.uid,
+        type: contentType,
+        productId: productId || null,
+        content: generatedContent,
+        parameters: {
+          style,
+          platform,
+          campaign,
+          customPrompt
+        },
+        isTesting: true,
+        createdAt: new Date()
+      };
+
+      const contentRef = await db.collection('marketingContent').add(testContentData);
+
+      res.json({
+        success: true,
+        message: `${contentType} generated successfully`,
+        data: {
+          contentId: contentRef.id,
+          type: contentType,
+          content: generatedContent,
+          productInfo,
+          parameters: {
+            style,
+            platform,
+            campaign
+          },
+          usage: {
+            note: contentType === 'image-prompt' ? 
+              'This is an AI-generated prompt. Use it with image generation services like DALL-E, Midjourney, or Stable Diffusion.' :
+              contentType === 'marketing-image-concept' ?
+              'This is a detailed marketing concept. Use it to guide your visual content creation.' :
+              'This is generated marketing content ready for use.'
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Testing content generation error:', error);
+      res.status(503).json({
+        error: 'AI Service Error',
+        message: 'Failed to generate content. Please try again.',
+        details: error.message
+      });
+    }
+  })
+);
 
 export default router;

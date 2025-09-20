@@ -1,13 +1,13 @@
 import express from 'express';
-import { getFirestore } from 'firebase-admin/firestore';
+import { Router } from 'express';
+import { db } from '../config/firebase.js';
 import { verifyToken } from '../middleware/auth.js';
 import { validate, schemas } from '../middleware/validation.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import { uploadSingle, processUpload } from '../middleware/upload.js';
 import { uploadFile } from '../services/firebaseStorage.js';
 
-const router = express.Router();
-const db = getFirestore();
+const router = Router();
 
 /**
  * GET /api/user/profile
@@ -79,38 +79,33 @@ router.put('/profile',
 
 /**
  * POST /api/user/profile/avatar
- * Upload user avatar
+ * Upload user avatar (temporarily disabled - requires Firebase Storage upgrade)
  */
 router.post('/profile/avatar', 
   verifyToken, 
-  uploadSingle('avatar'), 
   asyncHandler(async (req, res) => {
-    if (!req.file) {
+    // Temporary implementation without file upload
+    // For development: accept base64 image or external URL
+    const { avatarUrl } = req.body;
+    
+    if (!avatarUrl) {
       return res.status(400).json({
-        error: 'No File',
-        message: 'No avatar file provided'
+        error: 'No Avatar URL',
+        message: 'Please provide avatarUrl (base64 or external URL)'
       });
     }
 
-    const processedFile = processUpload(req.file, 'avatars');
-    const uploadResult = await uploadFile(
-      processedFile.buffer, 
-      processedFile.originalname, 
-      processedFile.mimetype, 
-      'avatars'
-    );
-
     // Update user profile with avatar URL
     await db.collection('users').doc(req.user.uid).update({
-      avatarUrl: uploadResult.publicUrl,
+      avatarUrl,
       updatedAt: new Date()
     });
 
     res.json({
       success: true,
-      message: 'Avatar uploaded successfully',
+      message: 'Avatar updated successfully',
       data: {
-        avatarUrl: uploadResult.publicUrl
+        avatarUrl
       }
     });
   })
