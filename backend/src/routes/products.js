@@ -5,7 +5,7 @@ import { verifyToken, verifyArtisan, optionalAuth } from '../middleware/auth.js'
 import { validate, schemas } from '../middleware/validation.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import { uploadMultiple, processUpload } from '../middleware/upload.js';
-import { uploadMultipleFiles } from '../services/firebaseStorage.js';
+import { uploadMultipleFiles } from '../services/minioStorage.js';
 import { generateProductDescription, analyzeProductImage } from '../services/geminiAI.js';
 
 const router = Router();
