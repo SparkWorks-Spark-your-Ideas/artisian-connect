@@ -7,3 +7,4 @@ package.json
 .vscode/
 .idea/
 vite.config.*s.*
+.vercel

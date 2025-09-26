@@ -55,6 +55,14 @@ const ProductUploadWizard = () => {
         if (!formData?.price || formData?.price <= 0) newErrors.price = 'Valid price is required';
         if (!formData?.quantity || formData?.quantity <= 0) newErrors.quantity = 'Quantity is required';
         if (photos?.length === 0) newErrors.photos = 'At least one photo is required';
+        
+        // Check if photos are still uploading
+        const uploadingPhotos = photos.filter(photo => photo.uploading);
+        if (uploadingPhotos.length > 0) newErrors.photos = 'Please wait for photo uploads to complete';
+        
+        // Check for failed uploads
+        const failedPhotos = photos.filter(photo => photo.error);
+        if (failedPhotos.length > 0) newErrors.photos = 'Some photos failed to upload. Please retry or remove them';
         break;
       case 2:
         if (!aiDescription?.trim()) newErrors.description = 'Product description is required';
@@ -114,18 +122,64 @@ const ProductUploadWizard = () => {
   const handlePublish = async () => {
     if (!validateStep(4)) return;
 
+    // Additional validation for publishing
+    const uploadedPhotos = photos.filter(photo => photo.uploaded && photo.url && !photo.error);
+    if (uploadedPhotos.length === 0) {
+      alert('Please upload at least one photo before publishing');
+      return;
+    }
+
+    const uploadingPhotos = photos.filter(photo => photo.uploading);
+    if (uploadingPhotos.length > 0) {
+      alert('Please wait for all photos to finish uploading');
+      return;
+    }
+
     setIsPublishing(true);
     try {
+      // Transform formData to match backend API structure
       const productData = {
-        photos,
-        ...formData,
-        description: aiDescription,
-        seo: seoData,
-        status: 'published',
-        publishedAt: new Date().toISOString()
+        name: formData.name,
+        description: aiDescription || formData.shortDescription,
+        category: formData.category,
+        price: parseFloat(formData.price),
+        currency: 'INR',
+        stockQuantity: parseInt(formData.quantity),
+        materials: formData.materials ? formData.materials.split(',').map(m => m.trim()) : [],
+        tags: seoData.keywords || [],
+        dimensions: {
+          length: parseFloat(formData.length) || 0,
+          width: parseFloat(formData.width) || 0,
+          height: parseFloat(formData.height) || 0,
+          weight: parseFloat(formData.weight) || 0
+        },
+        imageUrls: uploadedPhotos.map(photo => photo.url), // Only successfully uploaded photos
+        customizable: false,
+        shippingInfo: {
+          weight: parseFloat(formData.weight) || 0,
+          dimensions: {
+            length: parseFloat(formData.length) || 0,
+            width: parseFloat(formData.width) || 0,
+            height: parseFloat(formData.height) || 0
+          }
+        }
       };
 
+      // Add SEO data if available
+      if (seoData.title) {
+        productData.seoTitle = seoData.title;
+        productData.metaDescription = seoData.metaDescription;
+      }
+
+      console.log('📤 Publishing product with data:', {
+        name: productData.name,
+        imageUrls: productData.imageUrls,
+        uploadedPhotosCount: uploadedPhotos.length
+      });
+
       const response = await api.products.create(productData);
+      
+      console.log('✅ Product published successfully:', response.data);
       
       // Clear any saved draft
       localStorage.removeItem('product-draft');
@@ -139,7 +193,8 @@ const ProductUploadWizard = () => {
       });
     } catch (error) {
       console.error('Error publishing product:', error);
-      alert('Error publishing product. Please try again.');
+      const errorMessage = error.response?.data?.message || 'Error publishing product. Please try again.';
+      alert(errorMessage);
     } finally {
       setIsPublishing(false);
     }
