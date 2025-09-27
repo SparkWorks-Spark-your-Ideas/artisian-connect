@@ -98,51 +98,19 @@ Care Instructions: Handle with care to preserve the handmade quality. Clean gent
  */
 export const generateMarketingContent = async (type, productInfo, targetAudience, tone, platform) => {
   try {
+    console.log('🤖 Generating marketing content:', { type, platform, tone, productInfo });
+    
     const model = genAI.getGenerativeModel({ model: config.gemini.model });
     
     let prompt = '';
     
     switch (type) {
       case 'social':
-        prompt = `
-          Create engaging social media content for an Indian artisan product.
-          
-          Product: ${productInfo.name}
-          Category: ${productInfo.category}
-          Price: ₹${productInfo.price}
-          Target Audience: ${targetAudience || 'General audience interested in handmade products'}
-          Tone: ${tone || 'professional'}
-          Platform: ${platform || 'general'}
-          
-          Create 3 different social media posts that:
-          1. Highlight the artisan's skill and cultural heritage
-          2. Include relevant hashtags for Indian handicrafts
-          3. Encourage engagement and sales
-          4. Are appropriate for ${platform || 'social media platforms'}
-          
-          Each post should be concise and engaging.
-        `;
+        prompt = createSocialMediaPrompt(productInfo, targetAudience, tone, platform);
         break;
         
       case 'ad':
-        prompt = `
-          Create compelling advertisement copy for an Indian artisan product.
-          
-          Product: ${productInfo.name}
-          Category: ${productInfo.category}
-          Price: ₹${productInfo.price}
-          Target Audience: ${targetAudience || 'People interested in authentic handmade products'}
-          Tone: ${tone || 'professional'}
-          
-          Create ad copy that:
-          1. Grabs attention with a strong headline
-          2. Highlights unique selling points
-          3. Creates urgency or desire
-          4. Includes a clear call-to-action
-          5. Emphasizes authenticity and cultural value
-          
-          Provide both a short version (for social ads) and a longer version (for detailed ads).
-        `;
+        prompt = createAdPrompt(productInfo, targetAudience, tone, platform);
         break;
         
       case 'description':
@@ -154,16 +122,198 @@ export const generateMarketingContent = async (type, productInfo, targetAudience
         );
         
       default:
-        throw new Error('Invalid content type');
+        // Default to social media content
+        prompt = createSocialMediaPrompt(productInfo, targetAudience, tone, platform);
     }
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    return response.text();
+    console.log('🚀 Sending prompt to Gemini API...');
+    
+    try {
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const generatedText = response.text();
+      console.log('✅ Gemini API response received');
+      return generatedText;
+    } catch (apiError) {
+      console.error('❌ Gemini API error:', apiError);
+      console.log('🔄 Using fallback content generation...');
+      return generateFallbackMarketingContent(type, productInfo, targetAudience, tone, platform);
+    }
   } catch (error) {
     console.error('Marketing content generation error:', error);
-    throw new Error('Failed to generate marketing content');
+    console.log('🔄 Using fallback content generation...');
+    return generateFallbackMarketingContent(type, productInfo, targetAudience, tone, platform);
   }
+};
+
+/**
+ * Create platform-specific social media prompt
+ */
+const createSocialMediaPrompt = (productInfo, targetAudience, tone, platform) => {
+  const platformSpecs = {
+    instagram: {
+      format: '1-2 engaging paragraphs + 5-8 hashtags',
+      style: 'Visual storytelling with emoji, lifestyle-focused',
+      maxChars: 2200,
+      features: 'Focus on aesthetics, lifestyle integration, behind-the-scenes'
+    },
+    facebook: {
+      format: '2-3 paragraphs with storytelling + 3-5 hashtags',
+      style: 'Community-focused, detailed storytelling',
+      maxChars: 63206,
+      features: 'Emphasize community, artisan story, cultural significance'
+    },
+    whatsapp: {
+      format: 'Short, personal message + product link',
+      style: 'Personal, direct, conversational',
+      maxChars: 4096,
+      features: 'Personal touch, direct benefits, call-to-action'
+    }
+  };
+  
+  const spec = platformSpecs[platform] || platformSpecs.instagram;
+  
+  return `
+Create engaging ${platform} content for an Indian artisan product.
+
+PRODUCT DETAILS:
+- Name: ${productInfo.name}
+- Category: ${productInfo.category}
+- Price: ₹${productInfo.price}
+- Materials: ${productInfo.materials?.join(', ') || 'Traditional handcrafted materials'}
+- Description: ${productInfo.description || 'Authentic handcrafted item'}
+
+AUDIENCE & TONE:
+- Target Audience: ${targetAudience || 'People interested in authentic handmade products'}
+- Tone: ${tone || 'enthusiastic'}
+- Platform: ${platform}
+
+PLATFORM REQUIREMENTS:
+- Format: ${spec.format}
+- Style: ${spec.style}
+- Max Characters: ${spec.maxChars}
+- Key Features: ${spec.features}
+
+CONTENT GUIDELINES:
+1. Start with an engaging hook that captures attention
+2. Tell the story of the artisan and the craft
+3. Highlight cultural significance and authenticity
+4. Mention the traditional techniques used
+5. Create emotional connection with the audience
+6. Include a clear call-to-action
+7. Use appropriate hashtags for discoverability
+8. Maintain the specified tone throughout
+
+For ${platform}:
+${platform === 'instagram' ? '- Use emojis strategically for visual appeal\n- Focus on lifestyle and aesthetic aspects\n- Include hashtags like #HandmadeIndia #ArtisanMade #AuthenticCrafts' : ''}
+${platform === 'facebook' ? '- Tell a complete story about the artisan\n- Encourage community engagement with questions\n- Focus on cultural heritage and tradition' : ''}
+${platform === 'whatsapp' ? '- Keep it conversational and personal\n- Include specific benefits for the customer\n- Add urgency or exclusivity if appropriate' : ''}
+
+Generate compelling content that drives engagement and sales while celebrating Indian craftsmanship.
+`;
+};
+
+/**
+ * Create advertisement prompt
+ */
+const createAdPrompt = (productInfo, targetAudience, tone, platform) => {
+  return `
+Create compelling advertisement copy for an Indian artisan product.
+
+Product: ${productInfo.name}
+Category: ${productInfo.category}
+Price: ₹${productInfo.price}
+Target Audience: ${targetAudience || 'People interested in authentic handmade products'}
+Tone: ${tone || 'professional'}
+Platform: ${platform}
+
+Create ad copy that:
+1. Grabs attention with a strong headline
+2. Highlights unique selling points
+3. Creates urgency or desire
+4. Includes a clear call-to-action
+5. Emphasizes authenticity and cultural value
+
+Provide both a short version (for social ads) and a longer version (for detailed ads).
+Make it suitable for ${platform} advertising.
+`;
+};
+
+/**
+ * Generate fallback marketing content when AI services fail
+ */
+const generateFallbackMarketingContent = (type, productInfo, targetAudience, tone, platform) => {
+  console.log('🎭 Creating fallback content for:', platform);
+  
+  const platformContent = {
+    instagram: {
+      caption: `✨ Discover the beauty of authentic Indian craftsmanship with our ${productInfo.name}! 
+
+This stunning ${productInfo.category} piece showcases traditional artisan skills passed down through generations. Every detail tells a story of cultural heritage and meticulous craftsmanship.
+
+${productInfo.materials?.length > 0 ? `🏺 Made with: ${productInfo.materials.join(', ')}\n` : ''}💰 Price: ₹${productInfo.price}
+
+Perfect for those who appreciate authentic handmade art that brings cultural richness to any space. Each piece is unique, carrying the soul of its maker.
+
+#HandmadeIndia #ArtisanMade #IndianHandicrafts #TraditionalCrafts #AuthenticArt #HandcraftedWithLove #CulturalHeritage #SupportLocalArtisans`,
+      
+      hashtags: ['#HandmadeIndia', '#ArtisanMade', '#IndianHandicrafts', '#TraditionalCrafts', '#AuthenticArt', '#HandcraftedWithLove', '#CulturalHeritage', '#SupportLocalArtisans']
+    },
+    
+    facebook: {
+      caption: `🎨 Experience the Rich Heritage of Indian Craftsmanship
+
+We're excited to share this beautiful ${productInfo.name}, a testament to the incredible skill and artistry of Indian craftspeople. This ${productInfo.category} represents more than just a product – it's a piece of living history.
+
+Our artisan has carefully crafted this piece using traditional techniques that have been perfected over generations. ${productInfo.materials?.length > 0 ? `Using ${productInfo.materials.join(' and ')}, ` : ''}every aspect of this creation reflects the deep cultural roots and artistic excellence that make Indian handicrafts treasured worldwide.
+
+What makes this special:
+✅ 100% authentic handmade craftsmanship
+✅ Traditional techniques passed down through generations
+✅ Unique piece - no two are exactly alike
+✅ Direct support to local artisan communities
+✅ Cultural significance and artistic value
+
+At ₹${productInfo.price}, this piece offers incredible value for authentic artisan work. It's perfect for collectors, gift-givers, or anyone who appreciates the beauty of traditional Indian art.
+
+When you choose handmade, you're not just buying a product – you're preserving cultural traditions and supporting artisan livelihoods. Each purchase helps keep these beautiful art forms alive for future generations.
+
+Ready to bring authentic Indian artistry into your home? Comment below or message us directly!
+
+#HandmadeInIndia #TraditionalCrafts #ArtisanMade #AuthenticCrafts #IndianHandicrafts`,
+      
+      hashtags: ['#HandmadeInIndia', '#TraditionalCrafts', '#ArtisanMade', '#AuthenticCrafts', '#IndianHandicrafts']
+    },
+    
+    whatsapp: {
+      caption: `🌟 Special handcrafted ${productInfo.name} available!
+
+Hello! I wanted to share something special with you - this beautiful ${productInfo.category} piece that showcases authentic Indian craftsmanship.
+
+Key highlights:
+• 100% handmade using traditional techniques
+• ${productInfo.materials?.length > 0 ? `Made with ${productInfo.materials.join(' & ')}` : 'Premium quality materials'}
+• Unique piece with cultural significance
+• Price: ₹${productInfo.price}
+
+This piece would be perfect for your home or as a meaningful gift for someone special. Each item directly supports local artisan communities and helps preserve traditional craft techniques.
+
+Would you like to see more photos or have any questions about this piece? I'm happy to share more details!
+
+WhatsApp me back or call to discuss. Limited pieces available! 
+
+Best regards,
+Your Artisan Marketplace`,
+      
+      hashtags: ['#HandmadeIndia', '#ArtisanCrafts', '#TraditionalArt']
+    }
+  };
+  
+  const content = platformContent[platform] || platformContent.instagram;
+  
+  return `${content.caption}
+
+${content.hashtags ? content.hashtags.join(' ') : ''}`;
 };
 
 /**
