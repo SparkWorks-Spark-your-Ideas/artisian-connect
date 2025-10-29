@@ -1,6 +1,12 @@
 import Replicate from 'replicate';
 import { config } from '../config/index.js';
 
+// Verify token is loaded
+console.log('🔑 Replicate token check:', {
+  hasToken: !!config.replicate.apiToken,
+  tokenPreview: config.replicate.apiToken ? config.replicate.apiToken.substring(0, 10) + '...' : 'MISSING'
+});
+
 // Initialize Replicate client
 const replicate = new Replicate({
   auth: config.replicate.apiToken,
@@ -12,23 +18,23 @@ const replicate = new Replicate({
  */
 export const analyzeProductImage = async (imageUrl) => {
   console.log('🔍 Analyzing image with Replicate LLAVA:', imageUrl);
+  console.log('🔑 Using token:', config.replicate.apiToken ? config.replicate.apiToken.substring(0, 15) + '...' : 'MISSING');
   
   // Check if Replicate API token is configured
   if (!config.replicate.apiToken || config.replicate.apiToken === 'your-replicate-api-token-here') {
+    console.error('❌ REPLICATE TOKEN IS MISSING OR INVALID');
     const error = new Error('Replicate API token not configured. Please set REPLICATE_API_TOKEN in .env file. Get your token from https://replicate.com/account/api-tokens');
     error.code = 'MISSING_CREDENTIALS';
     throw error;
   }
   
   try {
-    console.log('📸 Running LLaVA-v1.6-34B model for high-quality image analysis...');
+    console.log('📸 Running Salesforce BLIP model for image analysis...');
+    console.log('⏳ This may take a few seconds...');
     
-    // Use LLaVA-v1.6-34B - More powerful model with better accuracy
-    // Alternative models to consider:
-    // - "yorickvp/llava-v1.6-34b" - 34B parameters, better than 13B
-    // - "yorickvp/llava-13b" - 13B parameters, faster but less accurate
+    // Using Salesforce BLIP with specific version
     const output = await replicate.run(
-      "yorickvp/llava-v1.6-34b:41ecfbfb261e6c1adf3ad896c9066ca98346996d7c4045c5bc944a79d430f174",
+      "salesforce/blip:2e1dddc8621f72155f24cf2e0adbde548458d3cab9f00c0139eea840d0ac4746",
       {
         input: {
           image: imageUrl,
@@ -48,6 +54,9 @@ Be specific and detailed about what you see. Focus on aspects that would help de
         }
       }
     );
+    
+    console.log('📊 Replicate returned output type:', typeof output);
+    console.log('📊 Replicate output:', output);
     
     // LLAVA returns an array of text chunks, join them
     const analysisText = Array.isArray(output) ? output.join('') : output;

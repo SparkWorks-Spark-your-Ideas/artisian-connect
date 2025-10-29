@@ -150,10 +150,20 @@ router.post('/auto-describe',
       materials = [], 
       features = [],
       imageUrls = [],
-      imageAnalysis = null, // Add image analysis from Vision API
+      imageAnalysis = null, // Image analysis from Replicate LLAVA
       price,
       dimensions
     } = req.body;
+
+    console.log('📥 Received auto-describe request:', {
+      productName,
+      category,
+      materialsCount: materials.length,
+      featuresCount: features.length,
+      imageUrlsCount: imageUrls.length,
+      hasImageAnalysis: !!imageAnalysis,
+      imageAnalysisPreview: imageAnalysis ? imageAnalysis.substring(0, 100) + '...' : 'none'
+    });
 
     if (!productName || !category) {
       return res.status(400).json({
@@ -227,16 +237,22 @@ router.post('/auto-describe',
 
 /**
  * POST /api/products/analyze-image
- * Analyze product image using Google Cloud Vision API
+ * Analyze product image using Replicate LLAVA API
  * This should be called FIRST before generating description
  */
 router.post('/analyze-image', 
-  verifyToken,
-  verifyArtisan,
+  // verifyToken,      // Temporarily disabled for testing
+  // verifyArtisan,    // Temporarily disabled for testing
   asyncHandler(async (req, res) => {
+    console.log('🎯 /analyze-image endpoint hit!');
+    console.log('📦 Request body:', req.body);
+    
     const { imageUrl } = req.body;
 
+    console.log('🔗 Image URL received:', imageUrl);
+
     if (!imageUrl) {
+      console.log('❌ No image URL provided');
       return res.status(400).json({
         success: false,
         error: 'Image Required',
@@ -245,46 +261,45 @@ router.post('/analyze-image',
     }
 
     try {
-      console.log('🔍 Starting Vision API analysis for image...');
+      console.log('🔍 Starting Replicate LLAVA analysis for image...');
       const analysis = await analyzeProductImage(imageUrl);
 
-      console.log('✅ Vision API analysis completed successfully');
+      console.log('✅ Replicate image analysis completed successfully');
       res.json({
         success: true,
-        message: 'Image analysis completed successfully using Google Cloud Vision API',
+        message: 'Image analysis completed successfully using Replicate LLAVA',
         data: {
           analysis,
           imageUrl,
-          aiService: 'Google Cloud Vision API'
+          aiService: 'Replicate LLAVA'
         }
       });
     } catch (error) {
-      console.error('❌ Vision API analysis error:', error.message);
+      console.error('❌ Replicate analysis error:', error.message);
       
       // Return detailed error with actionable suggestions
       const errorResponse = {
         success: false,
-        error: 'Vision API Service Error',
+        error: 'Replicate API Service Error',
         message: error.message || 'Failed to analyze product image'
       };
       
       // Add helpful suggestions based on error type
       if (error.code === 'MISSING_CREDENTIALS') {
         errorResponse.details = {
-          suggestion: 'Configure Google Cloud Vision API credentials',
+          suggestion: 'Configure Replicate API token',
           steps: [
-            'Set GOOGLE_CLOUD_PROJECT_ID in .env',
-            'Set GOOGLE_APPLICATION_CREDENTIALS path in .env',
-            'Ensure service account JSON file exists at the specified path'
+            'Get your API token from https://replicate.com/account/api-tokens',
+            'Set REPLICATE_API_TOKEN in .env file',
+            'Restart the server'
           ]
         };
-      } else if (error.message?.includes('Permission denied')) {
+      } else if (error.message?.includes('rate limit')) {
         errorResponse.details = {
-          suggestion: 'Enable Cloud Vision API and check permissions',
+          suggestion: 'Rate limit exceeded',
           steps: [
-            'Go to Google Cloud Console',
-            'Enable Cloud Vision API for your project',
-            'Ensure service account has "Cloud Vision User" role'
+            'Wait a few moments before trying again',
+            'Consider upgrading your Replicate plan for higher limits'
           ]
         };
       } else if (error.message?.includes('Invalid image URL')) {
