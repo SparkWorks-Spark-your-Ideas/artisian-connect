@@ -1,24 +1,31 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleAuth } from 'google-auth-library';
 import vision from '@google-cloud/vision';
 import fetch from 'node-fetch';
 import { config } from '../config/index.js';
 
+// Initialize Gemini API (for all generative AI tasks)
 const genAI = new GoogleGenerativeAI(config.gemini.apiKey);
 
-// Initialize Google Cloud Vision client
+// Initialize Google Auth for Vertex AI (uses service account credentials)
+const auth = new GoogleAuth({
+  keyFilename: config.googleCloud.credentials,
+  scopes: ['https://www.googleapis.com/auth/cloud-platform'],
+});
+
+// Initialize Google Cloud Vision client (for image analysis)
 const visionClient = new vision.ImageAnnotatorClient({
   projectId: config.googleCloud.projectId,
   keyFilename: config.googleCloud.credentials
 });
 
 /**
- * Generate product description using Gemini AI
+ * Generate product description using Vertex AI Gemini + Vision API
+ * This is used for the "Add New Product" page to analyze images and create descriptions
  */
 export const generateProductDescription = async (productName, category, materials, features, additionalContext = {}) => {
   try {
-    console.log('🤖 Generating description for:', { productName, category, materials, features });
-    
-    const model = genAI.getGenerativeModel({ model: config.gemini.model });
+    console.log('🤖 Generating description using Vertex AI Gemini for:', { productName, category, materials, features });
     
     let prompt = `
       Create an engaging and detailed product description for an Indian artisan marketplace.
@@ -45,6 +52,14 @@ export const generateProductDescription = async (productName, category, material
       Number of photos available: ${additionalContext.photoCount}`;
     }
 
+    // Add image analysis if available from Vision API
+    if (additionalContext.imageAnalysis) {
+      prompt += `
+      
+      Image Analysis Results from Google Cloud Vision API:
+      ${additionalContext.imageAnalysis}`;
+    }
+
     prompt += `
       
       Please create a description that:
@@ -62,9 +77,67 @@ export const generateProductDescription = async (productName, category, material
       Use specific details about the materials and crafting process to enhance credibility.
     `;
 
-    console.log('🚀 Using fallback description for testing...');
+    try {
+      console.log('🚀 Calling Vertex AI Gemini API via service account...');
+      
+      // Get access token from service account
+      const client = await auth.getClient();
+      const accessToken = await client.getAccessToken();
+      
+      if (!accessToken.token) {
+        throw new Error('Failed to get access token from service account');
+      }
+      
+      // Call Vertex AI Gemini API
+      const vertexEndpoint = `https://${config.googleCloud.vertexAiRegion}-aiplatform.googleapis.com/v1/projects/${config.googleCloud.projectId}/locations/${config.googleCloud.vertexAiRegion}/publishers/google/models/gemini-pro:generateContent`;
+      
+      const response = await fetch(vertexEndpoint, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken.token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            role: 'user',
+            parts: [{ text: prompt }]
+          }],
+          generation_config: {
+            temperature: 0.7,
+            top_p: 0.8,
+            max_output_tokens: 1024,
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Vertex AI API error: ${response.status} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      const generatedText = data.candidates[0].content.parts[0].text;
+      
+      console.log('✅ Vertex AI Gemini description generated successfully');
+      return generatedText;
+      
+    } catch (vertexError) {
+      console.error('❌ Vertex AI error:', vertexError.message);
+      console.log('🔄 Falling back to Gemini API with API key...');
+      
+      // Fallback to Gemini API if Vertex AI fails
+      const model = genAI.getGenerativeModel({ model: config.gemini.model });
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      
+      console.log('✅ Gemini API fallback successful');
+      return response.text();
+    }
     
-    // Temporarily skip Gemini API and return fallback directly
+  } catch (error) {
+    console.error('❌ Description generation error:', error);
+    
+    // Final fallback - generate basic description
     const fallbackDescription = `This beautiful ${category || 'handcrafted'} piece represents the rich tradition of Indian artisanship. The ${productName} is made with traditional techniques using ${materials?.join(', ') || 'quality materials'}, showcasing the skill and dedication of local artisans. 
 
 Each piece is unique, reflecting the authentic handmade nature that makes Indian handicrafts treasured worldwide. The careful attention to detail and use of time-honored methods ensures that every ${productName} carries the story of its maker and the cultural heritage of India.
@@ -75,30 +148,18 @@ ${additionalContext.price ? `Priced at ₹${additionalContext.price}, this piece
 
 Care Instructions: Handle with care to preserve the handmade quality. Clean gently with appropriate methods for ${materials?.join(' and ') || 'the materials used'}.`;
     
-    console.log('✅ Fallback description generated successfully');
-    return fallbackDescription;
-  } catch (error) {
-    console.error('Gemini API error:', error);
-    
-    // Return a fallback description instead of throwing error
-    const fallbackDescription = `This beautiful ${category || 'handcrafted'} piece represents the rich tradition of Indian artisanship. The ${productName} is made with traditional techniques using ${materials?.join(', ') || 'quality materials'}, showcasing the skill and dedication of local artisans. 
-
-Each piece is unique, reflecting the authentic handmade nature that makes Indian handicrafts treasured worldwide. The careful attention to detail and use of time-honored methods ensures that every ${productName} carries the story of its maker and the cultural heritage of India.
-
-${features?.length > 0 ? `Special features include ${features.join(', ')}, making this piece both functional and decorative. ` : ''}Perfect for those who appreciate traditional craftsmanship and want to bring authentic Indian artistry into their homes. This ${category} not only serves its practical purpose but also acts as a conversation piece that celebrates the rich artistic traditions of India.
-
-Care Instructions: Handle with care to preserve the handmade quality. Clean gently with appropriate methods for ${materials?.join(' and ') || 'the materials used'}.`;
-    
+    console.log('ℹ️ Using fallback description');
     return fallbackDescription;
   }
 };
 
 /**
  * Generate marketing content using Gemini AI
+ * This is used for the Marketing Content Generator page (Instagram, Facebook, WhatsApp)
  */
 export const generateMarketingContent = async (type, productInfo, targetAudience, tone, platform) => {
   try {
-    console.log('🤖 Generating marketing content:', { type, platform, tone, productInfo });
+    console.log('🤖 Generating marketing content with Gemini API:', { type, platform, tone, productInfo });
     
     const model = genAI.getGenerativeModel({ model: config.gemini.model });
     
@@ -114,6 +175,7 @@ export const generateMarketingContent = async (type, productInfo, targetAudience
         break;
         
       case 'description':
+        // For descriptions in marketing context, use the product description generator
         return await generateProductDescription(
           productInfo.name,
           productInfo.category,
@@ -126,22 +188,18 @@ export const generateMarketingContent = async (type, productInfo, targetAudience
         prompt = createSocialMediaPrompt(productInfo, targetAudience, tone, platform);
     }
 
-    console.log('🚀 Sending prompt to Gemini API...');
+    console.log('🚀 Sending prompt to Gemini API for marketing content...');
     
-    try {
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const generatedText = response.text();
-      console.log('✅ Gemini API response received');
-      return generatedText;
-    } catch (apiError) {
-      console.error('❌ Gemini API error:', apiError);
-      console.log('🔄 Using fallback content generation...');
-      return generateFallbackMarketingContent(type, productInfo, targetAudience, tone, platform);
-    }
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const generatedText = response.text();
+    
+    console.log('✅ Gemini API marketing content generated successfully');
+    return generatedText;
+    
   } catch (error) {
-    console.error('Marketing content generation error:', error);
-    console.log('🔄 Using fallback content generation...');
+    console.error('❌ Gemini API marketing content error:', error);
+    console.log('🔄 Using fallback marketing content generation...');
     return generateFallbackMarketingContent(type, productInfo, targetAudience, tone, platform);
   }
 };
@@ -355,34 +413,35 @@ export const generateMarketingTips = async (artisanProfile, productCategories) =
 
 /**
  * Analyze product image using Google Cloud Vision API
+ * This is used in the "Add New Product" page to analyze uploaded images
  */
 export const analyzeProductImage = async (imageUrl) => {
   try {
-    console.log('🔍 Analyzing image with Google Cloud Vision:', imageUrl);
-    
-    // Temporarily disable Google Cloud Vision to test Gemini description generation
-    console.log('🔄 Using basic image analysis (Google Cloud Vision temporarily disabled)');
-    return generateFallbackAnalysis();
+    console.log('🔍 Analyzing image with Google Cloud Vision API:', imageUrl);
     
     // Check if Google Cloud credentials are properly configured
     if (!config.googleCloud.projectId || !config.googleCloud.credentials) {
-      console.warn('⚠️ Google Cloud credentials not configured, using fallback analysis');
-      return generateFallbackAnalysis();
+      console.error('⚠️ Google Cloud credentials not configured');
+      throw new Error('Google Cloud credentials not configured');
     }
     
     // Use Google Cloud Vision to analyze the image
+    console.log('📸 Performing label detection...');
     const [result] = await visionClient.labelDetection(imageUrl);
     const labels = result.labelAnnotations;
     
     // Get text detection for any text in the image
+    console.log('📝 Performing text detection...');
     const [textResult] = await visionClient.textDetection(imageUrl);
     const textAnnotations = textResult.textAnnotations;
     
     // Get object localization for better understanding
+    console.log('🎯 Performing object localization...');
     const [objectResult] = await visionClient.objectLocalization(imageUrl);
     const objects = objectResult.localizedObjectAnnotations;
     
     // Get dominant colors
+    console.log('🎨 Analyzing color properties...');
     const [colorResult] = await visionClient.imageProperties(imageUrl);
     const colors = colorResult.imagePropertiesAnnotation?.dominantColors?.colors || [];
     
@@ -427,7 +486,7 @@ export const analyzeProductImage = async (imageUrl) => {
     // Add craftsmanship insights based on detected elements
     analysis += "CRAFTSMANSHIP INSIGHTS:\n";
     const craftKeywords = labels?.filter(label => 
-      ['handmade', 'craft', 'traditional', 'wood', 'metal', 'textile', 'ceramic', 'pottery', 'weaving'].some(keyword => 
+      ['handmade', 'craft', 'traditional', 'wood', 'metal', 'textile', 'ceramic', 'pottery', 'weaving', 'fabric', 'art', 'carved', 'woven'].some(keyword => 
         label.description.toLowerCase().includes(keyword)
       )
     ) || [];
@@ -448,15 +507,15 @@ export const analyzeProductImage = async (imageUrl) => {
     analysis += "- Emphasize traditional crafting techniques\n";
     analysis += "- Focus on cultural significance and heritage\n";
     
-    console.log('✅ Google Cloud Vision analysis completed');
+    console.log('✅ Google Cloud Vision API analysis completed successfully');
     return analysis;
     
   } catch (error) {
-    console.error('Google Cloud Vision API error:', error);
+    console.error('❌ Google Cloud Vision API error:', error.message);
+    console.error('Error details:', error);
     
-    // Fallback to basic analysis if Vision API fails
-    console.log('🔄 Falling back to basic image analysis');
-    return generateFallbackAnalysis();
+    // Don't use fallback - throw error so the route can handle it properly
+    throw new Error(`Vision API failed: ${error.message}`);
   }
 };
 

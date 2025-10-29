@@ -5,8 +5,9 @@ import { verifyToken, verifyArtisan, optionalAuth } from '../middleware/auth.js'
 import { validate, schemas } from '../middleware/validation.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import { uploadMultiple, processUpload } from '../middleware/upload.js';
-import { uploadMultipleFiles } from '../services/minioStorage.js';
+import { uploadMultipleFiles } from '../services/cloudinaryStorage.js';
 import { generateProductDescription, analyzeProductImage } from '../services/geminiAI.js';
+
 
 const router = Router();
 
@@ -138,6 +139,7 @@ router.post('/create',
 /**
  * POST /api/products/auto-describe
  * Generate AI product description with optional photo analysis
+ * Uses Vertex AI for description generation
  */
 router.post('/auto-describe', 
   asyncHandler(async (req, res) => {
@@ -147,6 +149,7 @@ router.post('/auto-describe',
       materials = [], 
       features = [],
       imageUrls = [],
+      imageAnalysis = null, // Add image analysis from Vision API
       price,
       dimensions
     } = req.body;
@@ -159,9 +162,15 @@ router.post('/auto-describe',
     }
 
     try {
-      console.log('🤖 Generating AI description for:', { productName, category, materials, features });
+      console.log('🤖 Generating AI description with Vertex AI for:', { 
+        productName, 
+        category, 
+        materials, 
+        features,
+        hasImageAnalysis: !!imageAnalysis 
+      });
       
-      // Generate description using only product details (no image analysis)
+      // Generate description using Vertex AI with optional image analysis from Vision API
       const description = await generateProductDescription(
         productName,
         category,
@@ -170,26 +179,28 @@ router.post('/auto-describe',
         { 
           price,
           dimensions,
-          photoCount: imageUrls.length
+          photoCount: imageUrls.length,
+          imageAnalysis: imageAnalysis // Pass Vision API analysis to Vertex AI
         }
       );
 
-      console.log('✅ Description generated successfully');
+      console.log('✅ Description generated successfully with Vertex AI');
 
       res.json({
         success: true,
-        message: 'Product description generated successfully',
+        message: 'Product description generated successfully using Vertex AI',
         data: {
           description,
           productName,
           category,
           materials,
           features,
-          photoAnalyzed: imageUrls.length > 0
+          photoAnalyzed: !!imageAnalysis,
+          aiService: 'Vertex AI + Vision API'
         }
       });
     } catch (error) {
-      console.error('AI description generation error:', error);
+      console.error('❌ AI description generation error:', error);
       res.status(500).json({
         success: false,
         error: 'AI Service Error',
@@ -197,11 +208,12 @@ router.post('/auto-describe',
       });
     }
   })
-);
+);;
 
 /**
  * POST /api/products/analyze-image
- * Analyze product image using AI
+ * Analyze product image using Google Cloud Vision API
+ * This should be called FIRST before generating description
  */
 router.post('/analyze-image', 
   verifyToken,
@@ -217,21 +229,25 @@ router.post('/analyze-image',
     }
 
     try {
+      console.log('🔍 Starting Vision API analysis for image...');
       const analysis = await analyzeProductImage(imageUrl);
 
+      console.log('✅ Vision API analysis completed successfully');
       res.json({
         success: true,
-        message: 'Image analysis completed successfully',
+        message: 'Image analysis completed successfully using Google Cloud Vision API',
         data: {
           analysis,
-          imageUrl
+          imageUrl,
+          aiService: 'Google Cloud Vision API'
         }
       });
     } catch (error) {
-      console.error('Image analysis error:', error);
+      console.error('❌ Vision API analysis error:', error);
       res.status(503).json({
-        error: 'AI Service Error',
-        message: 'Failed to analyze product image. Please try again.'
+        success: false,
+        error: 'Vision API Service Error',
+        message: error.message || 'Failed to analyze product image. Please check your Google Cloud Vision API credentials.'
       });
     }
   })
