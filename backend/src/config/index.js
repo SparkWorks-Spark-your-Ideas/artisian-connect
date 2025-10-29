@@ -30,8 +30,13 @@ export const config = {
   // Gemini AI Configuration
   gemini: {
     apiKey: process.env.GEMINI_API_KEY,
-    model: process.env.GEMINI_MODEL || 'gemini-pro',
-    visionModel: process.env.GEMINI_VISION_MODEL || 'gemini-pro-vision',
+    model: process.env.GEMINI_MODEL || 'models/gemini-2.5-flash',
+    visionModel: process.env.GEMINI_VISION_MODEL || 'models/gemini-2.5-flash',
+  },
+
+  // Replicate AI Configuration (Image Analysis)
+  replicate: {
+    apiToken: process.env.REPLICATE_API_TOKEN,
   },
 
   // Security Configuration

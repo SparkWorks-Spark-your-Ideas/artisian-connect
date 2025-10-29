@@ -62,8 +62,30 @@ export const generateMarketingContent = async (products, platform = 'instagram',
     if (response.data && response.data.success) {
       const backendContent = response.data.data;
       
-      // Parse the content to extract different parts
-      const generatedText = backendContent.content || backendContent;
+      // Check if content is already structured (JSON format from Gemini)
+      const content = backendContent.content || backendContent;
+      
+      console.log('📊 Content type:', typeof content);
+      console.log('📦 Content structure:', content);
+      
+      // If content is already a structured object with caption and hashtags
+      if (typeof content === 'object' && content.caption) {
+        console.log('✅ Using structured JSON response from backend');
+        return {
+          caption: content.caption,
+          hashtags: content.hashtags || [],
+          platform,
+          tone,
+          bestTime: content.bestTime || getBestPostingTime(platform),
+          engagement: content.engagement || getEngagementTip(platform, product),
+          selectedProducts: products.map(p => p.id),
+          generatedAt: new Date().toISOString()
+        };
+      }
+      
+      // Otherwise, parse from text (fallback content)
+      console.log('⚠️ Parsing unstructured text response');
+      const generatedText = typeof content === 'string' ? content : JSON.stringify(content);
       
       // Extract hashtags from the generated content
       const hashtagMatches = generatedText.match(/#\w+/g) || [];

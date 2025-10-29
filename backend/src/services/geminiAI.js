@@ -1,155 +1,99 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { GoogleAuth } from 'google-auth-library';
-import vision from '@google-cloud/vision';
 import fetch from 'node-fetch';
 import { config } from '../config/index.js';
 
-// Initialize Gemini API (for all generative AI tasks)
+// Initialize Gemini API (for text generation)
 const genAI = new GoogleGenerativeAI(config.gemini.apiKey);
 
-// Initialize Google Auth for Vertex AI (uses service account credentials)
-const auth = new GoogleAuth({
-  keyFilename: config.googleCloud.credentials,
-  scopes: ['https://www.googleapis.com/auth/cloud-platform'],
-});
-
-// Initialize Google Cloud Vision client (for image analysis)
-const visionClient = new vision.ImageAnnotatorClient({
-  projectId: config.googleCloud.projectId,
-  keyFilename: config.googleCloud.credentials
-});
-
 /**
- * Generate product description using Vertex AI Gemini + Vision API
+ * Generate product description using Gemini API + Replicate image analysis
  * This is used for the "Add New Product" page to analyze images and create descriptions
  */
 export const generateProductDescription = async (productName, category, materials, features, additionalContext = {}) => {
-  try {
-    console.log('🤖 Generating description using Vertex AI Gemini for:', { productName, category, materials, features });
+  console.log('🤖 Generating description using Gemini API for:', { productName, category, materials, features });
+  
+  // Ensure materials and features are arrays
+  const materialsArray = Array.isArray(materials) ? materials : (materials ? [materials] : []);
+  const featuresArray = Array.isArray(features) ? features : (features ? [features] : []);
+  
+  let prompt = `
+    Create an engaging and detailed product description for an Indian artisan marketplace.
     
-    let prompt = `
-      Create an engaging and detailed product description for an Indian artisan marketplace.
-      
-      Product: ${productName}
-      Category: ${category}
-      Materials: ${materials?.join(', ') || 'Not specified'}
-      Features: ${features?.join(', ') || 'Not specified'}
-    `;
+    Product: ${productName}
+    Category: ${category}
+    Materials: ${materialsArray.length > 0 ? materialsArray.join(', ') : 'Not specified'}
+    Features: ${featuresArray.length > 0 ? featuresArray.join(', ') : 'Not specified'}
+  `;
 
-    // Add additional product details if available
-    if (additionalContext.price) {
-      prompt += `
-      Price: ₹${additionalContext.price}`;
-    }
-
-    if (additionalContext.dimensions) {
-      prompt += `
-      Dimensions: ${additionalContext.dimensions}`;
-    }
-
-    if (additionalContext.photoCount && additionalContext.photoCount > 0) {
-      prompt += `
-      Number of photos available: ${additionalContext.photoCount}`;
-    }
-
-    // Add image analysis if available from Vision API
-    if (additionalContext.imageAnalysis) {
-      prompt += `
-      
-      Image Analysis Results from Google Cloud Vision API:
-      ${additionalContext.imageAnalysis}`;
-    }
-
+  // Add additional product details if available
+  if (additionalContext.price) {
     prompt += `
-      
-      Please create a description that:
-      1. Highlights the craftsmanship and cultural significance
-      2. Mentions the traditional techniques used
-      3. Appeals to both domestic and international customers
-      4. Is SEO-friendly and engaging
-      5. Emphasizes the uniqueness and authenticity
-      6. Includes care instructions if relevant
-      7. Creates an emotional connection with potential buyers
-      8. Mentions the story behind the craft and artisan heritage
-      
-      Keep it between 200-400 words and make it compelling for online shoppers.
-      Focus on the authenticity, cultural heritage, and artisan skills that make this product special.
-      Use specific details about the materials and crafting process to enhance credibility.
-    `;
+    Price: ₹${additionalContext.price}`;
+  }
 
-    try {
-      console.log('🚀 Calling Vertex AI Gemini API via service account...');
-      
-      // Get access token from service account
-      const client = await auth.getClient();
-      const accessToken = await client.getAccessToken();
-      
-      if (!accessToken.token) {
-        throw new Error('Failed to get access token from service account');
-      }
-      
-      // Call Vertex AI Gemini API
-      const vertexEndpoint = `https://${config.googleCloud.vertexAiRegion}-aiplatform.googleapis.com/v1/projects/${config.googleCloud.projectId}/locations/${config.googleCloud.vertexAiRegion}/publishers/google/models/gemini-pro:generateContent`;
-      
-      const response = await fetch(vertexEndpoint, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${accessToken.token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [{
-            role: 'user',
-            parts: [{ text: prompt }]
-          }],
-          generation_config: {
-            temperature: 0.7,
-            top_p: 0.8,
-            max_output_tokens: 1024,
-          },
-        }),
-      });
+  if (additionalContext.dimensions) {
+    prompt += `
+    Dimensions: ${additionalContext.dimensions}`;
+  }
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Vertex AI API error: ${response.status} - ${errorText}`);
-      }
+  if (additionalContext.photoCount && additionalContext.photoCount > 0) {
+    prompt += `
+    Number of photos available: ${additionalContext.photoCount}`;
+  }
 
-      const data = await response.json();
-      const generatedText = data.candidates[0].content.parts[0].text;
-      
-      console.log('✅ Vertex AI Gemini description generated successfully');
-      return generatedText;
-      
-    } catch (vertexError) {
-      console.error('❌ Vertex AI error:', vertexError.message);
-      console.log('🔄 Falling back to Gemini API with API key...');
-      
-      // Fallback to Gemini API if Vertex AI fails
-      const model = genAI.getGenerativeModel({ model: config.gemini.model });
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      
-      console.log('✅ Gemini API fallback successful');
-      return response.text();
+  // Add image analysis if available from Replicate LLAVA
+  if (additionalContext.imageAnalysis) {
+    prompt += `
+    
+    Image Analysis Results from Replicate AI:
+    ${additionalContext.imageAnalysis}`;
+  }
+
+  prompt += `
+    
+    Please create a description that:
+    1. Highlights the craftsmanship and cultural significance
+    2. Mentions the traditional techniques used
+    3. Appeals to both domestic and international customers
+    4. Is SEO-friendly and engaging
+    5. Emphasizes the uniqueness and authenticity
+    6. Includes care instructions if relevant
+    7. Creates an emotional connection with potential buyers
+    8. Mentions the story behind the craft and artisan heritage
+    
+    Keep it between 200-400 words and make it compelling for online shoppers.
+    Focus on the authenticity, cultural heritage, and artisan skills that make this product special.
+    Use specific details about the materials and crafting process to enhance credibility.
+  `;
+
+  try {
+    console.log('🚀 Calling Gemini API for product description...');
+    
+    if (!config.gemini.apiKey || config.gemini.apiKey === 'your-api-key-here') {
+      throw new Error('Gemini API key not configured. Check GEMINI_API_KEY in .env file.');
     }
+    
+    const model = genAI.getGenerativeModel({ model: config.gemini.model });
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    
+    if (!response || !response.text) {
+      throw new Error('Invalid response from Gemini API - no content generated');
+    }
+    
+    console.log('✅ Gemini API description generated successfully');
+    return {
+      description: response.text(),
+      source: 'Gemini API'
+    };
     
   } catch (error) {
-    console.error('❌ Description generation error:', error);
+    console.error('❌ Gemini API error:', error.message);
     
-    // Final fallback - generate basic description
-    const fallbackDescription = `This beautiful ${category || 'handcrafted'} piece represents the rich tradition of Indian artisanship. The ${productName} is made with traditional techniques using ${materials?.join(', ') || 'quality materials'}, showcasing the skill and dedication of local artisans. 
-
-Each piece is unique, reflecting the authentic handmade nature that makes Indian handicrafts treasured worldwide. The careful attention to detail and use of time-honored methods ensures that every ${productName} carries the story of its maker and the cultural heritage of India.
-
-${features?.length > 0 ? `Special features include ${features.join(', ')}, making this piece both functional and decorative. ` : ''}Perfect for those who appreciate traditional craftsmanship and want to bring authentic Indian artistry into their homes. This ${category} not only serves its practical purpose but also acts as a conversation piece that celebrates the rich artistic traditions of India.
-
-${additionalContext.price ? `Priced at ₹${additionalContext.price}, this piece offers exceptional value for authentic handcrafted art. ` : ''}${additionalContext.dimensions ? `With dimensions of ${additionalContext.dimensions}, it fits perfectly in various spaces. ` : ''}
-
-Care Instructions: Handle with care to preserve the handmade quality. Clean gently with appropriate methods for ${materials?.join(' and ') || 'the materials used'}.`;
-    
-    console.log('ℹ️ Using fallback description');
-    return fallbackDescription;
+    // Throw error - don't silently fall back to template
+    throw new Error(
+      `AI description generation failed: ${error.message}. Please check your GEMINI_API_KEY in .env file.`
+    );
   }
 };
 
@@ -195,7 +139,44 @@ export const generateMarketingContent = async (type, productInfo, targetAudience
     const generatedText = response.text();
     
     console.log('✅ Gemini API marketing content generated successfully');
-    return generatedText;
+    console.log('📝 Raw response:', generatedText.substring(0, 200));
+    
+    // Try to parse JSON response from Gemini
+    try {
+      // Remove markdown code blocks if present
+      let cleanedText = generatedText.trim();
+      if (cleanedText.startsWith('```json')) {
+        cleanedText = cleanedText.replace(/```json\n?/g, '').replace(/```\n?$/g, '');
+      } else if (cleanedText.startsWith('```')) {
+        cleanedText = cleanedText.replace(/```\n?/g, '');
+      }
+      
+      const parsedContent = JSON.parse(cleanedText);
+      console.log('✅ Successfully parsed JSON response from Gemini');
+      
+      // Validate the structure
+      if (parsedContent.caption && Array.isArray(parsedContent.hashtags)) {
+        return parsedContent;
+      }
+      
+      console.warn('⚠️ Parsed JSON missing required fields, using fallback structure');
+      return {
+        caption: parsedContent.caption || generatedText,
+        hashtags: parsedContent.hashtags || [],
+        bestTime: parsedContent.bestTime || '',
+        engagement: parsedContent.engagement || ''
+      };
+      
+    } catch (parseError) {
+      console.warn('⚠️ Could not parse JSON from Gemini response, using plain text');
+      // If JSON parsing fails, return plain text in expected format
+      return {
+        caption: generatedText,
+        hashtags: [],
+        bestTime: '',
+        engagement: ''
+      };
+    }
     
   } catch (error) {
     console.error('❌ Gemini API marketing content error:', error);
@@ -210,13 +191,13 @@ export const generateMarketingContent = async (type, productInfo, targetAudience
 const createSocialMediaPrompt = (productInfo, targetAudience, tone, platform) => {
   const platformSpecs = {
     instagram: {
-      format: '1-2 engaging paragraphs + 5-8 hashtags',
+      format: '1-2 engaging paragraphs + 5-8 relevant hashtags',
       style: 'Visual storytelling with emoji, lifestyle-focused',
       maxChars: 2200,
       features: 'Focus on aesthetics, lifestyle integration, behind-the-scenes'
     },
     facebook: {
-      format: '2-3 paragraphs with storytelling + 3-5 hashtags',
+      format: '2-3 paragraphs with storytelling + 3-5 relevant hashtags',
       style: 'Community-focused, detailed storytelling',
       maxChars: 63206,
       features: 'Emphasize community, artisan story, cultural significance'
@@ -232,7 +213,7 @@ const createSocialMediaPrompt = (productInfo, targetAudience, tone, platform) =>
   const spec = platformSpecs[platform] || platformSpecs.instagram;
   
   return `
-Create engaging ${platform} content for an Indian artisan product.
+You are an expert social media marketer for an Indian artisan marketplace. Create engaging ${platform} content for this product.
 
 PRODUCT DETAILS:
 - Name: ${productInfo.name}
@@ -259,15 +240,27 @@ CONTENT GUIDELINES:
 4. Mention the traditional techniques used
 5. Create emotional connection with the audience
 6. Include a clear call-to-action
-7. Use appropriate hashtags for discoverability
+7. Generate SPECIFIC, RELEVANT hashtags based on the product (not generic ones)
 8. Maintain the specified tone throughout
 
-For ${platform}:
-${platform === 'instagram' ? '- Use emojis strategically for visual appeal\n- Focus on lifestyle and aesthetic aspects\n- Include hashtags like #HandmadeIndia #ArtisanMade #AuthenticCrafts' : ''}
-${platform === 'facebook' ? '- Tell a complete story about the artisan\n- Encourage community engagement with questions\n- Focus on cultural heritage and tradition' : ''}
-${platform === 'whatsapp' ? '- Keep it conversational and personal\n- Include specific benefits for the customer\n- Add urgency or exclusivity if appropriate' : ''}
+**IMPORTANT: You MUST return your response in this EXACT JSON format:**
 
-Generate compelling content that drives engagement and sales while celebrating Indian craftsmanship.
+{
+  "caption": "Your engaging caption text here with emojis and storytelling...",
+  "hashtags": ["#SpecificHashtag1", "#RelevantHashtag2", "#ProductCategory", "#UniqueFeature", "#CraftsmanshipType"],
+  "bestTime": "Specific best posting time with reason (e.g., '8:00 PM - 10:00 PM IST (Family time browsing)')",
+  "engagement": "Specific engagement strategy for this product (e.g., 'Share the artisan story and encourage users to share their own traditional craft experiences')"
+}
+
+**CRITICAL REQUIREMENTS:**
+1. Generate 5-8 UNIQUE hashtags SPECIFIC to this product, its materials, craft type, and cultural significance
+2. DO NOT use generic hashtags like #HandmadeIndia - be specific to the product
+3. Include the product category, specific materials, regional craft style in hashtags
+4. Provide SPECIFIC best posting time with reasoning for ${platform}
+5. Give ACTIONABLE engagement insights specific to this product type
+6. Return ONLY valid JSON, no additional text before or after
+
+Generate compelling, authentic content that celebrates Indian craftsmanship!
 `;
 };
 
@@ -416,15 +409,16 @@ export const generateMarketingTips = async (artisanProfile, productCategories) =
  * This is used in the "Add New Product" page to analyze uploaded images
  */
 export const analyzeProductImage = async (imageUrl) => {
+  console.log('🔍 Analyzing image with Google Cloud Vision API:', imageUrl);
+  
+  // Check if Google Cloud credentials are properly configured
+  if (!config.googleCloud.projectId || !config.googleCloud.credentials) {
+    const error = new Error('Google Cloud Vision API credentials not configured. Please set GOOGLE_CLOUD_PROJECT_ID and GOOGLE_APPLICATION_CREDENTIALS in .env file.');
+    error.code = 'MISSING_CREDENTIALS';
+    throw error;
+  }
+  
   try {
-    console.log('🔍 Analyzing image with Google Cloud Vision API:', imageUrl);
-    
-    // Check if Google Cloud credentials are properly configured
-    if (!config.googleCloud.projectId || !config.googleCloud.credentials) {
-      console.error('⚠️ Google Cloud credentials not configured');
-      throw new Error('Google Cloud credentials not configured');
-    }
-    
     // Use Google Cloud Vision to analyze the image
     console.log('📸 Performing label detection...');
     const [result] = await visionClient.labelDetection(imageUrl);
@@ -512,10 +506,27 @@ export const analyzeProductImage = async (imageUrl) => {
     
   } catch (error) {
     console.error('❌ Google Cloud Vision API error:', error.message);
+    console.error('Error code:', error.code);
     console.error('Error details:', error);
     
-    // Don't use fallback - throw error so the route can handle it properly
-    throw new Error(`Vision API failed: ${error.message}`);
+    // Provide specific error messages based on error type
+    let errorMessage = 'Vision API failed: ';
+    
+    if (error.code === 'ENOENT') {
+      errorMessage += 'Service account credentials file not found. Check GOOGLE_APPLICATION_CREDENTIALS path in .env file.';
+    } else if (error.code === 7 || error.message?.includes('PERMISSION_DENIED')) {
+      errorMessage += 'Permission denied. Ensure Cloud Vision API is enabled and service account has proper permissions.';
+    } else if (error.code === 3 || error.message?.includes('INVALID_ARGUMENT')) {
+      errorMessage += 'Invalid image URL. Please ensure the image is publicly accessible.';
+    } else if (error.code === 16 || error.message?.includes('UNAUTHENTICATED')) {
+      errorMessage += 'Authentication failed. Check your service account credentials.';
+    } else {
+      errorMessage += error.message || 'Unknown error occurred';
+    }
+    
+    const visionError = new Error(errorMessage);
+    visionError.originalError = error;
+    throw visionError;
   }
 };
 
