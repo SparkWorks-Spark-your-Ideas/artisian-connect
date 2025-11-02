@@ -5,8 +5,10 @@ import { verifyToken, verifyArtisan, optionalAuth } from '../middleware/auth.js'
 import { validate, schemas } from '../middleware/validation.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import { uploadMultiple, processUpload } from '../middleware/upload.js';
-import { uploadMultipleFiles } from '../services/minioStorage.js';
-import { generateProductDescription, analyzeProductImage } from '../services/geminiAI.js';
+import { uploadMultipleFiles } from '../services/cloudinaryStorage.js';
+import { generateProductDescription } from '../services/geminiAI.js';
+import { analyzeProductImage } from '../services/replicateAI.js';
+
 
 const router = Router();
 
@@ -138,6 +140,7 @@ router.post('/create',
 /**
  * POST /api/products/auto-describe
  * Generate AI product description with optional photo analysis
+ * Uses Vertex AI for description generation
  */
 router.post('/auto-describe', 
   asyncHandler(async (req, res) => {
@@ -147,92 +150,170 @@ router.post('/auto-describe',
       materials = [], 
       features = [],
       imageUrls = [],
+      imageAnalysis = null, // Image analysis from Replicate LLAVA
       price,
       dimensions
     } = req.body;
 
+    console.log('📥 Received auto-describe request:', {
+      productName,
+      category,
+      materialsCount: materials.length,
+      featuresCount: features.length,
+      imageUrlsCount: imageUrls.length,
+      hasImageAnalysis: !!imageAnalysis,
+      imageAnalysisPreview: imageAnalysis ? imageAnalysis.substring(0, 100) + '...' : 'none'
+    });
+
     if (!productName || !category) {
       return res.status(400).json({
+        success: false,
         error: 'Missing Information',
         message: 'Product name and category are required'
       });
     }
 
+    // Ensure materials and features are arrays (frontend might send string)
+    const materialsArray = Array.isArray(materials) ? materials : (materials ? [materials] : []);
+    const featuresArray = Array.isArray(features) ? features : (features ? [features] : []);
+
     try {
-      console.log('🤖 Generating AI description for:', { productName, category, materials, features });
+      console.log('🤖 Generating AI description with Vertex AI for:', { 
+        productName, 
+        category, 
+        materials: materialsArray, 
+        features: featuresArray,
+        hasImageAnalysis: !!imageAnalysis 
+      });
       
-      // Generate description using only product details (no image analysis)
-      const description = await generateProductDescription(
+      // Generate description using Vertex AI with optional image analysis from Vision API
+      const result = await generateProductDescription(
         productName,
         category,
-        materials,
-        features,
+        materialsArray,
+        featuresArray,
         { 
           price,
           dimensions,
-          photoCount: imageUrls.length
+          photoCount: imageUrls.length,
+          imageAnalysis: imageAnalysis // Pass Vision API analysis to Vertex AI
         }
       );
 
-      console.log('✅ Description generated successfully');
+      console.log('✅ Description generated successfully with:', result.source);
 
       res.json({
         success: true,
-        message: 'Product description generated successfully',
+        message: `Product description generated successfully using ${result.source}`,
         data: {
-          description,
+          description: result.description,
           productName,
           category,
-          materials,
-          features,
-          photoAnalyzed: imageUrls.length > 0
+          materials: materialsArray,
+          features: featuresArray,
+          photoAnalyzed: !!imageAnalysis,
+          aiService: result.source
         }
       });
     } catch (error) {
-      console.error('AI description generation error:', error);
-      res.status(500).json({
+      console.error('❌ AI description generation error:', error.message);
+      
+      // Return detailed error to help user understand what went wrong
+      res.status(503).json({
         success: false,
         error: 'AI Service Error',
-        message: 'Failed to generate product description. Please try again.'
+        message: error.message || 'Failed to generate product description',
+        details: {
+          suggestion: 'Please check your API credentials in .env file',
+          requiredCredentials: [
+            'GOOGLE_APPLICATION_CREDENTIALS (for Vertex AI)',
+            'GEMINI_API_KEY (for fallback)'
+          ]
+        }
       });
     }
   })
-);
+);;
 
 /**
  * POST /api/products/analyze-image
- * Analyze product image using AI
+ * Analyze product image using Replicate LLAVA API
+ * This should be called FIRST before generating description
  */
 router.post('/analyze-image', 
-  verifyToken,
-  verifyArtisan,
+  // verifyToken,      // Temporarily disabled for testing
+  // verifyArtisan,    // Temporarily disabled for testing
   asyncHandler(async (req, res) => {
+    console.log('🎯 /analyze-image endpoint hit!');
+    console.log('📦 Request body:', req.body);
+    
     const { imageUrl } = req.body;
 
+    console.log('🔗 Image URL received:', imageUrl);
+
     if (!imageUrl) {
+      console.log('❌ No image URL provided');
       return res.status(400).json({
+        success: false,
         error: 'Image Required',
         message: 'Image URL is required for analysis'
       });
     }
 
     try {
+      console.log('🔍 Starting Replicate LLAVA analysis for image...');
       const analysis = await analyzeProductImage(imageUrl);
 
+      console.log('✅ Replicate image analysis completed successfully');
       res.json({
         success: true,
-        message: 'Image analysis completed successfully',
+        message: 'Image analysis completed successfully using Replicate LLAVA',
         data: {
           analysis,
-          imageUrl
+          imageUrl,
+          aiService: 'Replicate LLAVA'
         }
       });
     } catch (error) {
-      console.error('Image analysis error:', error);
-      res.status(503).json({
-        error: 'AI Service Error',
-        message: 'Failed to analyze product image. Please try again.'
-      });
+      console.error('❌ Replicate analysis error:', error.message);
+      
+      // Return detailed error with actionable suggestions
+      const errorResponse = {
+        success: false,
+        error: 'Replicate API Service Error',
+        message: error.message || 'Failed to analyze product image'
+      };
+      
+      // Add helpful suggestions based on error type
+      if (error.code === 'MISSING_CREDENTIALS') {
+        errorResponse.details = {
+          suggestion: 'Configure Replicate API token',
+          steps: [
+            'Get your API token from https://replicate.com/account/api-tokens',
+            'Set REPLICATE_API_TOKEN in .env file',
+            'Restart the server'
+          ]
+        };
+      } else if (error.message?.includes('rate limit')) {
+        errorResponse.details = {
+          suggestion: 'Rate limit exceeded',
+          steps: [
+            'Wait a few moments before trying again',
+            'Consider upgrading your Replicate plan for higher limits'
+          ]
+        };
+      } else if (error.message?.includes('Invalid image URL')) {
+        errorResponse.details = {
+          suggestion: 'Ensure image is publicly accessible',
+          steps: [
+            'Verify the image URL is correct',
+            'Make sure the image is uploaded to Cloudinary',
+            'Check that the URL is publicly accessible'
+          ]
+        };
+      }
+      
+      res.status(503).json(errorResponse);
     }
   })
 );

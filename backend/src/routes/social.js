@@ -4,7 +4,7 @@ import { verifyToken, optionalAuth } from '../middleware/auth.js';
 import { validate, schemas } from '../middleware/validation.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import { uploadMultiple, processUpload } from '../middleware/upload.js';
-import { uploadMultipleFiles } from '../services/minioStorage.js';
+import { uploadMultipleFiles } from '../services/cloudinaryStorage.js';
 
 const router = Router();
 

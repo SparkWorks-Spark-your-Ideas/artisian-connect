@@ -89,6 +89,10 @@ export const api = {
     delete: (id) => apiClient.delete(`/products/${id}`),
     getCategories: () => apiClient.get('/products/categories'),
     generateDescription: (productData) => apiClient.post('/products/auto-describe', productData),
+    analyzeImage: (imageUrl) => apiClient.post('/products/analyze-image', { imageUrl }),
+    uploadImages: (formData) => apiClient.post('/products/upload-images', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    }),
     favorite: (id) => apiClient.post(`/products/${id}/favorite`),
   },
 

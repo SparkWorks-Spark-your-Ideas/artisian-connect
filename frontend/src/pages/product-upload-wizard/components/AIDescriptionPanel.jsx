@@ -14,36 +14,61 @@ const AIDescriptionPanel = ({ formData, photos, onDescriptionChange, aiDescripti
     setError(null);
     
     try {
-      // Prepare product data with photos for AI analysis
+      let imageAnalysis = null;
+      
+      // Step 1: Analyze the first image using Replicate if photos exist
+      if (photos && photos.length > 0) {
+        const firstImageUrl = photos[0].url || photos[0];
+        console.log('🔍 Step 1: Analyzing image with Replicate LLAVA:', firstImageUrl);
+        
+        try {
+          const analysisResponse = await api.products.analyzeImage(firstImageUrl);
+          imageAnalysis = analysisResponse.data?.data?.analysis;
+          console.log('✅ Replicate image analysis completed:', {
+            hasAnalysis: !!imageAnalysis,
+            analysisLength: imageAnalysis?.length,
+            preview: imageAnalysis?.substring(0, 100)
+          });
+        } catch (analysisError) {
+          console.warn('⚠️ Image analysis failed, continuing without it:', analysisError.message);
+          // Continue without image analysis - Gemini will work with text only
+        }
+      }
+      
+      // Step 2: Generate description using Gemini (with or without image analysis)
       const productData = {
-        productName: formData?.name, // Changed from 'name' to 'productName' to match backend
+        productName: formData?.name,
         category: formData?.category,
         materials: formData?.materials || [],
-        features: formData?.tags || [], // Use tags as features if no dedicated features field
-        imageUrls: photos?.map(photo => photo.url || photo) || [], // Send photo URLs for analysis
+        features: formData?.tags || [],
+        imageUrls: photos?.map(photo => photo.url || photo) || [],
+        imageAnalysis: imageAnalysis, // Pass Replicate analysis to Gemini
         price: formData?.price,
         dimensions: formData?.dimensions
       };
 
-      console.log('🚀 Sending product data for AI description:', productData);
+      console.log('🤖 Step 2: Generating description with Gemini:', {
+        ...productData,
+        hasImageAnalysis: !!imageAnalysis
+      });
 
       const response = await api.products.generateDescription(productData);
       console.log('📦 Full API Response:', response);
-      console.log('📦 Response data:', response.data);
       
       const generatedDescription = response.data?.data?.description;
       
       console.log('✅ AI Description generated:', {
-        description: generatedDescription,
+        description: generatedDescription?.substring(0, 100) + '...',
         photoAnalyzed: response.data?.data?.photoAnalyzed,
-        imageAnalysis: response.data?.data?.imageAnalysis
+        aiService: response.data?.data?.aiService,
+        usedImageAnalysis: !!imageAnalysis
       });
       
       onGenerateDescription(generatedDescription);
       setEditedDescription(generatedDescription);
     } catch (error) {
-      console.error('Error generating description:', error);
-      setError('Failed to generate description. Please try again.');
+      console.error('❌ Error generating description:', error);
+      setError(error.response?.data?.message || 'Failed to generate description. Please try again.');
       
       // Fallback to a basic description
       const fallbackDescription = generateFallbackDescription(formData, photos?.length);

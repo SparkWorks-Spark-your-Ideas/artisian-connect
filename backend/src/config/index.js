@@ -2,7 +2,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 export const config = {
-  // Firebase Configuration (Authentication only, no storage)
+  // Firebase Configuration (Authentication and Firestore only)
   firebase: {
     projectId: process.env.FIREBASE_PROJECT_ID,
     privateKeyId: process.env.FIREBASE_PRIVATE_KEY_ID,
@@ -11,17 +11,13 @@ export const config = {
     clientId: process.env.FIREBASE_CLIENT_ID,
     authUri: process.env.FIREBASE_AUTH_URI,
     tokenUri: process.env.FIREBASE_TOKEN_URI,
-    // Removed storageBucket as we're using MinIO now
   },
 
-  // MinIO Configuration (Storage Solution)
-  minio: {
-    endPoint: process.env.MINIO_ENDPOINT || 'localhost',
-    port: parseInt(process.env.MINIO_PORT) || 9000,
-    useSSL: process.env.MINIO_USE_SSL === 'true',
-    accessKey: process.env.MINIO_ACCESS_KEY || 'minioadmin',
-    secretKey: process.env.MINIO_SECRET_KEY || 'minioadmin',
-    bucketName: process.env.MINIO_BUCKET || 'artisan-marketplace',
+  // Cloudinary Configuration (Storage Solution)
+  cloudinary: {
+    cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+    apiKey: process.env.CLOUDINARY_API_KEY,
+    apiSecret: process.env.CLOUDINARY_API_SECRET,
   },
 
   // Google Cloud AI Configuration
@@ -34,8 +30,13 @@ export const config = {
   // Gemini AI Configuration
   gemini: {
     apiKey: process.env.GEMINI_API_KEY,
-    model: process.env.GEMINI_MODEL || 'gemini-pro',
-    visionModel: process.env.GEMINI_VISION_MODEL || 'gemini-pro-vision',
+    model: process.env.GEMINI_MODEL || 'models/gemini-2.5-flash',
+    visionModel: process.env.GEMINI_VISION_MODEL || 'models/gemini-2.5-flash',
+  },
+
+  // Replicate AI Configuration (Image Analysis)
+  replicate: {
+    apiToken: process.env.REPLICATE_API_TOKEN,
   },
 
   // Security Configuration
