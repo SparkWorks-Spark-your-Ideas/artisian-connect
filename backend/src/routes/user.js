@@ -79,33 +79,46 @@ router.put('/profile',
 
 /**
  * POST /api/user/profile/avatar
- * Upload user avatar (temporarily disabled - requires Firebase Storage upgrade)
+ * Upload user profile photo to Cloudinary
  */
 router.post('/profile/avatar', 
-  verifyToken, 
+  verifyToken,
+  uploadSingle('avatar'),
   asyncHandler(async (req, res) => {
-    // Temporary implementation without file upload
-    // For development: accept base64 image or external URL
-    const { avatarUrl } = req.body;
-    
-    if (!avatarUrl) {
+    if (!req.file) {
       return res.status(400).json({
-        error: 'No Avatar URL',
-        message: 'Please provide avatarUrl (base64 or external URL)'
+        error: 'No File',
+        message: 'No avatar file provided'
       });
     }
 
+    console.log('📸 Uploading profile photo for user:', req.user.uid);
+
+    // Process and upload to Firebase Storage
+    const processedFile = processUpload(req.file, 'avatars');
+    const uploadResult = await uploadFile(
+      processedFile.buffer, 
+      processedFile.originalname, 
+      processedFile.mimetype, 
+      'users/avatars'
+    );
+
+    console.log('✅ Profile photo uploaded:', uploadResult);
+    console.log('✅ Public URL:', uploadResult.publicUrl);
+
     // Update user profile with avatar URL
     await db.collection('users').doc(req.user.uid).update({
-      avatarUrl,
+      profilePhoto: uploadResult.publicUrl,
+      avatarUrl: uploadResult.publicUrl, // Backward compatibility
       updatedAt: new Date()
     });
 
     res.json({
       success: true,
-      message: 'Avatar updated successfully',
+      message: 'Profile photo updated successfully',
       data: {
-        avatarUrl
+        profilePhoto: uploadResult.publicUrl,
+        avatarUrl: uploadResult.publicUrl
       }
     });
   })
@@ -166,7 +179,7 @@ router.get('/profile/:uid', asyncHandler(async (req, res) => {
 
 /**
  * PUT /api/user/artisan-profile
- * Update artisan-specific profile information
+ * Update comprehensive artisan profile information
  */
 router.put('/artisan-profile', 
   verifyToken, 
@@ -180,38 +193,114 @@ router.put('/artisan-profile',
     }
 
     const {
-      skills,
+      profilePhoto,
+      crafts,
       bio,
-      experienceLevel,
-      certifications,
-      socialLinks,
-      specializations
+      location,
+      portfolio,
+      contact,
+      skills,
+      completedAt
     } = req.body;
 
+    console.log('📝 Updating artisan profile:', {
+      userId: req.user.uid,
+      profilePhoto: profilePhoto ? 'PROVIDED' : 'MISSING',
+      profilePhotoValue: profilePhoto,
+      crafts,
+      hasPortfolio: portfolio?.length > 0,
+      location: location?.city
+    });
+
+    console.log('🔍 Full request body:', JSON.stringify(req.body, null, 2));
+
+    // Build update object with nested artisanProfile
     const updateData = {
-      'artisanProfile.skills': skills,
-      'artisanProfile.bio': bio,
-      'artisanProfile.experienceLevel': experienceLevel,
-      'artisanProfile.certifications': certifications,
-      'artisanProfile.socialLinks': socialLinks,
-      'artisanProfile.specializations': specializations,
-      updatedAt: new Date()
+      updatedAt: new Date(),
+      profileComplete: true
     };
 
-    // Remove undefined values
-    Object.keys(updateData).forEach(key => {
-      if (updateData[key] === undefined) {
-        delete updateData[key];
+    // Update top-level fields
+    if (profilePhoto) {
+      updateData.profilePhoto = profilePhoto;
+      updateData.avatarUrl = profilePhoto; // Also save as avatarUrl for consistency
+    }
+    if (bio) updateData.bio = bio;
+    if (location) updateData.location = location;
+    if (contact?.phone) updateData.phone = contact.phone;
+    if (contact?.email) updateData.email = contact.email;
+
+    // Update artisan profile nested object
+    const artisanProfile = {};
+    
+    if (crafts && Array.isArray(crafts)) artisanProfile.craftSpecializations = crafts;
+    if (bio) artisanProfile.bio = bio;
+    if (portfolio && Array.isArray(portfolio)) artisanProfile.portfolioImages = portfolio;
+    
+    // Contact information
+    if (contact) {
+      artisanProfile.socialLinks = {
+        whatsapp: contact.whatsapp || '',
+        website: contact.website || '',
+        instagram: contact.instagram || '',
+        facebook: contact.facebook || ''
+      };
+    }
+
+    // Skills and experience
+    if (skills) {
+      if (skills.experienceLevel) artisanProfile.experienceLevel = skills.experienceLevel;
+      if (skills.yearsOfPractice) artisanProfile.yearsOfExperience = parseInt(skills.yearsOfPractice) || 0;
+      if (skills.specialization) artisanProfile.specializationFocus = skills.specialization;
+      if (skills.techniques && Array.isArray(skills.techniques)) artisanProfile.craftTechniques = skills.techniques;
+      if (skills.tools) artisanProfile.toolsAndEquipment = skills.tools;
+      if (skills.awards) artisanProfile.awardsRecognition = skills.awards;
+    }
+
+    if (completedAt) artisanProfile.profileCompletedAt = new Date(completedAt);
+    artisanProfile.isVerified = false; // Admin verification required
+    artisanProfile.rating = req.user.artisanProfile?.rating || 0;
+    artisanProfile.totalReviews = req.user.artisanProfile?.totalReviews || 0;
+    artisanProfile.totalSales = req.user.artisanProfile?.totalSales || 0;
+
+    updateData.artisanProfile = artisanProfile;
+
+    // Log what will be saved
+    console.log('💾 Saving to Firebase:', {
+      profilePhoto: updateData.profilePhoto,
+      bio: updateData.bio,
+      location: updateData.location?.city,
+      artisanProfile: {
+        craftSpecializations: artisanProfile.craftSpecializations,
+        portfolioImages: artisanProfile.portfolioImages?.length
       }
     });
 
+    // Update user document
     await db.collection('users').doc(req.user.uid).update(updateData);
+
+    console.log('✅ Artisan profile updated successfully');
+
+    // Verify the update
+    const updatedDoc = await db.collection('users').doc(req.user.uid).get();
+    const updatedData = updatedDoc.data();
+    console.log('🔍 Verification - User document after update:', {
+      avatarUrl: updatedData.avatarUrl,
+      profilePhoto: updatedData.profilePhoto,
+      bio: updatedData.bio ? 'EXISTS' : 'MISSING',
+      location: updatedData.location?.city,
+      artisanProfile: {
+        craftSpecializations: updatedData.artisanProfile?.craftSpecializations,
+        portfolioImages: updatedData.artisanProfile?.portfolioImages?.length
+      }
+    });
 
     res.json({
       success: true,
       message: 'Artisan profile updated successfully',
       data: {
-        updated: updateData
+        updated: updateData,
+        completionPercentage: 100
       }
     });
   })

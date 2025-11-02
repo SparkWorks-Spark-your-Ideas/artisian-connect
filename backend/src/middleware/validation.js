@@ -90,8 +90,8 @@ export const schemas = {
     stockQuantity: Joi.number().integer().min(0).required(),
     imageUrls: Joi.array().items(Joi.string().uri()).optional(), // Array of image URLs
     thumbnailUrl: Joi.string().uri().optional(), // Thumbnail URL
-    seoTitle: Joi.string().max(100).optional(), // SEO fields
-    metaDescription: Joi.string().max(200).optional(),
+    seoTitle: Joi.string().max(200).optional(), // SEO fields - increased limit
+    metaDescription: Joi.string().max(1000).optional(), // Increased for AI-generated content
     shippingInfo: Joi.object({
       weight: Joi.number().min(0).optional(), // Allow 0 and decimals
       dimensions: Joi.object({

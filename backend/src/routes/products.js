@@ -67,6 +67,14 @@ router.post('/create',
   verifyArtisan,
   validate(schemas.productCreation),
   asyncHandler(async (req, res) => {
+    console.log('📥 Received request body:', {
+      name: req.body.name,
+      imageUrls: req.body.imageUrls,
+      imageUrlsType: typeof req.body.imageUrls,
+      imageUrlsIsArray: Array.isArray(req.body.imageUrls),
+      fullBody: req.body
+    });
+
     const {
       name,
       description,
