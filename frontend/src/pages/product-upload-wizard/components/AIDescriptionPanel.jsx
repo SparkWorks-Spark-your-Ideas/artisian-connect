@@ -16,18 +16,19 @@ const AIDescriptionPanel = ({ formData, photos, onDescriptionChange, aiDescripti
     try {
       let imageAnalysis = null;
       
-      // Step 1: Analyze the first image using Replicate if photos exist
+      // Step 1: Analyze the first image using Everypixel if photos exist
       if (photos && photos.length > 0) {
         const firstImageUrl = photos[0].url || photos[0];
-        console.log('🔍 Step 1: Analyzing image with Replicate LLAVA:', firstImageUrl);
+        console.log('🔍 Step 1: Analyzing image with Everypixel AI:', firstImageUrl);
         
         try {
           const analysisResponse = await api.products.analyzeImage(firstImageUrl);
           imageAnalysis = analysisResponse.data?.data?.analysis;
-          console.log('✅ Replicate image analysis completed:', {
+          console.log('✅ Everypixel image analysis completed:', {
             hasAnalysis: !!imageAnalysis,
-            analysisLength: imageAnalysis?.length,
-            preview: imageAnalysis?.substring(0, 100)
+            type: typeof imageAnalysis,
+            keywords: imageAnalysis?.keywords?.length || 0,
+            preview: imageAnalysis?.fullText?.substring(0, 100) || 'N/A'
           });
         } catch (analysisError) {
           console.warn('⚠️ Image analysis failed, continuing without it:', analysisError.message);
@@ -42,7 +43,7 @@ const AIDescriptionPanel = ({ formData, photos, onDescriptionChange, aiDescripti
         materials: formData?.materials || [],
         features: formData?.tags || [],
         imageUrls: photos?.map(photo => photo.url || photo) || [],
-        imageAnalysis: imageAnalysis, // Pass Replicate analysis to Gemini
+        imageAnalysis: imageAnalysis, // Pass Everypixel analysis to Gemini
         price: formData?.price,
         dimensions: formData?.dimensions
       };

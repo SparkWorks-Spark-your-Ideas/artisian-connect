@@ -7,7 +7,7 @@ import { asyncHandler } from '../middleware/errorHandler.js';
 import { uploadMultiple, processUpload } from '../middleware/upload.js';
 import { uploadMultipleFiles } from '../services/cloudinaryStorage.js';
 import { generateProductDescription } from '../services/geminiAI.js';
-import { analyzeProductImage } from '../services/replicateAI.js';
+import { analyzeProductImage } from '../services/everypixelAI.js';
 
 
 const router = Router();
@@ -150,7 +150,7 @@ router.post('/auto-describe',
       materials = [], 
       features = [],
       imageUrls = [],
-      imageAnalysis = null, // Image analysis from Replicate LLAVA
+      imageAnalysis = null, // Image analysis from Everypixel
       price,
       dimensions
     } = req.body;
@@ -162,7 +162,11 @@ router.post('/auto-describe',
       featuresCount: features.length,
       imageUrlsCount: imageUrls.length,
       hasImageAnalysis: !!imageAnalysis,
-      imageAnalysisPreview: imageAnalysis ? imageAnalysis.substring(0, 100) + '...' : 'none'
+      imageAnalysisPreview: imageAnalysis 
+        ? (typeof imageAnalysis === 'string' 
+            ? imageAnalysis.substring(0, 100) + '...' 
+            : imageAnalysis.fullText?.substring(0, 100) + '...' || 'object received')
+        : 'none'
     });
 
     if (!productName || !category) {
@@ -178,7 +182,7 @@ router.post('/auto-describe',
     const featuresArray = Array.isArray(features) ? features : (features ? [features] : []);
 
     try {
-      console.log('🤖 Generating AI description with Vertex AI for:', { 
+      console.log('🤖 Generating AI description with Gemini AI for:', { 
         productName, 
         category, 
         materials: materialsArray, 
@@ -186,7 +190,7 @@ router.post('/auto-describe',
         hasImageAnalysis: !!imageAnalysis 
       });
       
-      // Generate description using Vertex AI with optional image analysis from Vision API
+      // Generate description using Gemini AI with optional image analysis from Everypixel
       const result = await generateProductDescription(
         productName,
         category,
@@ -196,7 +200,7 @@ router.post('/auto-describe',
           price,
           dimensions,
           photoCount: imageUrls.length,
-          imageAnalysis: imageAnalysis // Pass Vision API analysis to Vertex AI
+          imageAnalysis: imageAnalysis // Pass Everypixel analysis to Gemini AI
         }
       );
 
@@ -237,7 +241,7 @@ router.post('/auto-describe',
 
 /**
  * POST /api/products/analyze-image
- * Analyze product image using Replicate LLAVA API
+ * Analyze product image using Everypixel API
  * This should be called FIRST before generating description
  */
 router.post('/analyze-image', 
@@ -261,36 +265,36 @@ router.post('/analyze-image',
     }
 
     try {
-      console.log('🔍 Starting Replicate LLAVA analysis for image...');
+      console.log('🔍 Starting Everypixel analysis for image...');
       const analysis = await analyzeProductImage(imageUrl);
 
-      console.log('✅ Replicate image analysis completed successfully');
+      console.log('✅ Everypixel image analysis completed successfully');
       res.json({
         success: true,
-        message: 'Image analysis completed successfully using Replicate LLAVA',
+        message: 'Image analysis completed successfully using Everypixel AI',
         data: {
           analysis,
           imageUrl,
-          aiService: 'Replicate LLAVA'
+          aiService: 'Everypixel AI'
         }
       });
     } catch (error) {
-      console.error('❌ Replicate analysis error:', error.message);
+      console.error('❌ Everypixel analysis error:', error.message);
       
       // Return detailed error with actionable suggestions
       const errorResponse = {
         success: false,
-        error: 'Replicate API Service Error',
+        error: 'Everypixel API Service Error',
         message: error.message || 'Failed to analyze product image'
       };
       
       // Add helpful suggestions based on error type
       if (error.code === 'MISSING_CREDENTIALS') {
         errorResponse.details = {
-          suggestion: 'Configure Replicate API token',
+          suggestion: 'Configure Everypixel API credentials',
           steps: [
-            'Get your API token from https://replicate.com/account/api-tokens',
-            'Set REPLICATE_API_TOKEN in .env file',
+            'Get your API credentials from https://www.everypixel.com/api',
+            'Set EVERYPIXEL_CLIENT_ID and EVERYPIXEL_CLIENT_SECRET in .env file',
             'Restart the server'
           ]
         };
@@ -299,7 +303,7 @@ router.post('/analyze-image',
           suggestion: 'Rate limit exceeded',
           steps: [
             'Wait a few moments before trying again',
-            'Consider upgrading your Replicate plan for higher limits'
+            'Consider upgrading your Everypixel plan for higher limits'
           ]
         };
       } else if (error.message?.includes('Invalid image URL')) {

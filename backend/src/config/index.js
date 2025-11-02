@@ -34,9 +34,10 @@ export const config = {
     visionModel: process.env.GEMINI_VISION_MODEL || 'models/gemini-2.5-flash',
   },
 
-  // Replicate AI Configuration (Image Analysis)
-  replicate: {
-    apiToken: process.env.REPLICATE_API_TOKEN,
+  // Everypixel AI Configuration (Image Analysis)
+  everypixel: {
+    clientId: process.env.EVERYPIXEL_CLIENT_ID,
+    clientSecret: process.env.EVERYPIXEL_CLIENT_SECRET,
   },
 
   // Security Configuration
