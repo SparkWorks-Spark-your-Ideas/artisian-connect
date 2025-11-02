@@ -3,7 +3,7 @@ import Image from '../../../components/AppImage';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 
-const ProductCard = ({ product, onEdit, onDuplicate, onArchive, onSelect, isSelected, viewMode = 'grid' }) => {
+const ProductCard = ({ product, onEdit, onDuplicate, onArchive, onSelect, isSelected, viewMode = 'grid', onViewDetails }) => {
   const getStatusColor = (status) => {
     switch (status) {
       case 'In Stock':
@@ -25,13 +25,17 @@ const ProductCard = ({ product, onEdit, onDuplicate, onArchive, onSelect, isSele
 
   if (viewMode === 'list') {
     return (
-      <div className="bg-card border border-border rounded-lg p-4 hover:shadow-warm-md transition-shadow duration-200">
+      <div 
+        className="bg-card border border-border rounded-lg p-4 hover:shadow-warm-md transition-shadow duration-200 cursor-pointer"
+        onClick={() => onViewDetails && onViewDetails(product)}
+      >
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-3">
             <input
               type="checkbox"
               checked={isSelected}
               onChange={(e) => onSelect(product?.id, e?.target?.checked)}
+              onClick={(e) => e.stopPropagation()}
               className="w-4 h-4 text-primary border-border rounded focus:ring-primary focus:ring-2"
             />
             <div className="w-16 h-16 rounded-lg overflow-hidden bg-muted">
@@ -80,13 +84,22 @@ const ProductCard = ({ product, onEdit, onDuplicate, onArchive, onSelect, isSele
           </div>
           
           <div className="flex items-center space-x-2">
-            <Button variant="ghost" size="sm" onClick={() => onEdit(product?.id)}>
+            <Button variant="ghost" size="sm" onClick={(e) => {
+              e.stopPropagation();
+              onEdit(product?.id);
+            }}>
               <Icon name="Edit" size={16} />
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => onDuplicate(product?.id)}>
+            <Button variant="ghost" size="sm" onClick={(e) => {
+              e.stopPropagation();
+              onDuplicate(product?.id);
+            }}>
               <Icon name="Copy" size={16} />
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => onArchive(product?.id)}>
+            <Button variant="ghost" size="sm" onClick={(e) => {
+              e.stopPropagation();
+              onArchive(product?.id);
+            }}>
               <Icon name="Archive" size={16} />
             </Button>
           </div>
@@ -97,12 +110,16 @@ const ProductCard = ({ product, onEdit, onDuplicate, onArchive, onSelect, isSele
 
   return (
     <div className="bg-card border border-border rounded-lg overflow-hidden hover:shadow-warm-md transition-shadow duration-200">
-      <div className="relative">
+      <div 
+        className="relative cursor-pointer"
+        onClick={() => onViewDetails && onViewDetails(product)}
+      >
         <div className="absolute top-2 left-2 z-10">
           <input
             type="checkbox"
             checked={isSelected}
             onChange={(e) => onSelect(product?.id, e?.target?.checked)}
+            onClick={(e) => e.stopPropagation()}
             className="w-4 h-4 text-primary border-border rounded focus:ring-primary focus:ring-2"
           />
         </div>
@@ -122,7 +139,10 @@ const ProductCard = ({ product, onEdit, onDuplicate, onArchive, onSelect, isSele
         </div>
       </div>
       <div className="p-4">
-        <div className="mb-3">
+        <div 
+          className="mb-3 cursor-pointer"
+          onClick={() => onViewDetails && onViewDetails(product)}
+        >
           <h3 className="font-semibold text-foreground mb-1 line-clamp-2">{product?.name}</h3>
           <p className="text-sm text-muted-foreground mb-1">{product?.category}</p>
           <p className="text-xs text-muted-foreground">SKU: {product?.sku}</p>
@@ -153,13 +173,22 @@ const ProductCard = ({ product, onEdit, onDuplicate, onArchive, onSelect, isSele
         </div>
         
         <div className="flex items-center space-x-1">
-          <Button variant="outline" size="sm" onClick={() => onEdit(product?.id)} className="flex-1">
+          <Button variant="outline" size="sm" onClick={(e) => {
+            e.stopPropagation();
+            onEdit(product?.id);
+          }} className="flex-1">
             <Icon name="Edit" size={14} />
           </Button>
-          <Button variant="ghost" size="sm" onClick={() => onDuplicate(product?.id)}>
+          <Button variant="ghost" size="sm" onClick={(e) => {
+            e.stopPropagation();
+            onDuplicate(product?.id);
+          }}>
             <Icon name="Copy" size={14} />
           </Button>
-          <Button variant="ghost" size="sm" onClick={() => onArchive(product?.id)}>
+          <Button variant="ghost" size="sm" onClick={(e) => {
+            e.stopPropagation();
+            onArchive(product?.id);
+          }}>
             <Icon name="Archive" size={14} />
           </Button>
         </div>

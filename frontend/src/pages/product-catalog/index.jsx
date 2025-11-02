@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Header from '../../components/ui/Header';
 import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
@@ -7,13 +7,17 @@ import ProductCard from './components/ProductCard';
 import FilterPanel from './components/FilterPanel';
 import InventoryAnalytics from './components/InventoryAnalytics';
 import BulkActions from './components/BulkActions';
+import ProductDetailsModal from './components/ProductDetailsModal';
 import { api } from '../../utils/api';
 
 const ProductCatalog = () => {
+  const navigate = useNavigate();
   const [viewMode, setViewMode] = useState('grid');
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [selectedProducts, setSelectedProducts] = useState([]);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [products, setProducts] = useState([]);
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -239,7 +243,8 @@ const ProductCatalog = () => {
 
   const handleProductEdit = (productId) => {
     console.log('Edit product:', productId);
-    // Navigate to product edit page
+    // Navigate to product edit page (you can implement this later)
+    alert(`Edit functionality for product ${productId} - Coming soon!`);
   };
 
   const handleProductDuplicate = (productId) => {
@@ -250,6 +255,11 @@ const ProductCatalog = () => {
   const handleProductArchive = (productId) => {
     console.log('Archive product:', productId);
     // Implementation would archive the product
+  };
+
+  const handleViewDetails = (product) => {
+    setSelectedProduct(product);
+    setShowDetailsModal(true);
   };
 
   return (
@@ -413,6 +423,7 @@ const ProductCatalog = () => {
                     onEdit={handleProductEdit}
                     onDuplicate={handleProductDuplicate}
                     onArchive={handleProductArchive}
+                    onViewDetails={handleViewDetails}
                   />
                 ))}
               </div>
@@ -420,6 +431,17 @@ const ProductCatalog = () => {
           </div>
         </div>
       </div>
+
+      {/* Product Details Modal */}
+      <ProductDetailsModal
+        product={selectedProduct}
+        isOpen={showDetailsModal}
+        onClose={() => {
+          setShowDetailsModal(false);
+          setSelectedProduct(null);
+        }}
+        onEdit={handleProductEdit}
+      />
     </div>
   );
 };
