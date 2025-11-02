@@ -56,34 +56,47 @@ const ArtisanProfileSetup = () => {
   const loadExistingProfile = async () => {
     try {
       const response = await api.user.getProfile();
-      const profile = response.data;
+      console.log('📥 Loaded profile:', response.data);
       
-      if (profile) {
-        setProfilePhoto(profile.profilePhoto);
-        setSelectedCrafts(profile.crafts || []);
-        setBio(profile.bio || '');
-        setLocationData(profile.location || {
-          city: '',
-          district: '',
-          state: '',
-          pinCode: ''
-        });
-        setPortfolioImages(profile.portfolio || []);
-        setContactData(profile.contact || {
-          phone: '',
-          email: '',
-          whatsapp: '',
-          website: '',
-          instagram: '',
-          facebook: ''
-        });
-        setSkillsData(profile.skills || {
-          experienceLevel: '',
-          yearsOfPractice: '',
-          specialization: '',
-          techniques: [],
-          tools: '',
-          awards: ''
+      const profile = response.data?.data?.user || response.data?.user;
+      
+      if (profile && profile.artisanProfile) {
+        // Map backend data to frontend state
+        const ap = profile.artisanProfile;
+        
+        if (profile.profilePhoto) setProfilePhoto(profile.profilePhoto);
+        if (ap.craftSpecializations) setSelectedCrafts(ap.craftSpecializations);
+        if (profile.bio || ap.bio) setBio(profile.bio || ap.bio);
+        
+        if (profile.location) {
+          setLocationData({
+            city: profile.location.city || '',
+            district: profile.location.district || '',
+            state: profile.location.state || '',
+            pinCode: profile.location.pincode || profile.location.pinCode || ''
+          });
+        }
+        
+        if (ap.portfolioImages) setPortfolioImages(ap.portfolioImages);
+        
+        if (profile.phone || profile.email || ap.socialLinks) {
+          setContactData({
+            phone: profile.phone || '',
+            email: profile.email || '',
+            whatsapp: ap.socialLinks?.whatsapp || '',
+            website: ap.socialLinks?.website || '',
+            instagram: ap.socialLinks?.instagram || '',
+            facebook: ap.socialLinks?.facebook || ''
+          });
+        }
+        
+        setSkillsData({
+          experienceLevel: ap.experienceLevel || '',
+          yearsOfPractice: ap.yearsOfExperience?.toString() || '',
+          specialization: ap.specializationFocus || '',
+          techniques: ap.craftTechniques || [],
+          tools: ap.toolsAndEquipment || '',
+          awards: ap.awardsRecognition || ''
         });
       }
     } catch (error) {
@@ -189,6 +202,14 @@ const ArtisanProfileSetup = () => {
         skills: skillsData,
         completedAt: new Date().toISOString()
       };
+
+      console.log('📤 FRONTEND - Sending profileData:', {
+        profilePhoto: profilePhoto || 'MISSING',
+        craftsCount: selectedCrafts?.length,
+        bioLength: bio?.length,
+        location: locationData,
+        portfolioCount: portfolioImages?.length
+      });
 
       await api.user.updateArtisanProfile(profileData);
       

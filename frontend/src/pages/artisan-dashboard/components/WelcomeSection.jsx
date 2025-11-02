@@ -29,60 +29,46 @@ const WelcomeSection = () => {
     try {
       setLoading(true);
       
-      // Try to fetch from API first (will work once auth is enabled)
+      // Try to fetch from API first
       try {
+        console.log('🔍 Fetching user profile from API...');
         const response = await api.user.getProfile();
+        console.log('📥 API Response:', response.data);
+        
         const profile = response.data?.data?.user || response.data?.user || response.data;
+        console.log('👤 Parsed profile:', profile);
+        
+        // Store the profile
         setUserProfile(profile);
         localStorage.setItem('userProfile', JSON.stringify(profile));
-        console.log('👤 User profile loaded from API:', profile);
+        
+        console.log('✅ User profile loaded from API');
+        setLoading(false);
         return;
       } catch (apiError) {
-        console.log('⚠️ API call failed, using stored or fallback profile');
+        console.log('⚠️ API call failed:', apiError.message);
+        console.log('Falling back to localStorage or fallback profile');
       }
       
       // Check localStorage for stored user profile
       const storedProfile = localStorage.getItem('userProfile');
       
       if (storedProfile) {
-        const parsedProfile = JSON.parse(storedProfile);
-        setUserProfile(parsedProfile);
-        console.log('👤 User profile loaded from localStorage:', parsedProfile);
+        try {
+          const parsedProfile = JSON.parse(storedProfile);
+          setUserProfile(parsedProfile);
+          console.log('👤 User profile loaded from localStorage:', parsedProfile);
+        } catch (parseError) {
+          console.error('Failed to parse stored profile:', parseError);
+          setUserProfile(null);
+        }
       } else {
-        // Create a realistic fallback based on your actual artisan
-        const fallbackProfile = {
-          fullName: 'Spark Works User',
-          firstName: 'Spark Works',
-          lastName: 'User',
-          profilePhoto: null,
-          avatarUrl: null,
-          email: 'sparkworks@example.com',
-          craftSpecializations: ['Traditional Pottery & Ceramics'],
-          userType: 'artisan',
-          location: {
-            city: 'Mumbai',
-            state: 'Maharashtra',
-            district: 'Mumbai Suburban',
-            country: 'India'
-          },
-          artisanProfile: {
-            businessName: 'Spark Works Crafts',
-            yearsOfExperience: 5,
-            specializations: ['Pottery', 'Ceramics'],
-            isVerified: true
-          }
-        };
-        
-        setUserProfile(fallbackProfile);
-        localStorage.setItem('userProfile', JSON.stringify(fallbackProfile));
-        console.log('👤 Using fallback profile for development');
+        console.log('❌ No stored profile found');
+        setUserProfile(null);
       }
     } catch (error) {
       console.error('Failed to fetch user profile:', error);
-      setUserProfile({
-        fullName: 'Artisan User',
-        craftSpecializations: ['Artisan']
-      });
+      setUserProfile(null);
     } finally {
       setLoading(false);
     }
@@ -131,14 +117,26 @@ const WelcomeSection = () => {
 
   const getUserDisplayName = () => {
     if (loading) return 'Loading...';
-    if (!userProfile?.fullName) return 'Guest User';
-    return userProfile.fullName;
+    if (!userProfile) return 'Guest User';
+    
+    // Try fullName first
+    if (userProfile.fullName) return userProfile.fullName;
+    
+    // Combine firstName and lastName
+    if (userProfile.firstName) {
+      return userProfile.lastName 
+        ? `${userProfile.firstName} ${userProfile.lastName}`
+        : userProfile.firstName;
+    }
+    
+    return 'Guest User';
   };
 
   const getUserProfilePhoto = () => {
-    if (userProfile?.profilePhoto) {
-      return userProfile.profilePhoto;
-    }
+    // Check multiple possible fields for profile photo
+    if (userProfile?.profilePhoto) return userProfile.profilePhoto;
+    if (userProfile?.avatarUrl) return userProfile.avatarUrl;
+    
     // Fallback to default avatar
     return "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=face";
   };
