@@ -1,64 +1,129 @@
 /**
  * Gemini API Integration for Content Generation
- * Direct client-side integration with Google's Gemini AI API
+ * Integrates with backend marketing API with client-side fallback
  */
+
+import { api } from './api';
 
 // For demo purposes, using a mock API key. In production, this should be handled by your backend.
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyC2ArZm2BBsfeW5HhgK21Ui9Tr19H1RyY0'; // Hardcoded fallback for testing
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
 // Debug log to check if API key is loaded
-console.log('Gemini API Key loaded:', GEMINI_API_KEY !== 'demo-key' ? 'Yes' : 'No (using demo-key)');
-console.log('API Key first 10 chars:', GEMINI_API_KEY ? GEMINI_API_KEY.substring(0, 10) + '...' : 'Not found');
-console.log('Full API Key check:', GEMINI_API_KEY);
-console.log('Environment check:', import.meta.env.VITE_GEMINI_API_KEY);
+console.log('🔑 Gemini API Key loaded:', GEMINI_API_KEY ? '✓' : '✗');
+console.log('🔑 API Key first 10 chars:', GEMINI_API_KEY ? GEMINI_API_KEY.substring(0, 10) + '...' : 'Not found');
 
 /**
- * Generate marketing content using Gemini AI
+ * Generate marketing content using backend API with client fallback
  * @param {Array} products - Array of selected products
  * @param {string} platform - Target social media platform
  * @param {string} tone - Content tone (professional, casual, enthusiastic)
  * @returns {Promise<Object>} Generated content object
  */
 export const generateMarketingContent = async (products, platform = 'instagram', tone = 'enthusiastic') => {
+  // Ensure we have at least one product
+  if (!products || products.length === 0) {
+    console.error('No products provided to generateMarketingContent');
+    throw new Error('No products provided for content generation');
+  }
+
+  try {
+    // First attempt to use the backend API for content generation
+    console.log('🚀 Attempting to use backend API for content generation');
+    
+    // Prepare product data for the backend
+    const product = products[0]; // Use first product
+    const productData = {
+      name: product.productName || product.name,
+      category: product.craftCategory || product.category,
+      price: product.priceInr || product.price,
+      description: product.shortDescription || product.description,
+      materials: product.materialsUsed || [],
+      imageUrl: product.productPhotos?.[0] || product.imageUrls?.[0]
+    };
+    
+    // Prepare request payload
+    const contentData = {
+      type: 'social', // social media content
+      productInfo: productData,
+      targetAudience: 'People interested in authentic handmade crafts',
+      tone,
+      platform
+    };
+    
+    console.log('📤 Sending request to backend API:', contentData);
+    
+    // Try calling the backend API
+    const response = await api.marketing.generateContent(contentData);
+    
+    console.log('📥 Backend response received:', response.data);
+    
+    // Process backend response
+    if (response.data && response.data.success) {
+      const backendContent = response.data.data;
+      
+      // Parse the content to extract different parts
+      const generatedText = backendContent.content || backendContent;
+      
+      // Extract hashtags from the generated content
+      const hashtagMatches = generatedText.match(/#\w+/g) || [];
+      const hashtags = hashtagMatches.slice(0, 8); // Limit to 8 hashtags
+      
+      // Remove hashtags from main caption for cleaner display
+      const caption = generatedText.replace(/#\w+/g, '').trim();
+      
+      return {
+        caption,
+        hashtags: hashtags.length > 0 ? hashtags : generateHashtagsForProduct(product, platform),
+        platform,
+        tone,
+        bestTime: getBestPostingTime(platform),
+        engagement: getEngagementTip(platform, product),
+        selectedProducts: products.map(p => p.id),
+        generatedAt: new Date().toISOString()
+      };
+    }
+    
+    // If backend fails or returns unexpected data, fall back to direct API or mock
+    console.log('⚠️ Backend response invalid or unsuccessful, falling back to direct API');
+  } catch (error) {
+    console.error('❌ Backend API error:', error);
+    console.log('🔄 Attempting direct Gemini API call');
+  }
+  
+  // Backend failed, attempt direct API call
   try {
     // Create detailed product descriptions for the prompt
-    const productDescriptions = products.map(product => {
-      return `Product: ${product.name}
-Price: ₹${product.price.toLocaleString('en-IN')}
-Category: ${product.category || 'Handcrafted Item'}
-Description: ${product.description}
-Materials: ${product.materials || 'Traditional materials'}
-Artisan Specialty: ${product.specialty || 'Traditional craftsmanship'}`;
-    }).join('\n\n');
-
+    const product = products[0];
+    
     // Create a highly detailed prompt for Gemini
     const prompt = `Create engaging ${platform} marketing content for this product:
 
-PRODUCT: ${products[0]?.name}
-PRICE: ₹${products[0]?.price?.toLocaleString('en-IN')}
-DESCRIPTION: ${products[0]?.description}
-MATERIALS: ${products[0]?.materials?.join(', ') || 'traditional materials'}
-ARTISAN: ${products[0]?.artisan?.firstName} ${products[0]?.artisan?.lastName} from ${products[0]?.artisan?.location?.city}, ${products[0]?.artisan?.location?.state}
+PRODUCT: ${product.productName || product.name}
+PRICE: ₹${(product.priceInr || product.price).toLocaleString('en-IN')}
+DESCRIPTION: ${product.shortDescription || product.description}
+MATERIALS: ${(product.materialsUsed || []).join(', ') || 'traditional materials'}
+CRAFT: ${product.craftCategory || product.category}
 
 Write a compelling ${tone} ${platform} caption that:
 - Mentions the specific product name and exact price
 - Highlights the craftsmanship and materials
-- Tells the artisan's story
+- Emphasizes authentic Indian craftsmanship
 - Uses appropriate ${platform} style and tone
-- Includes a call-to-action
+- Includes 5-7 relevant hashtags
+- Adds a call-to-action
 
 Write 150-200 words maximum. Make it engaging and authentic.`;
 
     // Check if we have a real API key
-    if (GEMINI_API_KEY === 'demo-key' || !GEMINI_API_KEY) {
-      console.log('No valid Gemini API key found, using mock content');
+    if (!GEMINI_API_KEY) {
+      console.log('⚠️ No valid Gemini API key found, using mock content');
       return generateMockContent(products, platform, tone);
     }
 
-    console.log('Making real Gemini API call for products:', products.map(p => p.name));
-    console.log('Platform:', platform, 'Tone:', tone);
-    console.log('Full prompt being sent to Gemini:', prompt.substring(0, 200) + '...');
+    console.log('🔮 Making direct Gemini API call');
+    console.log('🎯 Platform:', platform, '| Tone:', tone);
+    console.log('📝 Prompt excerpt:', prompt.substring(0, 100) + '...');
 
     // Make actual API call to Gemini
     const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
@@ -76,42 +141,35 @@ Write 150-200 words maximum. Make it engaging and authentic.`;
           temperature: 0.7,
           topK: 40,
           topP: 0.95,
-          maxOutputTokens: 2048, // Increased from 1024 to 2048
+          maxOutputTokens: 1024,
         }
       })
     });
 
-    console.log('Gemini API Response Status:', response.status);
+    console.log('📊 Gemini API Response Status:', response.status);
     
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Gemini API Error Details:', errorText);
+      console.error('❌ Gemini API Error:', errorText);
       throw new Error(`Gemini API error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
-    console.log('Gemini API Response Data:', data);
-    console.log('Response structure check:');
-    console.log('- Has candidates:', !!data.candidates);
-    console.log('- Candidates length:', data.candidates?.length);
-    console.log('- First candidate:', data.candidates?.[0]);
     
     // Check if the response has the expected structure
     if (!data.candidates || data.candidates.length === 0) {
-      console.error('No candidates in response:', data);
+      console.error('❌ No candidates in response');
       throw new Error('No content generated by Gemini API');
     }
     
     const candidate = data.candidates[0];
-    console.log('Candidate structure:', candidate);
-    console.log('Finish reason:', candidate.finishReason);
     
     if (!candidate.content || !candidate.content.parts || candidate.content.parts.length === 0) {
-      console.error('Invalid candidate structure:', candidate);
+      console.error('❌ Invalid candidate structure');
       
       // If it's a MAX_TOKENS issue, try to handle it gracefully
       if (candidate.finishReason === 'MAX_TOKENS') {
-        console.warn('Response was truncated due to token limit, falling back to mock content');
+        console.warn('⚠️ Response was truncated due to token limit');
         return generateMockContent(products, platform, tone);
       }
       
@@ -119,28 +177,38 @@ Write 150-200 words maximum. Make it engaging and authentic.`;
     }
     
     const generatedText = candidate.content.parts[0].text;
-    console.log('Generated Text from Gemini:', generatedText);
+    console.log('✅ Generated Text from Gemini (excerpt):', 
+      generatedText.substring(0, 100) + '...');
     
-    // Since we're getting natural text (not JSON), structure it properly
+    // Extract hashtags from the generated content
+    const hashtagMatches = generatedText.match(/#\w+/g) || [];
+    const hashtags = hashtagMatches.length > 0 
+      ? hashtagMatches.slice(0, 8) 
+      : generateHashtagsForProduct(products[0], platform);
+    
+    // Remove hashtags from main caption for cleaner display
+    const caption = generatedText.replace(/#\w+/g, '').trim();
+    
+    // Structure the content properly
     const content = {
-      caption: generatedText.trim(),
-      hashtags: generateHashtagsForProduct(products[0], platform),
+      caption,
+      hashtags,
       bestTime: getBestPostingTime(platform),
       engagement: getEngagementTip(platform, products[0]),
-      callToAction: `Shop this amazing ${products[0]?.name} for ₹${products[0]?.price?.toLocaleString('en-IN')}!`,
-      tips: getMarketingTips(platform, products[0])
+      selectedProducts: products.map(p => p.id),
     };
     
     return {
       ...content,
       generatedAt: new Date().toISOString(),
       platform,
-      products: products.map(p => ({ id: p.id, name: p.name }))
+      tone
     };
 
   } catch (error) {
-    console.error('Error generating content with Gemini:', error);
+    console.error('❌ Error generating content with Gemini:', error);
     // Fallback to mock content
+    console.log('🔄 Using fallback mock content');
     return generateMockContent(products, platform, tone);
   }
 };

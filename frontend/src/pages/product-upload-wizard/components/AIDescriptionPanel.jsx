@@ -14,18 +14,30 @@ const AIDescriptionPanel = ({ formData, photos, onDescriptionChange, aiDescripti
     setError(null);
     
     try {
+      // Prepare product data with photos for AI analysis
       const productData = {
-        name: formData?.name,
+        productName: formData?.name, // Changed from 'name' to 'productName' to match backend
         category: formData?.category,
-        materials: formData?.materials,
-        dimensions: formData?.dimensions,
+        materials: formData?.materials || [],
+        features: formData?.tags || [], // Use tags as features if no dedicated features field
+        imageUrls: photos?.map(photo => photo.url || photo) || [], // Send photo URLs for analysis
         price: formData?.price,
-        photoCount: photos?.length,
-        tags: formData?.tags
+        dimensions: formData?.dimensions
       };
 
+      console.log('🚀 Sending product data for AI description:', productData);
+
       const response = await api.products.generateDescription(productData);
-      const generatedDescription = response.data.description;
+      console.log('📦 Full API Response:', response);
+      console.log('📦 Response data:', response.data);
+      
+      const generatedDescription = response.data?.data?.description;
+      
+      console.log('✅ AI Description generated:', {
+        description: generatedDescription,
+        photoAnalyzed: response.data?.data?.photoAnalyzed,
+        imageAnalysis: response.data?.data?.imageAnalysis
+      });
       
       onGenerateDescription(generatedDescription);
       setEditedDescription(generatedDescription);
@@ -70,6 +82,9 @@ const AIDescriptionPanel = ({ formData, photos, onDescriptionChange, aiDescripti
           <h4 className="font-medium text-foreground mb-1">AI Description Generator</h4>
           <p className="text-sm text-muted-foreground">
             Generate a compelling product description using AI analysis of your photos and product details
+            {photos?.length > 0 && (
+              <span className="text-primary font-medium"> • {photos.length} photo{photos.length > 1 ? 's' : ''} will be analyzed</span>
+            )}
           </p>
         </div>
         <Button

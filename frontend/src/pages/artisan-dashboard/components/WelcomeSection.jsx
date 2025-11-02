@@ -1,15 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import Icon from '../../../components/AppIcon';
 import Image from '../../../components/AppImage';
+import { api } from '../../../utils/api';
 
 const WelcomeSection = () => {
   const [currentLanguage, setCurrentLanguage] = useState('en');
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [userProfile, setUserProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Check localStorage for saved language preference
     const savedLanguage = localStorage.getItem('selectedLanguage') || 'en';
     setCurrentLanguage(savedLanguage);
+
+    // Fetch user profile data
+    fetchUserProfile();
 
     // Update time every minute
     const timer = setInterval(() => {
@@ -18,6 +24,54 @@ const WelcomeSection = () => {
 
     return () => clearInterval(timer);
   }, []);
+
+  const fetchUserProfile = async () => {
+    try {
+      setLoading(true);
+      // Since authentication is temporarily disabled, let's check if we have a stored user profile
+      const storedProfile = localStorage.getItem('userProfile');
+      
+      if (storedProfile) {
+        const parsedProfile = JSON.parse(storedProfile);
+        setUserProfile(parsedProfile);
+        console.log('👤 User profile loaded from localStorage:', parsedProfile);
+      } else {
+        // Try to fetch from API (will work once auth is enabled)
+        try {
+          const response = await api.user.getProfile();
+          setUserProfile(response.data?.data?.user || response.data?.user || response.data);
+          console.log('👤 User profile loaded from API:', response.data);
+        } catch (error) {
+          console.log('API call failed, using fallback profile');
+          // Set fallback data based on your database schema
+          const fallbackProfile = {
+            fullName: 'Spark Works User', // This will be replaced with real data
+            profilePhoto: null,
+            emailAddress: 'sparkworks@gmail.com',
+            craftSpecializations: ['Pottery & Ceramics'],
+            location: {
+              city: 'Mumbai',
+              state: 'Maharashtra',
+              district: 'Mumbai'
+            }
+          };
+          setUserProfile(fallbackProfile);
+          // Store in localStorage for future visits during development
+          localStorage.setItem('userProfile', JSON.stringify(fallbackProfile));
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch user profile:', error);
+      // Set fallback data if everything fails
+      setUserProfile({
+        fullName: 'Guest User',
+        profilePhoto: null,
+        craftSpecializations: ['Artisan']
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getGreeting = () => {
     const hour = currentTime?.getHours();
@@ -42,21 +96,36 @@ const WelcomeSection = () => {
   };
 
   const getWelcomeText = () => {
+    const primarySpecialization = userProfile?.craftSpecializations?.[0] || 'Artisan';
     const texts = {
       en: {
         welcome: "Welcome back to your craft journey!",
-        subtitle: "Traditional Pottery Artisan",
+        subtitle: `Traditional ${primarySpecialization}`,
         description: "Continue creating beautiful handcrafted pieces and growing your digital presence.",
         todayIs: "Today is"
       },
       hi: {
         welcome: "अपनी शिल्प यात्रा में वापस स्वागत है!",
-        subtitle: "पारंपरिक मिट्टी के बर्तन कारीगर",
+        subtitle: `पारंपरिक ${primarySpecialization} कारीगर`,
         description: "सुंदर हस्तशिल्प बनाना जारी रखें और अपनी डिजिटल उपस्थिति बढ़ाएं।",
         todayIs: "आज है"
       }
     };
     return texts?.[currentLanguage];
+  };
+
+  const getUserDisplayName = () => {
+    if (loading) return 'Loading...';
+    if (!userProfile?.fullName) return 'Guest User';
+    return userProfile.fullName;
+  };
+
+  const getUserProfilePhoto = () => {
+    if (userProfile?.profilePhoto) {
+      return userProfile.profilePhoto;
+    }
+    // Fallback to default avatar
+    return "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=face";
   };
 
   const formatDate = () => {
@@ -81,11 +150,15 @@ const WelcomeSection = () => {
         {/* Profile Section */}
         <div className="flex items-center space-x-4">
           <div className="relative">
-            <Image
-              src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=face"
-              alt="Artisan Profile"
-              className="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover border-4 border-primary/20"
-            />
+            {loading ? (
+              <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-muted animate-pulse border-4 border-primary/20" />
+            ) : (
+              <Image
+                src={getUserProfilePhoto()}
+                alt="Artisan Profile"
+                className="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover border-4 border-primary/20"
+              />
+            )}
             <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-success rounded-full border-2 border-card flex items-center justify-center">
               <Icon name="Check" size={12} color="white" />
             </div>
@@ -93,7 +166,7 @@ const WelcomeSection = () => {
           
           <div>
             <h1 className="text-xl md:text-2xl font-bold text-foreground">
-              {getGreeting()}, राज कुमार!
+              {getGreeting()}, {getUserDisplayName()}!
             </h1>
             <p className="text-sm text-primary font-medium">{text?.subtitle}</p>
           </div>
