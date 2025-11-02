@@ -49,8 +49,9 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 401) {
       // Handle unauthorized access
       localStorage.removeItem('authToken');
-      // Temporarily comment out auto-redirect to allow development
-      // window.location.href = '/login';
+      localStorage.removeItem('userProfile');
+      // Redirect to login
+      window.location.href = '/login';
       console.warn('Authentication required - please login');
     }
     return Promise.reject(error);

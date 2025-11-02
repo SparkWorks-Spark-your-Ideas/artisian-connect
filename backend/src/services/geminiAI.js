@@ -6,7 +6,7 @@ import { config } from '../config/index.js';
 const genAI = new GoogleGenerativeAI(config.gemini.apiKey);
 
 /**
- * Generate product description using Gemini API + Replicate image analysis
+ * Generate product description using Gemini API + Everypixel image analysis
  * This is used for the "Add New Product" page to analyze images and create descriptions
  */
 export const generateProductDescription = async (productName, category, materials, features, additionalContext = {}) => {
@@ -41,29 +41,52 @@ export const generateProductDescription = async (productName, category, material
     Number of photos available: ${additionalContext.photoCount}`;
   }
 
-  // Add image analysis if available from Replicate LLAVA
+  // Add image analysis if available from Everypixel
   if (additionalContext.imageAnalysis) {
-    prompt += `
+    // Handle both string format (legacy) and object format (Everypixel)
+    if (typeof additionalContext.imageAnalysis === 'string') {
+      prompt += `
     
-    Image Analysis Results from Replicate AI:
+    Image Analysis Results from Everypixel AI:
     ${additionalContext.imageAnalysis}`;
+    } else if (typeof additionalContext.imageAnalysis === 'object') {
+      // Everypixel returns structured data
+      const analysis = additionalContext.imageAnalysis;
+      prompt += `
+    
+    Image Analysis Results from Everypixel AI:
+    ${analysis.fullText || ''}
+    
+    Key Keywords: ${analysis.keywords?.join(', ') || 'N/A'}
+    Main Objects: ${analysis.mainObjects?.join(', ') || 'N/A'}
+    Materials Detected: ${analysis.materials?.join(', ') || 'N/A'}
+    Colors Identified: ${analysis.colors?.join(', ') || 'N/A'}
+    Craftsmanship Style: ${analysis.craftsmanship?.join(', ') || 'N/A'}
+    Image Quality Score: ${analysis.qualityScore ? (analysis.qualityScore * 100).toFixed(1) + '%' : 'N/A'}`;
+    }
   }
 
   prompt += `
     
-    Please create a description that:
-    1. Highlights the craftsmanship and cultural significance
-    2. Mentions the traditional techniques used
-    3. Appeals to both domestic and international customers
-    4. Is SEO-friendly and engaging
-    5. Emphasizes the uniqueness and authenticity
-    6. Includes care instructions if relevant
-    7. Creates an emotional connection with potential buyers
-    8. Mentions the story behind the craft and artisan heritage
+    IMPORTANT FORMATTING RULES:
+    1. Write in plain text - DO NOT use markdown formatting (no **, no *, no #)
+    2. DO NOT use asterisks or stars for emphasis - write naturally
+    3. Use relevant emojis (✨ 🎨 🌟 ✅ 💫 🏺 🪔 etc.) to make it visually appealing
+    4. If price is provided, mention the EXACT price given - do not round or change it
+    5. Keep it between 150-300 words
+    6. Write in a flowing, natural style without bold or italic markers
     
-    Keep it between 200-400 words and make it compelling for online shoppers.
-    Focus on the authenticity, cultural heritage, and artisan skills that make this product special.
-    Use specific details about the materials and crafting process to enhance credibility.
+    Create a description that:
+    - Starts with an engaging emoji and opening line
+    - Highlights the craftsmanship and cultural significance
+    - Mentions traditional techniques and materials used
+    - Appeals to both domestic and international customers
+    - Creates emotional connection with potential buyers
+    - Includes 2-3 relevant emojis throughout (but don't overdo it)
+    - Ends with care instructions if relevant
+    - Is SEO-friendly with natural keyword placement
+    
+    Remember: Write in plain, natural text. NO markdown. NO asterisks. Just clean, engaging prose with occasional emojis.
   `;
 
   try {

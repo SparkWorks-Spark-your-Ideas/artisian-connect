@@ -26,8 +26,20 @@ const ProductSelector = ({ selectedProducts, onProductToggle }) => {
       setLoading(true);
       setError(null);
       
-      console.log('🔄 Loading products from API...');
+      // Get current user from localStorage
+      const userProfile = JSON.parse(localStorage.getItem('userProfile') || '{}');
+      const currentUserId = userProfile.uid;
+      
+      if (!currentUserId) {
+        console.warn('⚠️ No user ID found');
+        setError('Please login to view your products');
+        setLoading(false);
+        return;
+      }
+      
+      console.log('🔄 Loading products from API for user:', currentUserId);
       const response = await api.products.list({
+        artisanId: currentUserId, // Filter by current user
         limit: 50 // Get more products for marketing
       });
       

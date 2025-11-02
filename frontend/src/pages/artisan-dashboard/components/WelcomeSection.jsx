@@ -28,7 +28,20 @@ const WelcomeSection = () => {
   const fetchUserProfile = async () => {
     try {
       setLoading(true);
-      // Since authentication is temporarily disabled, let's check if we have a stored user profile
+      
+      // Try to fetch from API first (will work once auth is enabled)
+      try {
+        const response = await api.user.getProfile();
+        const profile = response.data?.data?.user || response.data?.user || response.data;
+        setUserProfile(profile);
+        localStorage.setItem('userProfile', JSON.stringify(profile));
+        console.log('👤 User profile loaded from API:', profile);
+        return;
+      } catch (apiError) {
+        console.log('⚠️ API call failed, using stored or fallback profile');
+      }
+      
+      // Check localStorage for stored user profile
       const storedProfile = localStorage.getItem('userProfile');
       
       if (storedProfile) {
@@ -36,36 +49,38 @@ const WelcomeSection = () => {
         setUserProfile(parsedProfile);
         console.log('👤 User profile loaded from localStorage:', parsedProfile);
       } else {
-        // Try to fetch from API (will work once auth is enabled)
-        try {
-          const response = await api.user.getProfile();
-          setUserProfile(response.data?.data?.user || response.data?.user || response.data);
-          console.log('👤 User profile loaded from API:', response.data);
-        } catch (error) {
-          console.log('API call failed, using fallback profile');
-          // Set fallback data based on your database schema
-          const fallbackProfile = {
-            fullName: 'Spark Works User', // This will be replaced with real data
-            profilePhoto: null,
-            emailAddress: 'sparkworks@gmail.com',
-            craftSpecializations: ['Pottery & Ceramics'],
-            location: {
-              city: 'Mumbai',
-              state: 'Maharashtra',
-              district: 'Mumbai'
-            }
-          };
-          setUserProfile(fallbackProfile);
-          // Store in localStorage for future visits during development
-          localStorage.setItem('userProfile', JSON.stringify(fallbackProfile));
-        }
+        // Create a realistic fallback based on your actual artisan
+        const fallbackProfile = {
+          fullName: 'Spark Works User',
+          firstName: 'Spark Works',
+          lastName: 'User',
+          profilePhoto: null,
+          avatarUrl: null,
+          email: 'sparkworks@example.com',
+          craftSpecializations: ['Traditional Pottery & Ceramics'],
+          userType: 'artisan',
+          location: {
+            city: 'Mumbai',
+            state: 'Maharashtra',
+            district: 'Mumbai Suburban',
+            country: 'India'
+          },
+          artisanProfile: {
+            businessName: 'Spark Works Crafts',
+            yearsOfExperience: 5,
+            specializations: ['Pottery', 'Ceramics'],
+            isVerified: true
+          }
+        };
+        
+        setUserProfile(fallbackProfile);
+        localStorage.setItem('userProfile', JSON.stringify(fallbackProfile));
+        console.log('👤 Using fallback profile for development');
       }
     } catch (error) {
       console.error('Failed to fetch user profile:', error);
-      // Set fallback data if everything fails
       setUserProfile({
-        fullName: 'Guest User',
-        profilePhoto: null,
+        fullName: 'Artisan User',
         craftSpecializations: ['Artisan']
       });
     } finally {
