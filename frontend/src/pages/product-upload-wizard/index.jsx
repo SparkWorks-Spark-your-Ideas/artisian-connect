@@ -146,7 +146,7 @@ const ProductUploadWizard = () => {
         currency: 'INR',
         stockQuantity: parseInt(formData.quantity),
         materials: formData.materials ? formData.materials.split(',').map(m => m.trim()) : [],
-        tags: seoData.keywords || [],
+        tags: Array.isArray(seoData.keywords) ? seoData.keywords : (seoData.keywords ? [seoData.keywords] : []),
         dimensions: {
           length: parseFloat(formData.length) || 0,
           width: parseFloat(formData.width) || 0,
@@ -174,8 +174,12 @@ const ProductUploadWizard = () => {
       console.log('📤 Publishing product with data:', {
         name: productData.name,
         imageUrls: productData.imageUrls,
-        uploadedPhotosCount: uploadedPhotos.length
+        uploadedPhotosCount: uploadedPhotos.length,
+        uploadedPhotos: uploadedPhotos,
+        allPhotos: photos
       });
+
+      console.log('📸 Image URLs being sent:', productData.imageUrls);
 
       const response = await api.products.create(productData);
       
@@ -184,17 +188,29 @@ const ProductUploadWizard = () => {
       // Clear any saved draft
       localStorage.removeItem('product-draft');
       
-      // Navigate to product catalog with success message
+      // Navigate to product catalog with success message and force refresh
       navigate('/product-catalog', { 
         state: { 
           message: 'Product published successfully!',
-          newProduct: response.data
-        }
+          newProduct: response.data,
+          refresh: Date.now() // Force refresh
+        },
+        replace: true
       });
     } catch (error) {
-      console.error('Error publishing product:', error);
+      console.error('❌ Error publishing product:', error);
+      console.error('❌ Error response data:', error.response?.data);
+      console.error('❌ Validation details:', error.response?.data?.details);
+      
       const errorMessage = error.response?.data?.message || 'Error publishing product. Please try again.';
-      alert(errorMessage);
+      const validationDetails = error.response?.data?.details;
+      
+      if (validationDetails && Array.isArray(validationDetails)) {
+        const detailedErrors = validationDetails.map(d => `${d.field}: ${d.message}`).join('\n');
+        alert(`Validation Errors:\n\n${detailedErrors}`);
+      } else {
+        alert(errorMessage);
+      }
     } finally {
       setIsPublishing(false);
     }

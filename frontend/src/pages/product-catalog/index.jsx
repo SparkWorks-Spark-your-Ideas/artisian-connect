@@ -121,6 +121,15 @@ const ProductCatalog = () => {
           trend: product.trend || '0.0'
         }));
 
+        console.log('🖼️ Products with images:', mappedProducts.map(p => ({
+          name: p.name,
+          id: p.id,
+          artisanId: p.artisanId,
+          thumbnailUrl: p.thumbnailUrl,
+          imageUrls: p.imageUrls,
+          mappedImage: p.image
+        })));
+
         setProducts(mappedProducts);
         console.log(`✅ Loaded ${mappedProducts.length} products from Firebase`);
       } else {

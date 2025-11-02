@@ -74,26 +74,30 @@ export const schemas = {
   // Product validation schemas
   productCreation: Joi.object({
     name: Joi.string().min(3).max(100).required(),
-    description: Joi.string().min(10).max(1000).required(),
+    description: Joi.string().min(10).max(5000).required(), // Increased for AI-generated descriptions
     category: Joi.string().required(),
     price: Joi.number().positive().required(),
     currency: Joi.string().default('INR'),
     tags: Joi.array().items(Joi.string()).optional(),
     materials: Joi.array().items(Joi.string()).optional(),
     dimensions: Joi.object({
-      length: Joi.number().positive().optional(),
-      width: Joi.number().positive().optional(),
-      height: Joi.number().positive().optional(),
-      weight: Joi.number().positive().optional()
+      length: Joi.number().min(0).optional(), // Allow 0 and decimals
+      width: Joi.number().min(0).optional(),
+      height: Joi.number().min(0).optional(),
+      weight: Joi.number().min(0).optional() // Allow 0 and decimals
     }).optional(),
     customizable: Joi.boolean().default(false),
     stockQuantity: Joi.number().integer().min(0).required(),
+    imageUrls: Joi.array().items(Joi.string().uri()).optional(), // Array of image URLs
+    thumbnailUrl: Joi.string().uri().optional(), // Thumbnail URL
+    seoTitle: Joi.string().max(100).optional(), // SEO fields
+    metaDescription: Joi.string().max(200).optional(),
     shippingInfo: Joi.object({
-      weight: Joi.number().positive().optional(),
+      weight: Joi.number().min(0).optional(), // Allow 0 and decimals
       dimensions: Joi.object({
-        length: Joi.number().positive().optional(),
-        width: Joi.number().positive().optional(),
-        height: Joi.number().positive().optional()
+        length: Joi.number().min(0).optional(),
+        width: Joi.number().min(0).optional(),
+        height: Joi.number().min(0).optional()
       }).optional(),
       processingTime: Joi.string().optional()
     }).optional()
