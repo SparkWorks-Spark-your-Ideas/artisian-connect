@@ -79,8 +79,7 @@ const ProductCatalog = () => {
         artisanId: currentUserId, // Filter by current user
         page: 1,
         limit: 50,
-        sortBy: filters.sortBy.includes('name') ? 'name' : 'createdAt',
-        sortOrder: filters.sortBy.includes('desc') ? 'desc' : 'asc',
+        // Don't send sorting to backend - we'll handle it client-side
         category: filters.category !== 'All Categories' ? filters.category : undefined,
         search: filters.search || undefined,
         minPrice: filters.priceMin || undefined,
@@ -92,22 +91,57 @@ const ProductCatalog = () => {
       if (response.data.success && response.data.data.products) {
         let fetchedProducts = response.data.data.products;
         
-        // Apply client-side filters that aren't handled by API
+        // Apply client-side filters
         let filteredProducts = fetchedProducts.filter(product => {
           // Status filter
           if (filters.status !== 'All Status') {
-            if (filters.status === 'In Stock' && product.stockQuantity <= 0) return false;
-            if (filters.status === 'Out of Stock' && product.stockQuantity > 0) return false;
-            if (filters.status === 'Low Stock' && product.stockQuantity > 5) return false;
+            const stock = product.stockQuantity || 0;
+            if (filters.status === 'In Stock' && stock <= 0) return false;
+            if (filters.status === 'Out of Stock' && stock > 0) return false;
+            if (filters.status === 'Low Stock' && (stock > 5 || stock <= 0)) return false;
           }
           
-          // High performance filter
-          if (filters.highPerformance && (!product.rating || product.rating < 4.5)) return false;
+          // High performance filter (conversion rate > 5%)
+          if (filters.highPerformance) {
+            const conversionRate = parseFloat(product.conversionRate || '0');
+            if (conversionRate <= 5) return false;
+          }
           
-          // Trending filter
-          if (filters.trending && (!product.views || product.views < 1000)) return false;
+          // Trending filter (views > 100)
+          if (filters.trending) {
+            const views = product.views || 0;
+            if (views < 100) return false;
+          }
 
           return true;
+        });
+
+        // Apply sorting
+        filteredProducts.sort((a, b) => {
+          switch(filters.sortBy) {
+            case 'name-asc':
+              return (a.name || '').localeCompare(b.name || '');
+            case 'name-desc':
+              return (b.name || '').localeCompare(a.name || '');
+            case 'price-asc':
+              return (a.price || 0) - (b.price || 0);
+            case 'price-desc':
+              return (b.price || 0) - (a.price || 0);
+            case 'views-desc':
+              return (b.views || 0) - (a.views || 0);
+            case 'favorites-desc':
+              return (b.favorites?.length || 0) - (a.favorites?.length || 0);
+            case 'date-desc':
+              const dateA = a.createdAt ? new Date(a.createdAt) : new Date(0);
+              const dateB = b.createdAt ? new Date(b.createdAt) : new Date(0);
+              return dateB - dateA;
+            case 'performance-desc':
+              const perfA = parseFloat(a.conversionRate || '0');
+              const perfB = parseFloat(b.conversionRate || '0');
+              return perfB - perfA;
+            default:
+              return 0;
+          }
         });
 
         // Map the products to ensure ProductCard gets the right properties

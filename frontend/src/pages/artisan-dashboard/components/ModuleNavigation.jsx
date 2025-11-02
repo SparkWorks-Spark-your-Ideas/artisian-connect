@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Icon from '../../../components/AppIcon';
 
-const ModuleNavigation = () => {
+const ModuleNavigation = ({ moduleStats = {} }) => {
   const navigate = useNavigate();
 
   const modules = [
@@ -12,7 +12,7 @@ const ModuleNavigation = () => {
       icon: "Package",
       color: "primary",
       route: "/product-catalog",
-      stats: "24 Products"
+      stats: moduleStats.totalProducts !== undefined ? `${moduleStats.totalProducts} Products` : "Loading..."
     },
     {
       title: "Community Feed",
@@ -20,7 +20,7 @@ const ModuleNavigation = () => {
       icon: "Users",
       color: "accent",
       route: "/community-feed",
-      stats: "156 Followers"
+      stats: moduleStats.followers !== undefined ? `${moduleStats.followers} Followers` : "Loading..."
     },
     {
       title: "Marketing Tools",
@@ -28,7 +28,7 @@ const ModuleNavigation = () => {
       icon: "Megaphone",
       color: "success",
       route: "/marketing-content-generator",
-      stats: "12 Campaigns"
+      stats: moduleStats.campaigns !== undefined ? `${moduleStats.campaigns} Campaigns` : "Loading..."
     },
     {
       title: "Profile Setup",
@@ -36,7 +36,7 @@ const ModuleNavigation = () => {
       icon: "UserCog",
       color: "warning",
       route: "/artisan-profile-setup",
-      stats: "85% Complete"
+      stats: moduleStats.profileCompletion !== undefined ? `${moduleStats.profileCompletion}% Complete` : "Loading..."
     }
   ];
 

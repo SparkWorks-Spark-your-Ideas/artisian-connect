@@ -11,6 +11,7 @@ import { api } from '../../utils/api';
 const ArtisanDashboard = () => {
   const [currentLanguage, setCurrentLanguage] = useState('en');
   const [dashboardData, setDashboardData] = useState(null);
+  const [moduleStats, setModuleStats] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -58,6 +59,20 @@ const ArtisanDashboard = () => {
         console.log(`✅ Found ${totalProducts} products for user ${currentUserId}`);
         console.log('📋 Products:', products.map(p => ({ id: p.id, name: p.name, artisanId: p.artisanId })));
         
+        // Fetch user profile for profile completion calculation
+        let fetchedUserProfile = userProfile;
+        try {
+          const profileResponse = await api.user.getProfile();
+          console.log('📥 Raw profile response:', profileResponse);
+          console.log('📥 Profile response data:', profileResponse.data);
+          
+          // The backend returns data in { success, message, data: { user: {...} } }
+          fetchedUserProfile = profileResponse.data?.data?.user || profileResponse.data?.data || userProfile;
+          console.log('👤 Fetched user profile from API:', fetchedUserProfile);
+        } catch (profileError) {
+          console.warn('⚠️ Could not fetch user profile, using localStorage:', profileError.message);
+        }
+        
         // Calculate metrics from real data
         const now = new Date();
         const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
@@ -100,8 +115,53 @@ const ArtisanDashboard = () => {
           earningsGrowth: inStockProducts > 0 ? `+${((inStockProducts/totalProducts)*100).toFixed(0)}%` : '+0%'
         };
         
+        // Calculate profile completion percentage
+        let profileCompletion = 0;
+        console.log('🔍 Calculating profile completion for:', fetchedUserProfile);
+        
+        if (fetchedUserProfile.firstName) {
+          profileCompletion += 15;
+          console.log('✅ Has firstName:', fetchedUserProfile.firstName);
+        }
+        if (fetchedUserProfile.avatarUrl || fetchedUserProfile.profilePhoto) {
+          profileCompletion += 15;
+          console.log('✅ Has profile photo:', fetchedUserProfile.avatarUrl || fetchedUserProfile.profilePhoto);
+        }
+        if (fetchedUserProfile.bio) {
+          profileCompletion += 20;
+          console.log('✅ Has bio:', fetchedUserProfile.bio?.substring(0, 50));
+        }
+        if (fetchedUserProfile.location?.city) {
+          profileCompletion += 10;
+          console.log('✅ Has location:', fetchedUserProfile.location?.city);
+        }
+        if (fetchedUserProfile.artisanProfile?.craftSpecializations?.length > 0) {
+          profileCompletion += 20;
+          console.log('✅ Has crafts:', fetchedUserProfile.artisanProfile?.craftSpecializations);
+        }
+        if (fetchedUserProfile.artisanProfile?.portfolioImages?.length > 0) {
+          profileCompletion += 10;
+          console.log('✅ Has portfolio:', fetchedUserProfile.artisanProfile?.portfolioImages?.length);
+        }
+        if (fetchedUserProfile.phone || fetchedUserProfile.email) {
+          profileCompletion += 10;
+          console.log('✅ Has contact:', fetchedUserProfile.phone || fetchedUserProfile.email);
+        }
+        
+        console.log('📊 Total profile completion:', profileCompletion);
+        
+        // Calculate module statistics
+        const calculatedModuleStats = {
+          totalProducts: totalProducts,
+          followers: totalFavorites, // Using favorites as proxy for followers
+          campaigns: 0, // Would need marketing campaigns API
+          profileCompletion: Math.min(profileCompletion, 100)
+        };
+        
+        setModuleStats(calculatedModuleStats);
         setDashboardData(realDashboardData);
         console.log('✅ Dashboard data loaded from real Firebase data:', realDashboardData);
+        console.log('✅ Module stats calculated:', calculatedModuleStats);
         return;
       } catch (apiError) {
         console.error('❌ Failed to fetch real data:', apiError);
@@ -130,7 +190,15 @@ const ArtisanDashboard = () => {
         earningsGrowth: '+0%'
       };
       
+      const fallbackModuleStats = {
+        totalProducts: 0,
+        followers: 0,
+        campaigns: 0,
+        profileCompletion: 0
+      };
+      
       setDashboardData(fallbackData);
+      setModuleStats(fallbackModuleStats);
       console.log('⚠️ Using empty fallback data');
       
     } catch (error) {
@@ -147,6 +215,13 @@ const ArtisanDashboard = () => {
         orderGrowth: '+0', 
         engagementGrowth: '+0',
         earningsGrowth: '+0%'
+      });
+      
+      setModuleStats({
+        totalProducts: 0,
+        followers: 0,
+        campaigns: 0,
+        profileCompletion: 0
       });
     } finally {
       setLoading(false);
@@ -264,7 +339,7 @@ const ArtisanDashboard = () => {
 
           {/* Module Navigation */}
           <div className="mb-8">
-            <ModuleNavigation />
+            <ModuleNavigation moduleStats={moduleStats} />
           </div>
 
           {/* Footer Section */}
