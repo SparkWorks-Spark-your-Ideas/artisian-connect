@@ -1,10 +1,23 @@
 import express from 'express';
 import { Router } from 'express';
+import jwt from 'jsonwebtoken';
 import { db, auth } from '../config/firebase.js';
 import { validate, schemas } from '../middleware/validation.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 
 const router = Router();
+
+// JWT Secret (in production, use environment variable)
+const JWT_SECRET = process.env.JWT_SECRET || 'artisan-connect-secret-key-2024';
+
+// Generate JWT token
+const generateToken = (uid, email, userType) => {
+  return jwt.sign(
+    { uid, email, userType },
+    JWT_SECRET,
+    { expiresIn: '7d' }
+  );
+};
 
 /**
  * POST /api/auth/register
@@ -56,24 +69,24 @@ router.post('/register', validate(schemas.userRegistration), asyncHandler(async 
 
     await db.collection('users').doc(userRecord.uid).set(userProfile);
 
-    // Generate custom token for immediate login
-    const customToken = await auth.createCustomToken(userRecord.uid);
+    // Generate JWT token for immediate login
+    const token = generateToken(userRecord.uid, email, userType);
 
     res.status(201).json({
       success: true,
       message: 'User registered successfully',
       data: {
-        uid: userRecord.uid,
-        email: userRecord.email,
-        userType,
-        customToken,
+        token,
         user: {
           uid: userRecord.uid,
           email,
           firstName,
           lastName,
+          fullName: `${firstName} ${lastName}`,
           userType,
-          createdAt: userProfile.createdAt
+          profileComplete: false,
+          createdAt: userProfile.createdAt,
+          artisanProfile: userProfile.artisanProfile || null
         }
       }
     });
@@ -142,24 +155,27 @@ router.post('/login', validate(schemas.userLogin), asyncHandler(async (req, res)
       updatedAt: new Date()
     });
 
-    // Generate custom token
-    const customToken = await auth.createCustomToken(userRecord.uid);
+    // Generate JWT token
+    const token = generateToken(userRecord.uid, email, userData.userType);
 
     res.json({
       success: true,
       message: 'Login successful',
       data: {
-        uid: userRecord.uid,
-        customToken,
+        token,
         user: {
           uid: userData.uid,
           email: userData.email,
           firstName: userData.firstName,
           lastName: userData.lastName,
+          fullName: `${userData.firstName} ${userData.lastName}`,
           userType: userData.userType,
           profileComplete: userData.profileComplete,
           emailVerified: userRecord.emailVerified,
-          lastLoginAt: new Date()
+          lastLoginAt: new Date(),
+          artisanProfile: userData.artisanProfile || null,
+          location: userData.location || null,
+          phone: userData.phone || null
         }
       }
     });

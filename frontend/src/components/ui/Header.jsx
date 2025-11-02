@@ -1,11 +1,21 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Icon from '../AppIcon';
 import Button from './Button';
 
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    // Clear authentication data
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('userProfile');
+    
+    // Redirect to login
+    navigate('/login');
+  };
 
   const navigationItems = [
     { 
@@ -129,6 +139,17 @@ const Header = () => {
               <div className="text-xs text-muted-foreground">Craft Specialist</div>
             </div>
           </div>
+
+          {/* Logout Button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleLogout}
+            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+          >
+            <Icon name="LogOut" size={18} />
+            <span className="ml-2 hidden lg:inline">Logout</span>
+          </Button>
         </div>
 
         {/* Mobile Menu Button */}
@@ -167,7 +188,7 @@ const Header = () => {
           
           {/* Mobile User Section */}
           <div className="border-t border-border p-4">
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-3 mb-3">
               <div className="w-10 h-10 bg-secondary rounded-full flex items-center justify-center">
                 <Icon name="User" size={20} color="white" />
               </div>
@@ -176,6 +197,17 @@ const Header = () => {
                 <div className="text-xs text-muted-foreground">Craft Specialist</div>
               </div>
             </div>
+            
+            {/* Mobile Logout Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleLogout}
+              className="w-full text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+            >
+              <Icon name="LogOut" size={18} />
+              <span className="ml-2">Logout</span>
+            </Button>
           </div>
         </div>
       )}

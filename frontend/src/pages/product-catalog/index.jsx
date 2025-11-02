@@ -63,7 +63,20 @@ const ProductCatalog = () => {
     
     try {
       console.log('🔄 Fetching products from API...');
+      
+      // Get current user from localStorage
+      const userProfile = JSON.parse(localStorage.getItem('userProfile') || '{}');
+      const currentUserId = userProfile.uid;
+      
+      if (!currentUserId) {
+        console.warn('⚠️ No user ID found');
+        setError('Please login to view your products');
+        setLoading(false);
+        return;
+      }
+      
       const response = await api.products.list({
+        artisanId: currentUserId, // Filter by current user
         page: 1,
         limit: 50,
         sortBy: filters.sortBy.includes('name') ? 'name' : 'createdAt',

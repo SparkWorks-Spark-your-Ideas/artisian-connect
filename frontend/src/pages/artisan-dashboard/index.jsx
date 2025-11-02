@@ -28,37 +28,114 @@ const ArtisanDashboard = () => {
       setLoading(true);
       setError(null);
       
-      // Try to fetch from API first
-      try {
-        const response = await api.user.getDashboard();
-        setDashboardData(response.data);
-        console.log('✅ Dashboard data loaded from API:', response.data);
+      // Get current user from localStorage
+      const userProfile = JSON.parse(localStorage.getItem('userProfile') || '{}');
+      const currentUserId = userProfile.uid;
+      
+      console.log('👤 User Profile from localStorage:', userProfile);
+      console.log('🆔 Current User ID:', currentUserId);
+      
+      if (!currentUserId) {
+        console.warn('⚠️ No user ID found, cannot load personalized data');
+        setError('Please login to view your dashboard');
+        setLoading(false);
         return;
-      } catch (apiError) {
-        console.log('API call failed, using mock data for development:', apiError.message);
       }
       
-      // Fallback to mock data for development (when auth is disabled)
-      const mockDashboardData = {
-        totalProducts: 12,
-        recentOrders: 8,
-        communityEngagement: 45,
-        monthlyEarnings: '₹15,250',
-        productGrowth: '+3',
-        orderGrowth: '+2',
-        engagementGrowth: '+12',
-        earningsGrowth: '+18%'
+      // Try to fetch real data from available APIs
+      try {
+        console.log('📊 Fetching dashboard data for user:', currentUserId);
+        console.log('🔍 API call parameters:', { artisanId: currentUserId });
+        
+        // Fetch products data filtered by current user
+        const productsResponse = await api.products.list({ artisanId: currentUserId });
+        
+        console.log('📦 Products API Response:', productsResponse);
+        
+        const products = productsResponse.data?.data?.products || [];
+        const totalProducts = products.length;
+        
+        console.log(`✅ Found ${totalProducts} products for user ${currentUserId}`);
+        console.log('📋 Products:', products.map(p => ({ id: p.id, name: p.name, artisanId: p.artisanId })));
+        
+        // Calculate metrics from real data
+        const now = new Date();
+        const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+        
+        // Products created this month
+        const productsThisMonth = products.filter(p => {
+          const createdAt = p.createdAt ? new Date(p.createdAt) : null;
+          return createdAt && createdAt >= lastMonth;
+        }).length;
+        
+        // Calculate total views across all products
+        const totalViews = products.reduce((sum, p) => sum + (p.views || 0), 0);
+        
+        // Calculate total favorites
+        const totalFavorites = products.reduce((sum, p) => sum + (p.favorites?.length || 0), 0);
+        
+        // Calculate estimated earnings (based on product prices)
+        const totalInventoryValue = products.reduce((sum, p) => {
+          const price = p.price || 0;
+          const stock = p.stockQuantity || 0;
+          return sum + (price * stock);
+        }, 0);
+        
+        // Calculate average product value for more realistic monthly earnings estimate
+        const averageProductPrice = products.reduce((sum, p) => sum + (p.price || 0), 0) / (totalProducts || 1);
+        const estimatedMonthlyEarnings = averageProductPrice * Math.min(totalProducts * 2, 10); // Conservative estimate: 2 sales per product or max 10 sales/month
+        
+        // In-stock products
+        const inStockProducts = products.filter(p => (p.stockQuantity || 0) > 0).length;
+        
+        const realDashboardData = {
+          totalProducts,
+          recentOrders: products.filter(p => (p.stockQuantity || 0) < 5 && (p.stockQuantity || 0) > 0).length, // Low stock items as proxy for recent orders
+          communityEngagement: totalViews + totalFavorites, // Combined engagement metric
+          monthlyEarnings: `₹${Math.round(estimatedMonthlyEarnings).toLocaleString('en-IN')}`, // Estimated monthly earnings
+          inventoryValue: `₹${totalInventoryValue.toLocaleString('en-IN')}`, // Total inventory value
+          productGrowth: productsThisMonth > 0 ? `+${productsThisMonth}` : '0',
+          orderGrowth: '+0', // Would need orders API
+          engagementGrowth: totalViews > 0 ? `+${totalViews}` : '+0',
+          earningsGrowth: inStockProducts > 0 ? `+${((inStockProducts/totalProducts)*100).toFixed(0)}%` : '+0%'
+        };
+        
+        setDashboardData(realDashboardData);
+        console.log('✅ Dashboard data loaded from real Firebase data:', realDashboardData);
+        return;
+      } catch (apiError) {
+        console.error('❌ Failed to fetch real data:', apiError);
+        console.error('Error details:', apiError.response?.data);
+        console.error('Error status:', apiError.response?.status);
+        
+        // Set a helpful error message
+        if (!apiError.response) {
+          setError('⚠️ Backend server is not running! Please start it with: cd backend && npm start');
+        } else if (apiError.response.status === 400) {
+          setError('⚠️ Bad request to API. Please check backend logs.');
+        } else {
+          setError(`⚠️ API Error: ${apiError.message}`);
+        }
+      }
+      
+      // Fallback to empty data
+      const fallbackData = {
+        totalProducts: 0,
+        recentOrders: 0,
+        communityEngagement: 0,
+        monthlyEarnings: '₹0',
+        productGrowth: '+0',
+        orderGrowth: '+0',
+        engagementGrowth: '+0',
+        earningsGrowth: '+0%'
       };
       
-      // Simulate API delay for realistic experience
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      setDashboardData(mockDashboardData);
-      console.log('✅ Dashboard data loaded from mock data:', mockDashboardData);
+      setDashboardData(fallbackData);
+      console.log('⚠️ Using empty fallback data');
       
     } catch (error) {
       console.error('Error loading dashboard data:', error);
-      setError('Failed to load dashboard data');
+      setError('Failed to load dashboard data. Please check if the backend server is running.');
       
       // Final fallback to zero data
       setDashboardData({

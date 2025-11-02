@@ -1,7 +1,11 @@
+import jwt from 'jsonwebtoken';
 import { db, auth } from '../config/firebase.js';
 
+// JWT Secret (must match the one in auth routes)
+const JWT_SECRET = process.env.JWT_SECRET || 'artisan-connect-secret-key-2024';
+
 /**
- * Middleware to verify Firebase JWT token
+ * Middleware to verify JWT token
  */
 export const verifyToken = async (req, res, next) => {
   try {
@@ -16,8 +20,8 @@ export const verifyToken = async (req, res, next) => {
 
     const token = authHeader.split(' ')[1];
     
-    // Verify the Firebase token
-    const decodedToken = await auth.verifyIdToken(token);
+    // Verify the JWT token
+    const decodedToken = jwt.verify(token, JWT_SECRET);
     
     // Get user data from Firestore
     const userDoc = await db.collection('users').doc(decodedToken.uid).get();
@@ -29,35 +33,37 @@ export const verifyToken = async (req, res, next) => {
       });
     }
 
+    const userData = userDoc.data();
+
     // Attach user data to request
     req.user = {
       uid: decodedToken.uid,
       email: decodedToken.email,
-      emailVerified: decodedToken.email_verified,
-      ...userDoc.data()
+      userType: decodedToken.userType,
+      ...userData
     };
 
     next();
   } catch (error) {
     console.error('Token verification error:', error);
     
-    if (error.code === 'auth/id-token-expired') {
+    if (error.name === 'TokenExpiredError') {
       return res.status(401).json({
         error: 'Token Expired',
-        message: 'Authentication token has expired'
+        message: 'Authentication token has expired. Please login again.'
       });
     }
     
-    if (error.code === 'auth/id-token-revoked') {
+    if (error.name === 'JsonWebTokenError') {
       return res.status(401).json({
-        error: 'Token Revoked',
-        message: 'Authentication token has been revoked'
+        error: 'Invalid Token',
+        message: 'Invalid authentication token'
       });
     }
 
     return res.status(401).json({
-      error: 'Invalid Token',
-      message: 'Invalid authentication token'
+      error: 'Authentication Failed',
+      message: 'Could not authenticate request'
     });
   }
 };

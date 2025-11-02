@@ -89,13 +89,13 @@ export const schemas = {
     customizable: Joi.boolean().default(false),
     stockQuantity: Joi.number().integer().min(0).required(),
     shippingInfo: Joi.object({
-      weight: Joi.number().positive().required(),
+      weight: Joi.number().positive().optional(),
       dimensions: Joi.object({
-        length: Joi.number().positive().required(),
-        width: Joi.number().positive().required(),
-        height: Joi.number().positive().required()
-      }).required(),
-      processingTime: Joi.string().required()
+        length: Joi.number().positive().optional(),
+        width: Joi.number().positive().optional(),
+        height: Joi.number().positive().optional()
+      }).optional(),
+      processingTime: Joi.string().optional()
     }).optional()
   }),
 
@@ -189,7 +189,15 @@ export const schemas = {
     page: Joi.number().integer().min(1).default(1),
     limit: Joi.number().integer().min(1).max(50).default(10),
     sortBy: Joi.string().optional(),
-    sortOrder: Joi.string().valid('asc', 'desc').default('desc')
+    sortOrder: Joi.string().valid('asc', 'desc').default('desc'),
+    // Filter parameters
+    category: Joi.string().optional(),
+    artisanId: Joi.string().optional(),
+    minPrice: Joi.number().optional(),
+    maxPrice: Joi.number().optional(),
+    search: Joi.string().optional(),
+    featured: Joi.string().valid('true', 'false').optional(),
+    location: Joi.string().optional()
   }),
 
   // MongoDB ObjectId validation

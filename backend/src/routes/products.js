@@ -14,11 +14,11 @@ const router = Router();
 
 /**
  * POST /api/products/upload-images
- * Upload product images to MinIO (temporarily public for testing)
+ * Upload product images to Cloudinary
  */
 router.post('/upload-images', 
-  // verifyToken,        // Temporarily disabled
-  // verifyArtisan,      // Temporarily disabled
+  verifyToken,
+  verifyArtisan,
   uploadMultiple('images', 10), // Max 10 images
   asyncHandler(async (req, res) => {
     if (!req.files || req.files.length === 0) {
@@ -60,13 +60,12 @@ router.post('/upload-images',
 
 /**
  * POST /api/products/create
- * Create a new product (temporarily without authentication for testing)
+ * Create a new product
  */
 router.post('/create', 
-  // Temporarily commented out for testing
-  // verifyToken,
-  // verifyArtisan,
-  // validate(schemas.productCreation),
+  verifyToken,
+  verifyArtisan,
+  validate(schemas.productCreation),
   asyncHandler(async (req, res) => {
     const {
       name,
@@ -83,11 +82,10 @@ router.post('/create',
       imageUrls = [] // Accept image URLs from MinIO
     } = req.body;
 
-    // Create product document with MinIO URLs
+    // Create product document with authenticated user's ID
     const productData = {
-      // Use dummy artisan data for testing (replace with real auth later)
-      artisanId: 'test-artisan-id',
-      artisanName: 'Test Artisan',
+      artisanId: req.user.uid,
+      artisanName: `${req.user.firstName} ${req.user.lastName}`,
       name,
       description,
       category,
