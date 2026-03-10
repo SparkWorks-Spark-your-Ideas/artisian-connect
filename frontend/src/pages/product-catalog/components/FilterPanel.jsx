@@ -12,15 +12,19 @@ const FilterPanel = ({
   resultCount 
 }) => {
   const categories = [
-    'All Categories',
-    'Pottery & Ceramics',
-    'Textiles & Fabrics',
-    'Jewelry & Accessories',
-    'Woodwork & Furniture',
-    'Metalwork & Sculptures',
-    'Paintings & Art',
-    'Home Decor',
-    'Traditional Crafts'
+    { value: 'All Categories', label: 'All Categories' },
+    { value: 'pottery', label: 'Pottery & Ceramics' },
+    { value: 'textiles', label: 'Textiles & Fabrics' },
+    { value: 'jewelry', label: 'Jewelry & Ornaments' },
+    { value: 'woodwork', label: 'Woodwork & Carving' },
+    { value: 'metalwork', label: 'Metalwork & Brass' },
+    { value: 'leather', label: 'Leather Craft' },
+    { value: 'bamboo', label: 'Bamboo & Cane' },
+    { value: 'stone', label: 'Stone Carving' },
+    { value: 'painting', label: 'Traditional Painting' },
+    { value: 'embroidery', label: 'Embroidery & Needlework' },
+    { value: 'weaving', label: 'Handloom Weaving' },
+    { value: 'other', label: 'Other Traditional Crafts' }
   ];
 
   const statusOptions = [
@@ -63,7 +67,7 @@ const FilterPanel = ({
           className="w-full px-3 py-2 border border-border rounded-lg bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
         >
           {categories?.map((category) => (
-            <option key={category} value={category}>{category}</option>
+            <option key={category.value} value={category.value}>{category.label}</option>
           ))}
         </select>
       </div>
