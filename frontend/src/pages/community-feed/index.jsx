@@ -264,7 +264,10 @@ const CommunityFeed = () => {
                     onComment={handleComment}
                     onFollow={handleFollow}
                     onShare={() => {}}
-                    onAuthorClick={(authorId) => setProfileUserId(authorId)}
+                    onAuthorClick={(authorId) => {
+                      const authorPost = posts.find(p => p.author?.id === authorId);
+                      setProfileUserId({ id: authorId, fallback: authorPost?.author });
+                    }}
                   />
                 ))}
 
@@ -306,13 +309,14 @@ const CommunityFeed = () => {
       {/* User Profile Modal */}
       {profileUserId && (
         <UserProfileModal
-          userId={profileUserId}
+          userId={profileUserId.id}
+          authorFallback={profileUserId.fallback}
           onClose={() => setProfileUserId(null)}
           onFollow={(uid) => {
             handleFollow(uid);
             setProfileUserId(null);
           }}
-          isFollowing={posts.find(p => p.author?.id === profileUserId)?.author?.isFollowing}
+          isFollowing={posts.find(p => p.author?.id === profileUserId.id)?.author?.isFollowing}
         />
       )}
     </div>
