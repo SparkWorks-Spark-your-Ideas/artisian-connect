@@ -17,6 +17,8 @@ const CommunityFeed = () => {
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
   const [profileUserId, setProfileUserId] = useState(null);
+  const [peopleList, setPeopleList] = useState([]);
+  const [loadingPeople, setLoadingPeople] = useState(false);
   const [stats, setStats] = useState({
     postsToday: 0,
     followingCount: 0,
@@ -51,7 +53,7 @@ const CommunityFeed = () => {
         setFilterCounts({
           all: data.totalPosts || 0,
           following: data.followingCount || 0,
-          craftType: 0,
+          followers: data.followersCount || 0,
           successStories: data.successStories || 0
         });
       }
@@ -70,6 +72,8 @@ const CommunityFeed = () => {
 
       if (filter === 'following') {
         params.filter = 'following';
+      } else if (filter === 'followers') {
+        params.filter = 'followers';
       } else if (filter === 'success_stories') {
         params.filter = 'success_stories';
       }
@@ -99,10 +103,31 @@ const CommunityFeed = () => {
     fetchStats();
   }, []);
 
+  // Fetch followers/following people list
+  const fetchPeopleList = async (filter) => {
+    if (filter !== 'followers' && filter !== 'following') {
+      setPeopleList([]);
+      return;
+    }
+    setLoadingPeople(true);
+    try {
+      const response = filter === 'followers'
+        ? await api.social.getFollowers()
+        : await api.social.getFollowing();
+      setPeopleList(response.data?.data?.[filter] || []);
+    } catch (err) {
+      console.error(`Failed to fetch ${filter}:`, err);
+      setPeopleList([]);
+    } finally {
+      setLoadingPeople(false);
+    }
+  };
+
   const handleFilterChange = (filter) => {
     setActiveFilter(filter);
     setPage(1);
     fetchPosts(filter, 1);
+    fetchPeopleList(filter);
   };
 
   const handleCreatePost = async (newPostData) => {
@@ -237,7 +262,55 @@ const CommunityFeed = () => {
             />
             
             <PostCreator onCreatePost={handleCreatePost} />
-            
+
+            {/* People List for Followers/Following tabs */}
+            {(activeFilter === 'followers' || activeFilter === 'following') && (
+              <div className="mb-6">
+                <h3 className="text-base font-semibold text-foreground mb-3">
+                  {activeFilter === 'followers' ? 'People who follow you' : 'People you follow'}
+                </h3>
+                {loadingPeople ? (
+                  <div className="flex items-center justify-center py-4">
+                    <Icon name="Loader2" size={20} className="animate-spin text-muted-foreground" />
+                  </div>
+                ) : peopleList.length === 0 ? (
+                  <div className="bg-card border border-border rounded-lg p-4 text-center text-muted-foreground text-sm">
+                    {activeFilter === 'followers' ? 'No one follows you yet.' : 'You are not following anyone yet.'}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {peopleList.map((person) => (
+                      <button
+                        key={person.uid}
+                        onClick={() => setProfileUserId({ id: person.uid, fallback: { name: `${person.firstName} ${person.lastName}`.trim(), avatar: person.avatarUrl, craftType: person.craftSpecialization } })}
+                        className="flex items-center space-x-3 bg-card border border-border rounded-lg p-3 hover:shadow-warm transition-shadow text-left w-full"
+                      >
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden flex-shrink-0">
+                          {person.avatarUrl ? (
+                            <img src={person.avatarUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
+                          ) : (
+                            <Icon name="User" size={20} className="text-primary" />
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center space-x-1">
+                            <p className="text-sm font-medium text-foreground truncate">
+                              {`${person.firstName} ${person.lastName}`.trim() || 'Artisan'}
+                            </p>
+                            {person.isVerified && <Icon name="BadgeCheck" size={14} className="text-primary flex-shrink-0" />}
+                          </div>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {person.craftSpecialization || 'Artisan'}
+                            {person.location ? ` • ${person.location}` : ''}
+                          </p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             {error && (
               <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
                 <p className="text-red-600">{error}</p>

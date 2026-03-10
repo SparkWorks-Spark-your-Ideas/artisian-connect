@@ -14,16 +14,16 @@ const FilterTabs = ({ activeFilter, onFilterChange, counts, stats }) => {
     {
       id: 'following',
       label: 'Following',
-      icon: 'Users',
+      icon: 'UserCheck',
       count: counts?.following || 0,
       description: 'Posts from artisans you follow'
     },
     {
-      id: 'craft_type',
-      label: 'My Craft Type',
-      icon: 'Palette',
-      count: counts?.craftType || 0,
-      description: 'Posts from similar craft specializations'
+      id: 'followers',
+      label: 'Followers',
+      icon: 'Users',
+      count: counts?.followers || 0,
+      description: 'Artisans who follow you'
     },
     {
       id: 'success_stories',
@@ -102,12 +102,12 @@ const FilterTabs = ({ activeFilter, onFilterChange, counts, stats }) => {
           <div className="text-xs text-muted-foreground">Posts Today</div>
         </div>
         <div className="text-center">
-          <div className="text-lg font-semibold text-foreground">{stats?.followingCount || 0}</div>
-          <div className="text-xs text-muted-foreground">Following</div>
+          <div className="text-lg font-semibold text-foreground">{stats?.followersCount || 0}</div>
+          <div className="text-xs text-muted-foreground">Followers</div>
         </div>
         <div className="text-center">
-          <div className="text-lg font-semibold text-foreground">{stats?.totalInteractions || 0}</div>
-          <div className="text-xs text-muted-foreground">Interactions</div>
+          <div className="text-lg font-semibold text-foreground">{stats?.followingCount || 0}</div>
+          <div className="text-xs text-muted-foreground">Following</div>
         </div>
         <div className="text-center">
           <div className="text-lg font-semibold text-foreground">{stats?.successStories || 0}</div>

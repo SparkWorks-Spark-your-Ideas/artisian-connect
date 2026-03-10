@@ -112,6 +112,8 @@ export const api = {
     }),
     followArtisan: (artisanId) => apiClient.post('/social/follow', { artisanId }),
     getStats: () => apiClient.get('/social/stats'),
+    getFollowers: () => apiClient.get('/social/followers'),
+    getFollowing: () => apiClient.get('/social/following'),
   },
 
   // Marketing endpoints

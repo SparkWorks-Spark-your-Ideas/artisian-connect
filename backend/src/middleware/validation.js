@@ -204,7 +204,7 @@ export const schemas = {
     featured: Joi.string().valid('true', 'false').optional(),
     location: Joi.string().optional(),
     // Social feed filter parameters
-    filter: Joi.string().valid('all', 'following', 'success_stories', 'craft_type').optional(),
+    filter: Joi.string().valid('all', 'following', 'followers', 'success_stories', 'craft_type').optional(),
     type: Joi.string().optional()
   }),
 

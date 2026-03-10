@@ -270,21 +270,23 @@ const ProductDetailsModal = ({ product, isOpen, onClose, onEdit }) => {
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Created:</span>
                     <span className="text-foreground">
-                      {product.createdAt ? new Date(product.createdAt).toLocaleDateString('en-IN', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                      }) : 'N/A'}
+                      {(() => {
+                        const ts = product.createdAt;
+                        if (!ts) return 'N/A';
+                        const d = ts._seconds ? new Date(ts._seconds * 1000) : new Date(ts);
+                        return isNaN(d.getTime()) ? 'N/A' : d.toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' });
+                      })()}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Last Updated:</span>
                     <span className="text-foreground">
-                      {product.updatedAt ? new Date(product.updatedAt).toLocaleDateString('en-IN', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                      }) : 'N/A'}
+                      {(() => {
+                        const ts = product.updatedAt;
+                        if (!ts) return 'N/A';
+                        const d = ts._seconds ? new Date(ts._seconds * 1000) : new Date(ts);
+                        return isNaN(d.getTime()) ? 'N/A' : d.toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' });
+                      })()}
                     </span>
                   </div>
                 </div>

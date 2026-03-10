@@ -173,8 +173,15 @@ router.get('/profile/:uid', asyncHandler(async (req, res) => {
   if (userData.userType === 'artisan' && userData.artisanProfile) {
     publicProfile.artisanProfile = {
       craftSpecialization: userData.artisanProfile.craftSpecialization,
+      craftSpecializations: userData.artisanProfile.craftSpecializations,
       skills: userData.artisanProfile.skills,
       experienceLevel: userData.artisanProfile.experienceLevel,
+      yearsOfExperience: userData.artisanProfile.yearsOfExperience,
+      specializationFocus: userData.artisanProfile.specializationFocus,
+      craftTechniques: userData.artisanProfile.craftTechniques,
+      toolsAndEquipment: userData.artisanProfile.toolsAndEquipment,
+      awardsRecognition: userData.artisanProfile.awardsRecognition,
+      portfolioImages: userData.artisanProfile.portfolioImages,
       rating: userData.artisanProfile.rating,
       totalReviews: userData.artisanProfile.totalReviews,
       totalSales: userData.artisanProfile.totalSales,
@@ -183,6 +190,13 @@ router.get('/profile/:uid', asyncHandler(async (req, res) => {
       bio: userData.artisanProfile.bio || userData.bio
     };
   }
+
+  // Add follower/following counts (compute followers dynamically)
+  const followersSnap = await db.collection('users')
+    .where('followedArtisans', 'array-contains', uid)
+    .get();
+  publicProfile.followersCount = followersSnap.size;
+  publicProfile.followingCount = (userData.followedArtisans || []).length;
 
   res.json({
     success: true,

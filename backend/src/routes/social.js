@@ -34,11 +34,18 @@ router.get('/feed',
       return bTime - aTime;
     });
 
-    // Get current user's followed list
+    // Get current user's followed list and followers list
     let followedArtisans = [];
+    let followerIds = [];
     if (req.user) {
       const userDoc = await db.collection('users').doc(req.user.uid).get();
-      followedArtisans = userDoc.data()?.followedArtisans || [];
+      const userData = userDoc.data() || {};
+      followedArtisans = userData.followedArtisans || [];
+      // Compute followers dynamically: find all users who follow the current user
+      const followersSnap = await db.collection('users')
+        .where('followedArtisans', 'array-contains', req.user.uid)
+        .get();
+      followerIds = followersSnap.docs.map(d => d.id);
     }
 
     // Apply filters
@@ -54,6 +61,18 @@ router.get('/feed',
         });
       }
       allDocs = allDocs.filter(p => followedArtisans.includes(p.authorId));
+    } else if (filter === 'followers' && req.user) {
+      if (followerIds.length === 0) {
+        return res.json({
+          success: true,
+          message: 'Feed retrieved successfully',
+          data: {
+            posts: [],
+            pagination: { page: pageNum, limit: limitNum, total: 0, totalPages: 0 }
+          }
+        });
+      }
+      allDocs = allDocs.filter(p => followerIds.includes(p.authorId));
     } else if (filter === 'success_stories' || type === 'success_story') {
       allDocs = allDocs.filter(p => p.type === 'success_story');
     }
@@ -204,6 +223,7 @@ router.post('/follow',
     }
 
     const userRef = db.collection('users').doc(req.user.uid);
+    const targetRef = db.collection('users').doc(artisanId);
     const userDoc = await userRef.get();
     const followedArtisans = userDoc.data()?.followedArtisans || [];
 
@@ -212,11 +232,26 @@ router.post('/follow',
       // Unfollow
       const updated = followedArtisans.filter(id => id !== artisanId);
       await userRef.update({ followedArtisans: updated, updatedAt: new Date() });
+      // Remove from target's followers list
+      const targetDoc = await targetRef.get();
+      if (targetDoc.exists) {
+        const targetFollowers = (targetDoc.data()?.followers || []).filter(id => id !== req.user.uid);
+        await targetRef.update({ followers: targetFollowers, updatedAt: new Date() });
+      }
       action = 'unfollowed';
     } else {
       // Follow
       followedArtisans.push(artisanId);
       await userRef.update({ followedArtisans, updatedAt: new Date() });
+      // Add to target's followers list
+      const targetDoc = await targetRef.get();
+      if (targetDoc.exists) {
+        const targetFollowers = targetDoc.data()?.followers || [];
+        if (!targetFollowers.includes(req.user.uid)) {
+          targetFollowers.push(req.user.uid);
+          await targetRef.update({ followers: targetFollowers, updatedAt: new Date() });
+        }
+      }
       action = 'followed';
     }
 
@@ -266,9 +301,16 @@ router.get('/stats',
 
     // User-specific counts
     let followingCount = 0;
+    let followersCount = 0;
     if (req.user) {
       const userDoc = await db.collection('users').doc(req.user.uid).get();
-      followingCount = (userDoc.data()?.followedArtisans || []).length;
+      const userData = userDoc.data() || {};
+      followingCount = (userData.followedArtisans || []).length;
+      // Compute followers dynamically
+      const followersSnap = await db.collection('users')
+        .where('followedArtisans', 'array-contains', req.user.uid)
+        .get();
+      followersCount = followersSnap.size;
     }
 
     res.json({
@@ -278,9 +320,78 @@ router.get('/stats',
         postsToday,
         successStories,
         totalInteractions,
-        followingCount
+        followingCount,
+        followersCount
       }
     });
+  })
+);
+
+/**
+ * GET /api/social/followers
+ * Get list of users who follow the current user (profiles)
+ */
+router.get('/followers',
+  verifyToken,
+  asyncHandler(async (req, res) => {
+    const followersSnap = await db.collection('users')
+      .where('followedArtisans', 'array-contains', req.user.uid)
+      .get();
+
+    const followers = followersSnap.docs.map(doc => {
+      const d = doc.data();
+      const artisan = d.artisanProfile || {};
+      return {
+        uid: doc.id,
+        firstName: d.firstName || '',
+        lastName: d.lastName || '',
+        avatarUrl: d.avatarUrl || artisan.avatarUrl || null,
+        craftSpecialization: artisan.craftSpecialization || d.craftSpecialization || d.userType || '',
+        location: artisan.location || d.location || '',
+        isVerified: d.isVerified || artisan.isVerified || false
+      };
+    });
+
+    res.json({ success: true, data: { followers } });
+  })
+);
+
+/**
+ * GET /api/social/following
+ * Get list of users the current user follows (profiles)
+ */
+router.get('/following',
+  verifyToken,
+  asyncHandler(async (req, res) => {
+    const userDoc = await db.collection('users').doc(req.user.uid).get();
+    const userData = userDoc.data() || {};
+    const followedArtisans = userData.followedArtisans || [];
+
+    if (followedArtisans.length === 0) {
+      return res.json({ success: true, data: { following: [] } });
+    }
+
+    const following = [];
+    for (const uid of followedArtisans) {
+      try {
+        const doc = await db.collection('users').doc(uid).get();
+        if (doc.exists) {
+          const d = doc.data();
+          const artisan = d.artisanProfile || {};
+          following.push({
+            uid: doc.id,
+            firstName: d.firstName || '',
+            lastName: d.lastName || '',
+            avatarUrl: d.avatarUrl || artisan.avatarUrl || null,
+            craftSpecialization: artisan.craftSpecialization || d.craftSpecialization || d.userType || '',
+            location: artisan.location || d.location || '',
+            isVerified: d.isVerified || artisan.isVerified || false
+          });
+        }
+      } catch (e) { /* skip */ }
+    }
+
+    res.json({ success: true, data: { following } });
   })
 );
 

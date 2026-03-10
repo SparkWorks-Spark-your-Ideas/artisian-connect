@@ -122,31 +122,6 @@ const FilterPanel = ({
         </select>
       </div>
 
-      {/* Performance Filter */}
-      <div>
-        <label className="block text-sm font-medium text-foreground mb-2">Performance</label>
-        <div className="space-y-2">
-          <label className="flex items-center">
-            <input
-              type="checkbox"
-              checked={filters?.highPerformance}
-              onChange={(e) => onFilterChange('highPerformance', e?.target?.checked)}
-              className="w-4 h-4 text-primary border-border rounded focus:ring-primary focus:ring-2 mr-2"
-            />
-            <span className="text-sm text-foreground">High Performance (&gt;5% conversion)</span>
-          </label>
-          <label className="flex items-center">
-            <input
-              type="checkbox"
-              checked={filters?.trending}
-              onChange={(e) => onFilterChange('trending', e?.target?.checked)}
-              className="w-4 h-4 text-primary border-border rounded focus:ring-primary focus:ring-2 mr-2"
-            />
-            <span className="text-sm text-foreground">Trending (Increasing views)</span>
-          </label>
-        </div>
-      </div>
-
       {/* Clear Filters */}
       <Button variant="outline" onClick={onClearFilters} className="w-full">
         <Icon name="X" size={16} className="mr-2" />
