@@ -96,23 +96,42 @@ const ArtisanDashboard = () => {
           return sum + (price * stock);
         }, 0);
         
-        // Calculate average product value for more realistic monthly earnings estimate
-        const averageProductPrice = products.reduce((sum, p) => sum + (p.price || 0), 0) / (totalProducts || 1);
-        const estimatedMonthlyEarnings = averageProductPrice * Math.min(totalProducts * 2, 10); // Conservative estimate: 2 sales per product or max 10 sales/month
+        // Fetch real orders to calculate actual earnings
+        let actualMonthlyEarnings = 0;
+        let recentOrderCount = 0;
+        try {
+          const ordersResponse = await api.orders.list({ artisanId: currentUserId });
+          const orders = ordersResponse.data?.data?.orders || [];
+          const now = new Date();
+          const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+          const completedThisMonth = orders.filter(o => {
+            const isCompleted = ['completed', 'delivered'].includes(o.status?.toLowerCase());
+            const orderDate = o.completedAt || o.createdAt;
+            const date = orderDate?._seconds ? new Date(orderDate._seconds * 1000) : new Date(orderDate);
+            return isCompleted && date >= thisMonthStart;
+          });
+          actualMonthlyEarnings = completedThisMonth.reduce((sum, o) => sum + (o.totalAmount || o.total || 0), 0);
+          recentOrderCount = orders.filter(o => {
+            const orderDate = o.createdAt?._seconds ? new Date(o.createdAt._seconds * 1000) : new Date(o.createdAt);
+            return orderDate >= thisMonthStart;
+          }).length;
+        } catch (ordersError) {
+          console.warn('⚠️ Could not fetch orders:', ordersError.message);
+        }
         
         // In-stock products
         const inStockProducts = products.filter(p => (p.stockQuantity || 0) > 0).length;
         
         const realDashboardData = {
           totalProducts,
-          recentOrders: products.filter(p => (p.stockQuantity || 0) < 5 && (p.stockQuantity || 0) > 0).length, // Low stock items as proxy for recent orders
+          recentOrders: recentOrderCount,
           communityEngagement: totalViews + totalFavorites, // Combined engagement metric
-          monthlyEarnings: `₹${Math.round(estimatedMonthlyEarnings).toLocaleString('en-IN')}`, // Estimated monthly earnings
-          inventoryValue: `₹${totalInventoryValue.toLocaleString('en-IN')}`, // Total inventory value
+          monthlyEarnings: `₹${Math.round(actualMonthlyEarnings).toLocaleString('en-IN')}`,
+          inventoryValue: `₹${totalInventoryValue.toLocaleString('en-IN')}`,
           productGrowth: productsThisMonth > 0 ? `+${productsThisMonth}` : '0',
-          orderGrowth: '+0', // Would need orders API
+          orderGrowth: recentOrderCount > 0 ? `+${recentOrderCount}` : '+0',
           engagementGrowth: totalViews > 0 ? `+${totalViews}` : '+0',
-          earningsGrowth: inStockProducts > 0 ? `+${((inStockProducts/totalProducts)*100).toFixed(0)}%` : '+0%'
+          earningsGrowth: actualMonthlyEarnings > 0 ? `+${((actualMonthlyEarnings/totalInventoryValue)*100).toFixed(0)}%` : '+0%'
         };
         
         // Calculate profile completion percentage
@@ -150,11 +169,20 @@ const ArtisanDashboard = () => {
         
         console.log('📊 Total profile completion:', profileCompletion);
         
+        // Fetch real followers count from social stats API
+        let followersCount = 0;
+        try {
+          const socialStatsResponse = await api.social.getStats();
+          followersCount = socialStatsResponse.data?.data?.followersCount || 0;
+        } catch (socialError) {
+          console.warn('⚠️ Could not fetch social stats:', socialError.message);
+        }
+
         // Calculate module statistics
         const calculatedModuleStats = {
           totalProducts: totalProducts,
-          followers: totalFavorites, // Using favorites as proxy for followers
-          campaigns: 0, // Would need marketing campaigns API
+          followers: followersCount,
+          campaigns: parseInt(localStorage.getItem('marketing-templates-count') || '0', 10),
           profileCompletion: Math.min(profileCompletion, 100)
         };
         

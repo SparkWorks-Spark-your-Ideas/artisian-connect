@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import Header from '../../components/ui/Header';
 import ProductSelector from './components/ProductSelector';
 import PlatformSelector from './components/PlatformSelector';
@@ -11,10 +11,13 @@ import Button from '../../components/ui/Button';
 
 const MarketingContentGenerator = () => {
   const [selectedProducts, setSelectedProducts] = useState([]);
+  const [allProducts, setAllProducts] = useState([]);
   const [selectedPlatform, setSelectedPlatform] = useState('');
   const [generatedContent, setGeneratedContent] = useState(null);
   const [selectedHashtags, setSelectedHashtags] = useState([]);
   const [activeTab, setActiveTab] = useState('create');
+  const [actionFeedback, setActionFeedback] = useState(null);
+  const [showAnalytics, setShowAnalytics] = useState(false);
 
   const handleProductToggle = (productId, isSelected) => {
     if (isSelected) {
@@ -34,10 +37,113 @@ const MarketingContentGenerator = () => {
 
   const handleContentGenerated = (content) => {
     setGeneratedContent(content);
-    // Auto-select hashtags from generated content
     if (content?.hashtags) {
       setSelectedHashtags(content?.hashtags);
     }
+  };
+
+  const showFeedback = (msg) => {
+    setActionFeedback(msg);
+    setTimeout(() => setActionFeedback(null), 3000);
+  };
+
+  // Export Content — download as .txt file
+  const handleExportContent = useCallback(() => {
+    if (!generatedContent) return;
+    const lines = [];
+    lines.push(`Platform: ${generatedContent.platform || selectedPlatform}`);
+    lines.push(`Tone: ${generatedContent.tone || ''}`);
+    lines.push(`Generated: ${new Date(generatedContent.generatedAt).toLocaleString()}`);
+    lines.push('');
+    lines.push('--- CAPTION ---');
+    lines.push(generatedContent.caption || '');
+    lines.push('');
+    if (generatedContent.hashtags?.length) {
+      lines.push('--- HASHTAGS ---');
+      lines.push(generatedContent.hashtags.join(' '));
+      lines.push('');
+    }
+    if (generatedContent.bestTime) {
+      lines.push('--- BEST POSTING TIME ---');
+      lines.push(generatedContent.bestTime);
+      lines.push('');
+    }
+    if (generatedContent.engagement) {
+      lines.push('--- ENGAGEMENT TIP ---');
+      lines.push(generatedContent.engagement);
+    }
+    const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `marketing-content-${generatedContent.platform || 'post'}-${Date.now()}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showFeedback('Content exported!');
+  }, [generatedContent, selectedPlatform]);
+
+  // Save Template — persist to localStorage
+  const handleSaveTemplate = useCallback(() => {
+    if (!generatedContent) return;
+    const templates = JSON.parse(localStorage.getItem('marketing-templates') || '[]');
+    const template = {
+      id: Date.now(),
+      platform: generatedContent.platform || selectedPlatform,
+      tone: generatedContent.tone,
+      caption: generatedContent.caption,
+      hashtags: generatedContent.hashtags,
+      bestTime: generatedContent.bestTime,
+      engagement: generatedContent.engagement,
+      savedAt: new Date().toISOString()
+    };
+    templates.unshift(template);
+    // Keep only last 20 templates
+    const savedTemplates = templates.slice(0, 20);
+    localStorage.setItem('marketing-templates', JSON.stringify(savedTemplates));
+    localStorage.setItem('marketing-templates-count', String(savedTemplates.length));
+    showFeedback('Template saved!');
+  }, [generatedContent, selectedPlatform]);
+
+  // Share Preview — copy caption + hashtags to clipboard or use Web Share API
+  const handleSharePreview = useCallback(async () => {
+    if (!generatedContent) return;
+    const text = [
+      generatedContent.caption || '',
+      '',
+      (generatedContent.hashtags || []).join(' ')
+    ].join('\n').trim();
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: 'Marketing Content', text });
+        showFeedback('Shared!');
+        return;
+      } catch (e) { /* user cancelled or not supported, fall through to clipboard */ }
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+      showFeedback('Copied to clipboard!');
+    } catch {
+      showFeedback('Could not copy.');
+    }
+  }, [generatedContent]);
+
+  // View Analytics — show saved templates history
+  const handleViewAnalytics = () => {
+    setShowAnalytics(prev => !prev);
+  };
+
+  const getSavedTemplates = () => {
+    try { return JSON.parse(localStorage.getItem('marketing-templates') || '[]'); }
+    catch { return []; }
+  };
+
+  const deleteTemplate = (id) => {
+    const templates = getSavedTemplates().filter(t => t.id !== id);
+    localStorage.setItem('marketing-templates', JSON.stringify(templates));
+    localStorage.setItem('marketing-templates-count', String(templates.length));
+    setShowAnalytics(false);
+    setTimeout(() => setShowAnalytics(true), 0);
   };
 
   const tabs = [
@@ -52,6 +158,7 @@ const MarketingContentGenerator = () => {
       <ProductSelector
         selectedProducts={selectedProducts}
         onProductToggle={handleProductToggle}
+        onProductsLoaded={setAllProducts}
       />
 
       {/* Platform Selection */}
@@ -64,13 +171,14 @@ const MarketingContentGenerator = () => {
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <ContentGenerator
           selectedProducts={selectedProducts}
+          allProducts={allProducts}
           selectedPlatform={selectedPlatform}
           onContentGenerated={handleContentGenerated}
         />
         <ContentPreview
           content={generatedContent}
           platform={selectedPlatform}
-          selectedProducts={selectedProducts}
+          selectedProducts={allProducts.filter(p => selectedProducts.includes(p.id))}
         />
       </div>
     </div>
@@ -182,7 +290,14 @@ const MarketingContentGenerator = () => {
 
         {/* Quick Actions */}
         <div className="bg-card rounded-lg border border-border p-6">
-          <h3 className="text-lg font-semibold text-foreground mb-4">Quick Actions</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-foreground">Quick Actions</h3>
+            {actionFeedback && (
+              <span className="text-sm font-medium text-green-600 flex items-center gap-1">
+                <Icon name="CheckCircle" size={14} /> {actionFeedback}
+              </span>
+            )}
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Button
               variant="outline"
@@ -190,6 +305,7 @@ const MarketingContentGenerator = () => {
               iconPosition="left"
               disabled={!generatedContent}
               fullWidth
+              onClick={handleExportContent}
             >
               Export Content
             </Button>
@@ -199,6 +315,7 @@ const MarketingContentGenerator = () => {
               iconPosition="left"
               disabled={!generatedContent}
               fullWidth
+              onClick={handleSaveTemplate}
             >
               Save Template
             </Button>
@@ -208,18 +325,67 @@ const MarketingContentGenerator = () => {
               iconPosition="left"
               disabled={!generatedContent}
               fullWidth
+              onClick={handleSharePreview}
             >
               Share Preview
             </Button>
             <Button
-              variant="outline"
+              variant={showAnalytics ? 'default' : 'outline'}
               iconName="BarChart3"
               iconPosition="left"
               fullWidth
+              onClick={handleViewAnalytics}
             >
-              View Analytics
+              {showAnalytics ? 'Hide Templates' : 'Saved Templates'}
             </Button>
           </div>
+
+          {/* Saved Templates Panel */}
+          {showAnalytics && (
+            <div className="mt-4 pt-4 border-t border-border">
+              <h4 className="text-sm font-semibold text-foreground mb-3">Saved Templates</h4>
+              {getSavedTemplates().length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">No saved templates yet. Generate content and click "Save Template" to save.</p>
+              ) : (
+                <div className="space-y-3 max-h-80 overflow-y-auto">
+                  {getSavedTemplates().map((tpl) => (
+                    <div key={tpl.id} className="bg-muted/30 rounded-lg p-3 border border-border">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-medium bg-primary/10 text-primary px-2 py-0.5 rounded-full capitalize">{tpl.platform}</span>
+                          <span className="text-xs text-muted-foreground capitalize">{tpl.tone}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground">{new Date(tpl.savedAt).toLocaleDateString()}</span>
+                          <button
+                            onClick={() => {
+                              const text = [tpl.caption, '', (tpl.hashtags || []).join(' ')].join('\n').trim();
+                              navigator.clipboard.writeText(text).then(() => showFeedback('Copied!'));
+                            }}
+                            className="text-muted-foreground hover:text-primary p-1"
+                            title="Copy to clipboard"
+                          >
+                            <Icon name="Copy" size={14} />
+                          </button>
+                          <button
+                            onClick={() => deleteTemplate(tpl.id)}
+                            className="text-muted-foreground hover:text-red-500 p-1"
+                            title="Delete template"
+                          >
+                            <Icon name="Trash2" size={14} />
+                          </button>
+                        </div>
+                      </div>
+                      <p className="text-xs text-foreground line-clamp-2">{tpl.caption}</p>
+                      {tpl.hashtags?.length > 0 && (
+                        <p className="text-xs text-primary mt-1 truncate">{tpl.hashtags.slice(0, 5).join(' ')}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Tips Section */}
