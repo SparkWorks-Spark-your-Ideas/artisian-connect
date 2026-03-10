@@ -134,9 +134,23 @@ router.get('/profile/:uid', asyncHandler(async (req, res) => {
   const userDoc = await db.collection('users').doc(uid).get();
   
   if (!userDoc.exists) {
-    return res.status(404).json({
-      error: 'Profile Not Found',
-      message: 'User profile not found'
+    // For legacy posts with non-existent authorIds, return a minimal profile
+    return res.json({
+      success: true,
+      message: 'Basic profile retrieved',
+      data: {
+        user: {
+          uid,
+          firstName: uid,
+          lastName: '',
+          userType: 'artisan',
+          avatarUrl: null,
+          bio: null,
+          location: null,
+          joinedDate: null,
+          isVerified: false
+        }
+      }
     });
   }
 
@@ -158,13 +172,15 @@ router.get('/profile/:uid', asyncHandler(async (req, res) => {
   // Add artisan-specific public information
   if (userData.userType === 'artisan' && userData.artisanProfile) {
     publicProfile.artisanProfile = {
+      craftSpecialization: userData.artisanProfile.craftSpecialization,
       skills: userData.artisanProfile.skills,
       experienceLevel: userData.artisanProfile.experienceLevel,
       rating: userData.artisanProfile.rating,
       totalReviews: userData.artisanProfile.totalReviews,
       totalSales: userData.artisanProfile.totalSales,
       socialLinks: userData.artisanProfile.socialLinks,
-      isVerified: userData.artisanProfile.isVerified
+      isVerified: userData.artisanProfile.isVerified,
+      bio: userData.artisanProfile.bio || userData.bio
     };
   }
 

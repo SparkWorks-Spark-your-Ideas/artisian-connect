@@ -107,6 +107,11 @@ export const api = {
     getGroups: () => apiClient.get('/social/groups'),
     joinGroup: (groupId) => apiClient.post('/social/group/join', { groupId }),
     leaveGroup: (groupId) => apiClient.post('/social/group/leave', { groupId }),
+    uploadImages: (formData) => apiClient.post('/social/upload-images', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    }),
+    followArtisan: (artisanId) => apiClient.post('/social/follow', { artisanId }),
+    getStats: () => apiClient.get('/social/stats'),
   },
 
   // Marketing endpoints

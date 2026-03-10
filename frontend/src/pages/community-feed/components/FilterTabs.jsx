@@ -2,7 +2,7 @@ import React from 'react';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 
-const FilterTabs = ({ activeFilter, onFilterChange, counts }) => {
+const FilterTabs = ({ activeFilter, onFilterChange, counts, stats }) => {
   const filters = [
     {
       id: 'all',
@@ -40,7 +40,7 @@ const FilterTabs = ({ activeFilter, onFilterChange, counts }) => {
         <h2 className="text-lg font-semibold text-foreground">Community Feed</h2>
         <div className="flex items-center space-x-2 text-sm text-muted-foreground">
           <Icon name="Users" size={16} />
-          <span>2,847 active artisans</span>
+          <span>{stats?.totalPosts || 0} total posts</span>
         </div>
       </div>
       {/* Desktop Tabs */}
@@ -98,19 +98,19 @@ const FilterTabs = ({ activeFilter, onFilterChange, counts }) => {
       {/* Quick Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 pt-4 border-t border-border">
         <div className="text-center">
-          <div className="text-lg font-semibold text-foreground">156</div>
+          <div className="text-lg font-semibold text-foreground">{stats?.postsToday || 0}</div>
           <div className="text-xs text-muted-foreground">Posts Today</div>
         </div>
         <div className="text-center">
-          <div className="text-lg font-semibold text-foreground">89</div>
-          <div className="text-xs text-muted-foreground">New Followers</div>
+          <div className="text-lg font-semibold text-foreground">{stats?.followingCount || 0}</div>
+          <div className="text-xs text-muted-foreground">Following</div>
         </div>
         <div className="text-center">
-          <div className="text-lg font-semibold text-foreground">234</div>
+          <div className="text-lg font-semibold text-foreground">{stats?.totalInteractions || 0}</div>
           <div className="text-xs text-muted-foreground">Interactions</div>
         </div>
         <div className="text-center">
-          <div className="text-lg font-semibold text-foreground">12</div>
+          <div className="text-lg font-semibold text-foreground">{stats?.successStories || 0}</div>
           <div className="text-xs text-muted-foreground">Success Stories</div>
         </div>
       </div>
