@@ -5,11 +5,24 @@ import Button from '../../../components/ui/Button';
 
 const PostCreator = ({ onCreatePost }) => {
   const [content, setContent] = useState('');
-  const [selectedImages, setSelectedImages] = useState([]);
+  const [selectedImages, setSelectedImages] = useState([]); // { file, preview }
   const [tags, setTags] = useState('');
   const [postType, setPostType] = useState('general');
   const [isDragOver, setIsDragOver] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const fileInputRef = useRef(null);
+
+  // Get user profile from localStorage
+  const getUserProfile = () => {
+    try {
+      const stored = localStorage.getItem('userProfile');
+      return stored ? JSON.parse(stored) : null;
+    } catch { return null; }
+  };
+
+  const userProfile = getUserProfile();
+  const userName = userProfile ? `${userProfile.firstName || ''} ${userProfile.lastName || ''}`.trim() : 'Artisan';
+  const userAvatar = userProfile?.avatarUrl || null;
 
   const craftTags = [
     'pottery', 'textiles', 'jewelry', 'woodwork', 'metalwork', 
@@ -17,9 +30,12 @@ const PostCreator = ({ onCreatePost }) => {
   ];
 
   const handleImageUpload = (files) => {
-    const newImages = Array.from(files)?.slice(0, 4 - selectedImages?.length);
-    const imageUrls = newImages?.map(file => URL.createObjectURL(file));
-    setSelectedImages(prev => [...prev, ...imageUrls]);
+    const newFiles = Array.from(files).slice(0, 4 - selectedImages.length);
+    const newImages = newFiles.map(file => ({
+      file,
+      preview: URL.createObjectURL(file)
+    }));
+    setSelectedImages(prev => [...prev, ...newImages]);
   };
 
   const handleDrop = (e) => {
@@ -40,39 +56,40 @@ const PostCreator = ({ onCreatePost }) => {
   };
 
   const removeImage = (index) => {
-    setSelectedImages(prev => prev?.filter((_, i) => i !== index));
+    setSelectedImages(prev => {
+      const removed = prev[index];
+      if (removed?.preview) URL.revokeObjectURL(removed.preview);
+      return prev.filter((_, i) => i !== index);
+    });
   };
 
-  const handleSubmit = () => {
-    if (!content?.trim() && selectedImages?.length === 0) return;
+  const typeMap = { general: 'text', technique: 'text', success_story: 'success_story' };
 
-    const newPost = {
-      id: Date.now(),
-      author: {
-        id: 'current-user',
-        name: 'Current User',
-        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face',
-        craftType: 'Multi-craft Artisan',
-        isFollowing: false
-      },
-      content,
-      images: selectedImages,
-      tags: tags?.split(',')?.map(tag => tag?.trim())?.filter(tag => tag),
-      type: postType,
-      timestamp: new Date(),
-      likes: 0,
-      isLiked: false,
-      comments: [],
-      location: 'Mumbai, Maharashtra'
-    };
+  const handleSubmit = async () => {
+    if (!content?.trim() && selectedImages.length === 0) return;
+    setSubmitting(true);
 
-    onCreatePost && onCreatePost(newPost);
-    
-    // Reset form
-    setContent('');
-    setSelectedImages([]);
-    setTags('');
-    setPostType('general');
+    try {
+      const postData = {
+        content,
+        type: typeMap[postType] || 'text',
+        tags: tags?.split(',')?.map(tag => tag?.trim())?.filter(tag => tag) || [],
+        imageFiles: selectedImages.map(img => img.file)
+      };
+
+      await onCreatePost(postData);
+      
+      // Reset form
+      selectedImages.forEach(img => { if (img.preview) URL.revokeObjectURL(img.preview); });
+      setContent('');
+      setSelectedImages([]);
+      setTags('');
+      setPostType('general');
+    } catch (err) {
+      console.error('Post creation error:', err);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -80,13 +97,13 @@ const PostCreator = ({ onCreatePost }) => {
       {/* Header */}
       <div className="flex items-center space-x-3 mb-4">
         <Image
-          src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face"
-          alt="Your avatar"
+          src={userAvatar}
+          alt={userName}
           className="w-10 h-10 rounded-full object-cover"
         />
         <div className="flex-1">
           <h3 className="font-medium text-foreground">Share your craft journey</h3>
-          <p className="text-sm text-muted-foreground">Connect with fellow artisans</p>
+          <p className="text-sm text-muted-foreground">Posting as {userName}</p>
         </div>
       </div>
       {/* Post Type Selector */}
@@ -158,10 +175,10 @@ const PostCreator = ({ onCreatePost }) => {
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-            {selectedImages?.map((image, index) => (
+            {selectedImages?.map((img, index) => (
               <div key={index} className="relative group">
                 <Image
-                  src={image}
+                  src={img.preview}
                   alt={`Upload ${index + 1}`}
                   className="w-full h-20 object-cover rounded-lg"
                 />
@@ -228,10 +245,19 @@ const PostCreator = ({ onCreatePost }) => {
         
         <Button
           onClick={handleSubmit}
-          disabled={!content?.trim() && selectedImages?.length === 0}
+          disabled={(!content?.trim() && selectedImages?.length === 0) || submitting}
         >
-          <Icon name="Send" size={16} className="mr-2" />
-          Share Post
+          {submitting ? (
+            <>
+              <Icon name="Loader2" size={16} className="mr-2 animate-spin" />
+              Posting...
+            </>
+          ) : (
+            <>
+              <Icon name="Send" size={16} className="mr-2" />
+              Share Post
+            </>
+          )}
         </Button>
       </div>
     </div>

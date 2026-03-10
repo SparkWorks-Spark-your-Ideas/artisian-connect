@@ -97,17 +97,19 @@ const WelcomeSection = () => {
   };
 
   const getWelcomeText = () => {
-    const primarySpecialization = userProfile?.craftSpecializations?.[0] || 'Artisan';
+    const primarySpecialization = userProfile?.craftSpecializations?.[0] || userProfile?.artisanProfile?.craftSpecialization;
+    const subtitleEn = primarySpecialization ? `Traditional ${primarySpecialization}` : 'New Artisan';
+    const subtitleHi = primarySpecialization ? `पारंपरिक ${primarySpecialization} कारीगर` : 'नया कारीगर';
     const texts = {
       en: {
         welcome: "Welcome back to your craft journey!",
-        subtitle: `Traditional ${primarySpecialization}`,
+        subtitle: subtitleEn,
         description: "Continue creating beautiful handcrafted pieces and growing your digital presence.",
         todayIs: "Today is"
       },
       hi: {
         welcome: "अपनी शिल्प यात्रा में वापस स्वागत है!",
-        subtitle: `पारंपरिक ${primarySpecialization} कारीगर`,
+        subtitle: subtitleHi,
         description: "सुंदर हस्तशिल्प बनाना जारी रखें और अपनी डिजिटल उपस्थिति बढ़ाएं।",
         todayIs: "आज है"
       }
@@ -137,8 +139,8 @@ const WelcomeSection = () => {
     if (userProfile?.profilePhoto) return userProfile.profilePhoto;
     if (userProfile?.avatarUrl) return userProfile.avatarUrl;
     
-    // Fallback to default avatar
-    return "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=face";
+    // Return null so AppImage shows its default placeholder
+    return null;
   };
 
   const formatDate = () => {
@@ -172,9 +174,11 @@ const WelcomeSection = () => {
                 className="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover border-4 border-primary/20"
               />
             )}
-            <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-success rounded-full border-2 border-card flex items-center justify-center">
-              <Icon name="Check" size={12} color="white" />
-            </div>
+            {(userProfile?.isVerified || userProfile?.artisanProfile?.isVerified) && (
+              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-success rounded-full border-2 border-card flex items-center justify-center">
+                <Icon name="Check" size={12} color="white" />
+              </div>
+            )}
           </div>
           
           <div>
@@ -201,26 +205,30 @@ const WelcomeSection = () => {
           </div>
         </div>
 
-        {/* Achievement Badge */}
-        <div className="hidden md:flex flex-col items-center space-y-2">
-          <div className="w-16 h-16 bg-success rounded-full flex items-center justify-center">
-            <Icon name="Award" size={24} color="white" />
+        {/* Achievement Badge - only show if verified */}
+        {(userProfile?.isVerified || userProfile?.artisanProfile?.isVerified) && (
+          <div className="hidden md:flex flex-col items-center space-y-2">
+            <div className="w-16 h-16 bg-success rounded-full flex items-center justify-center">
+              <Icon name="Award" size={24} color="white" />
+            </div>
+            <div className="text-center">
+              <p className="text-xs font-medium text-success">Verified</p>
+              <p className="text-xs text-muted-foreground">Artisan</p>
+            </div>
           </div>
-          <div className="text-center">
-            <p className="text-xs font-medium text-success">Verified</p>
-            <p className="text-xs text-muted-foreground">Artisan</p>
-          </div>
-        </div>
+        )}
       </div>
       {/* Mobile Achievement Badge */}
-      <div className="md:hidden mt-4 flex items-center justify-center space-x-4 pt-4 border-t border-border">
-        <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-success rounded-full flex items-center justify-center">
-            <Icon name="Award" size={16} color="white" />
+      {(userProfile?.isVerified || userProfile?.artisanProfile?.isVerified) && (
+        <div className="md:hidden mt-4 flex items-center justify-center space-x-4 pt-4 border-t border-border">
+          <div className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-success rounded-full flex items-center justify-center">
+              <Icon name="Award" size={16} color="white" />
+            </div>
+            <span className="text-sm font-medium text-success">Verified Artisan</span>
           </div>
-          <span className="text-sm font-medium text-success">Verified Artisan</span>
         </div>
-      </div>
+      )}
     </div>
   );
 };

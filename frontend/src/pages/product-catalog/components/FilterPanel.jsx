@@ -12,15 +12,19 @@ const FilterPanel = ({
   resultCount 
 }) => {
   const categories = [
-    'All Categories',
-    'Pottery & Ceramics',
-    'Textiles & Fabrics',
-    'Jewelry & Accessories',
-    'Woodwork & Furniture',
-    'Metalwork & Sculptures',
-    'Paintings & Art',
-    'Home Decor',
-    'Traditional Crafts'
+    { value: 'All Categories', label: 'All Categories' },
+    { value: 'pottery', label: 'Pottery & Ceramics' },
+    { value: 'textiles', label: 'Textiles & Fabrics' },
+    { value: 'jewelry', label: 'Jewelry & Ornaments' },
+    { value: 'woodwork', label: 'Woodwork & Carving' },
+    { value: 'metalwork', label: 'Metalwork & Brass' },
+    { value: 'leather', label: 'Leather Craft' },
+    { value: 'bamboo', label: 'Bamboo & Cane' },
+    { value: 'stone', label: 'Stone Carving' },
+    { value: 'painting', label: 'Traditional Painting' },
+    { value: 'embroidery', label: 'Embroidery & Needlework' },
+    { value: 'weaving', label: 'Handloom Weaving' },
+    { value: 'other', label: 'Other Traditional Crafts' }
   ];
 
   const statusOptions = [
@@ -63,7 +67,7 @@ const FilterPanel = ({
           className="w-full px-3 py-2 border border-border rounded-lg bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
         >
           {categories?.map((category) => (
-            <option key={category} value={category}>{category}</option>
+            <option key={category.value} value={category.value}>{category.label}</option>
           ))}
         </select>
       </div>
@@ -116,31 +120,6 @@ const FilterPanel = ({
             <option key={option?.value} value={option?.value}>{option?.label}</option>
           ))}
         </select>
-      </div>
-
-      {/* Performance Filter */}
-      <div>
-        <label className="block text-sm font-medium text-foreground mb-2">Performance</label>
-        <div className="space-y-2">
-          <label className="flex items-center">
-            <input
-              type="checkbox"
-              checked={filters?.highPerformance}
-              onChange={(e) => onFilterChange('highPerformance', e?.target?.checked)}
-              className="w-4 h-4 text-primary border-border rounded focus:ring-primary focus:ring-2 mr-2"
-            />
-            <span className="text-sm text-foreground">High Performance (&gt;5% conversion)</span>
-          </label>
-          <label className="flex items-center">
-            <input
-              type="checkbox"
-              checked={filters?.trending}
-              onChange={(e) => onFilterChange('trending', e?.target?.checked)}
-              className="w-4 h-4 text-primary border-border rounded focus:ring-primary focus:ring-2 mr-2"
-            />
-            <span className="text-sm text-foreground">Trending (Increasing views)</span>
-          </label>
-        </div>
       </div>
 
       {/* Clear Filters */}

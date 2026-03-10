@@ -1,17 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 import Select from '../../../components/ui/Select';
-import { api } from '../../../utils/api';
 import { generateMarketingContent } from '../../../utils/geminiAPI';
 
-const ContentGenerator = ({ selectedProducts, selectedPlatform, onContentGenerated }) => {
+const ContentGenerator = ({ selectedProducts, allProducts, selectedPlatform, onContentGenerated }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedContent, setGeneratedContent] = useState(null);
   const [error, setError] = useState(null);
   const [contentTone, setContentTone] = useState('enthusiastic');
   const [progress, setProgress] = useState(0);
-  const [products, setProducts] = useState([]);
   const [availableTones] = useState([
     { value: 'enthusiastic', label: 'Enthusiastic' },
     { value: 'professional', label: 'Professional' },
@@ -20,56 +18,19 @@ const ContentGenerator = ({ selectedProducts, selectedPlatform, onContentGenerat
     { value: 'persuasive', label: 'Persuasive' }
   ]);
 
-  useEffect(() => {
-    loadProducts();
-  }, [selectedProducts]);
-
-  const loadProducts = async () => {
-    try {
-      // If we already have selected products, no need to load from API
-      if (selectedProducts?.length > 0) {
-        return;
-      }
-      
-      const response = await api.products.list({ 
-        limit: 50, 
-        isActive: true
-      });
-      
-      if (response.data.success) {
-        setProducts(response.data.data.products || []);
-      }
-    } catch (error) {
-      console.error('Error loading products:', error);
-    }
-  };
-
-  // Get selected product objects from their IDs
+  // Get selected product objects from their IDs using allProducts from parent
   const getSelectedProductObjects = () => {
-    // First check if we have the products in state
-    const foundProducts = products.filter(product => 
-      selectedProducts.includes(product.id)
-    );
-    
-    // If we found all selected products, return them
-    if (foundProducts.length === selectedProducts.length) {
-      return foundProducts;
-    }
-    
-    // Otherwise, we need to fetch them individually
+    const source = allProducts || [];
     return selectedProducts.map(id => {
-      const product = products.find(p => p.id === id);
-      
+      const product = source.find(p => p.id === id);
       if (product) return product;
-      
-      // If product not found, return basic structure
       return {
         id,
         productName: `Product ${id.substring(0, 5)}`,
         craftCategory: 'Handcrafted Item',
-        priceInr: 1500,
-        shortDescription: 'Traditional Indian handcrafted item',
-        materialsUsed: ['Traditional materials'],
+        priceInr: 0,
+        shortDescription: 'Handcrafted item',
+        materialsUsed: [],
         productPhotos: []
       };
     });

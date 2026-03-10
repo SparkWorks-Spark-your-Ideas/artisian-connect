@@ -4,7 +4,7 @@ import Icon from '../../../components/AppIcon';
 import { Checkbox } from '../../../components/ui/Checkbox';
 import { api } from '../../../utils/api';
 
-const ProductSelector = ({ selectedProducts, onProductToggle }) => {
+const ProductSelector = ({ selectedProducts, onProductToggle, onProductsLoaded }) => {
   const [viewMode, setViewMode] = useState('grid');
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -54,6 +54,7 @@ const ProductSelector = ({ selectedProducts, onProductToggle }) => {
         }));
         
         setProducts(mappedProducts);
+        if (onProductsLoaded) onProductsLoaded(mappedProducts);
       } else {
         throw new Error('Failed to load products');
       }

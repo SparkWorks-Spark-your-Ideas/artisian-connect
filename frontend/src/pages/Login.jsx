@@ -8,6 +8,7 @@ import { api } from '../utils/api';
 const Login = () => {
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
+  const [loginRole, setLoginRole] = useState('artisan'); // 'artisan' or 'customer'
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [formData, setFormData] = useState({
@@ -26,6 +27,10 @@ const Login = () => {
     setError(null);
   };
 
+  const getRedirectPath = (userType) => {
+    return userType === 'customer' ? '/shop' : '/dashboard';
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -33,15 +38,11 @@ const Login = () => {
 
     try {
       if (isLogin) {
-        // Login
         const response = await api.auth.login({
           email: formData.email,
           password: formData.password
         });
 
-        console.log('✅ Login successful:', response.data);
-
-        // Store auth token and user data
         if (response.data.data.token) {
           localStorage.setItem('authToken', response.data.data.token);
         }
@@ -49,10 +50,9 @@ const Login = () => {
           localStorage.setItem('userProfile', JSON.stringify(response.data.data.user));
         }
 
-        // Redirect to dashboard
-        navigate('/dashboard');
+        const userType = response.data.data.user?.userType || loginRole;
+        navigate(getRedirectPath(userType));
       } else {
-        // Register
         const response = await api.auth.register({
           email: formData.email,
           password: formData.password,
@@ -61,9 +61,6 @@ const Login = () => {
           userType: formData.userType
         });
 
-        console.log('✅ Registration successful:', response.data);
-
-        // Store auth token and user data
         if (response.data.data.token) {
           localStorage.setItem('authToken', response.data.data.token);
         }
@@ -71,13 +68,10 @@ const Login = () => {
           localStorage.setItem('userProfile', JSON.stringify(response.data.data.user));
         }
 
-        // Redirect to dashboard
-        navigate('/dashboard');
+        navigate(getRedirectPath(formData.userType));
       }
     } catch (err) {
-      console.error('❌ Authentication error:', err);
-      
-      // Handle validation errors with details
+      console.error('Authentication error:', err);
       if (err.response?.data?.details && Array.isArray(err.response.data.details)) {
         const errorList = err.response.data.details.map(d => `${d.field}: ${d.message}`).join(', ');
         setError(errorList);
@@ -108,9 +102,39 @@ const Login = () => {
               {isLogin ? 'Welcome Back!' : 'Create Account'}
             </h2>
             <p className="text-gray-600">
-              {isLogin ? 'Sign in to continue to your dashboard' : 'Join our community of artisans'}
+              {isLogin ? 'Sign in to continue' : 'Join our community of artisans & customers'}
             </p>
           </div>
+
+          {/* Login Role Tabs (only on login) */}
+          {isLogin && (
+            <div className="flex bg-orange-50 rounded-xl p-1 mb-6">
+              <button
+                type="button"
+                onClick={() => setLoginRole('artisan')}
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  loginRole === 'artisan'
+                    ? 'bg-white text-orange-700 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <Icon name="Hammer" size={16} />
+                Artisan
+              </button>
+              <button
+                type="button"
+                onClick={() => setLoginRole('customer')}
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  loginRole === 'customer'
+                    ? 'bg-white text-orange-700 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <Icon name="ShoppingBag" size={16} />
+                Customer
+              </button>
+            </div>
+          )}
 
           {error && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start">

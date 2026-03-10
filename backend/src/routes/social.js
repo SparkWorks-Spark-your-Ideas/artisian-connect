@@ -16,57 +16,146 @@ router.get('/feed',
   optionalAuth, 
   validate(schemas.pagination, 'query'),
   asyncHandler(async (req, res) => {
-    const { page = 1, limit = 10, sortBy = 'createdAt', sortOrder = 'desc' } = req.query;
+    const { page = 1, limit = 10, filter, type } = req.query;
     
-    let query = db.collection('posts')
-      .where('isActive', '==', true)
-      .orderBy(sortBy, sortOrder)
-      .limit(parseInt(limit))
-      .offset((parseInt(page) - 1) * parseInt(limit));
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
 
-    // If user is logged in, prioritize posts from followed artisans
+    // Fetch all posts and filter/sort in code to avoid composite index requirements
+    const postsSnapshot = await db.collection('posts').get();
+    let allDocs = postsSnapshot.docs
+      .map(doc => ({ id: doc.id, ...doc.data() }))
+      .filter(p => p.isActive !== false);
+
+    // Sort by createdAt descending
+    allDocs.sort((a, b) => {
+      const aTime = a.createdAt?._seconds || (a.createdAt ? new Date(a.createdAt).getTime() / 1000 : 0);
+      const bTime = b.createdAt?._seconds || (b.createdAt ? new Date(b.createdAt).getTime() / 1000 : 0);
+      return bTime - aTime;
+    });
+
+    // Get current user's followed list and followers list
+    let followedArtisans = [];
+    let followerIds = [];
     if (req.user) {
-      // Get user's followed artisans
       const userDoc = await db.collection('users').doc(req.user.uid).get();
-      const followedArtisans = userDoc.data()?.followedArtisans || [];
-      
-      if (followedArtisans.length > 0) {
-        query = db.collection('posts')
-          .where('authorId', 'in', followedArtisans)
-          .where('isActive', '==', true)
-          .orderBy(sortBy, sortOrder)
-          .limit(parseInt(limit) / 2);
-      }
+      const userData = userDoc.data() || {};
+      followedArtisans = userData.followedArtisans || [];
+      // Compute followers dynamically: find all users who follow the current user
+      const followersSnap = await db.collection('users')
+        .where('followedArtisans', 'array-contains', req.user.uid)
+        .get();
+      followerIds = followersSnap.docs.map(d => d.id);
     }
 
-    const postsSnapshot = await query.get();
-    const posts = [];
+    // Apply filters
+    if (filter === 'following' && req.user) {
+      if (followedArtisans.length === 0) {
+        return res.json({
+          success: true,
+          message: 'Feed retrieved successfully',
+          data: {
+            posts: [],
+            pagination: { page: pageNum, limit: limitNum, total: 0, totalPages: 0 }
+          }
+        });
+      }
+      allDocs = allDocs.filter(p => followedArtisans.includes(p.authorId));
+    } else if (filter === 'followers' && req.user) {
+      if (followerIds.length === 0) {
+        return res.json({
+          success: true,
+          message: 'Feed retrieved successfully',
+          data: {
+            posts: [],
+            pagination: { page: pageNum, limit: limitNum, total: 0, totalPages: 0 }
+          }
+        });
+      }
+      allDocs = allDocs.filter(p => followerIds.includes(p.authorId));
+    } else if (filter === 'success_stories' || type === 'success_story') {
+      allDocs = allDocs.filter(p => p.type === 'success_story');
+    }
 
-    for (const doc of postsSnapshot.docs) {
-      const postData = doc.data();
-      
+    const total = allDocs.length;
+    const paged = allDocs.slice((pageNum - 1) * limitNum, pageNum * limitNum);
+
+    const posts = [];
+    for (const postData of paged) {
       // Get author information
-      const authorDoc = await db.collection('users').doc(postData.authorId).get();
-      const authorData = authorDoc.data();
-      
+      let authorData = {};
+      try {
+        const authorDoc = await db.collection('users').doc(postData.authorId).get();
+        if (authorDoc.exists) authorData = authorDoc.data();
+      } catch (e) { /* skip */ }
+
+      // Get comments for this post
+      const comments = [];
+      try {
+        const commentsSnapshot = await db.collection('comments')
+          .where('postId', '==', postData.id)
+          .get();
+
+        const commentDocs = commentsSnapshot.docs
+          .map(d => ({ id: d.id, ...d.data() }))
+          .sort((a, b) => {
+            const aT = a.createdAt?._seconds || 0;
+            const bT = b.createdAt?._seconds || 0;
+            return aT - bT;
+          });
+
+        for (const commentData of commentDocs) {
+          let commentAuthorData = {};
+          try {
+            const commentAuthorDoc = await db.collection('users').doc(commentData.authorId).get();
+            if (commentAuthorDoc.exists) commentAuthorData = commentAuthorDoc.data();
+          } catch (e) { /* skip */ }
+
+          comments.push({
+            id: commentData.id,
+            content: commentData.content,
+            timestamp: commentData.createdAt,
+            likes: (commentData.likes || []).length,
+            author: `${commentAuthorData.firstName || ''} ${commentAuthorData.lastName || ''}`.trim() || 'Unknown',
+            avatar: commentAuthorData.avatarUrl || null
+          });
+        }
+      } catch (e) { /* no comments */ }
+
+      // Handle likes as array or number (legacy data)
+      const likesArray = Array.isArray(postData.likes) ? postData.likes : [];
+      const likesCount = Array.isArray(postData.likes) ? postData.likes.length : (typeof postData.likes === 'number' ? postData.likes : 0);
+      const isLiked = req.user ? likesArray.includes(req.user.uid) : false;
+
+      // Handle images - could be imageUrls array or legacy images field
+      let images = postData.imageUrls || [];
+      if (images.length === 0 && Array.isArray(postData.images)) {
+        images = postData.images.filter(img => typeof img === 'string' && img.startsWith('http'));
+      }
+
       posts.push({
-        id: doc.id,
-        ...postData,
+        id: postData.id,
+        content: postData.content,
+        type: postData.type || postData.postType || 'text',
+        tags: Array.isArray(postData.tags) ? postData.tags.filter(t => typeof t === 'string' && !t.startsWith('[')) : [],
+        images,
+        likes: likesCount,
+        isLiked,
+        comments,
+        shares: postData.shares || 0,
+        views: postData.views || 0,
+        timestamp: postData.createdAt,
+        location: postData.location || (authorData.location ? `${authorData.location.city || ''}, ${authorData.location.state || ''}`.replace(/^, |, $/, '') : null),
         author: {
-          uid: authorData.uid,
-          firstName: authorData.firstName,
-          lastName: authorData.lastName,
-          avatarUrl: authorData.avatarUrl,
-          userType: authorData.userType,
+          id: postData.authorId,
+          name: `${authorData.firstName || ''} ${authorData.lastName || ''}`.trim() || postData.authorName || 'Unknown Artisan',
+          avatar: authorData.avatarUrl || postData.authorPhoto || null,
+          craftType: authorData.artisanProfile?.craftSpecialization || authorData.userType || 'Artisan',
+          isFollowing: followedArtisans.includes(postData.authorId),
           isVerified: authorData.artisanProfile?.isVerified || false
         }
       });
     }
-
-    // Get total count for pagination
-    const totalSnapshot = await db.collection('posts')
-      .where('isActive', '==', true)
-      .get();
 
     res.json({
       success: true,
@@ -74,13 +163,235 @@ router.get('/feed',
       data: {
         posts,
         pagination: {
-          page: parseInt(page),
-          limit: parseInt(limit),
-          total: totalSnapshot.size,
-          totalPages: Math.ceil(totalSnapshot.size / parseInt(limit))
+          page: pageNum,
+          limit: limitNum,
+          total,
+          totalPages: Math.ceil(total / limitNum)
         }
       }
     });
+  })
+);
+
+/**
+ * POST /api/social/upload-images
+ * Upload images for a social post
+ */
+router.post('/upload-images',
+  verifyToken,
+  uploadMultiple('images', 4),
+  asyncHandler(async (req, res) => {
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({
+        error: 'No Files',
+        message: 'No images provided'
+      });
+    }
+
+    const uploadResults = await uploadMultipleFiles(req.files, 'social-posts');
+    const imageUrls = uploadResults.map(r => r.publicUrl);
+
+    res.json({
+      success: true,
+      message: 'Images uploaded successfully',
+      data: { imageUrls }
+    });
+  })
+);
+
+/**
+ * POST /api/social/follow
+ * Follow or unfollow an artisan
+ */
+router.post('/follow',
+  verifyToken,
+  asyncHandler(async (req, res) => {
+    const { artisanId } = req.body;
+
+    if (!artisanId) {
+      return res.status(400).json({
+        error: 'Validation Error',
+        message: 'artisanId is required'
+      });
+    }
+
+    if (artisanId === req.user.uid) {
+      return res.status(400).json({
+        error: 'Invalid Action',
+        message: 'You cannot follow yourself'
+      });
+    }
+
+    const userRef = db.collection('users').doc(req.user.uid);
+    const targetRef = db.collection('users').doc(artisanId);
+    const userDoc = await userRef.get();
+    const followedArtisans = userDoc.data()?.followedArtisans || [];
+
+    let action;
+    if (followedArtisans.includes(artisanId)) {
+      // Unfollow
+      const updated = followedArtisans.filter(id => id !== artisanId);
+      await userRef.update({ followedArtisans: updated, updatedAt: new Date() });
+      // Remove from target's followers list
+      const targetDoc = await targetRef.get();
+      if (targetDoc.exists) {
+        const targetFollowers = (targetDoc.data()?.followers || []).filter(id => id !== req.user.uid);
+        await targetRef.update({ followers: targetFollowers, updatedAt: new Date() });
+      }
+      action = 'unfollowed';
+    } else {
+      // Follow
+      followedArtisans.push(artisanId);
+      await userRef.update({ followedArtisans, updatedAt: new Date() });
+      // Add to target's followers list
+      const targetDoc = await targetRef.get();
+      if (targetDoc.exists) {
+        const targetFollowers = targetDoc.data()?.followers || [];
+        if (!targetFollowers.includes(req.user.uid)) {
+          targetFollowers.push(req.user.uid);
+          await targetRef.update({ followers: targetFollowers, updatedAt: new Date() });
+        }
+      }
+      action = 'followed';
+    }
+
+    res.json({
+      success: true,
+      message: `Successfully ${action} artisan`,
+      data: { action, artisanId, isFollowing: action === 'followed' }
+    });
+  })
+);
+
+/**
+ * GET /api/social/stats
+ * Get community feed statistics
+ */
+router.get('/stats',
+  optionalAuth,
+  asyncHandler(async (req, res) => {
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const todayStartSeconds = todayStart.getTime() / 1000;
+
+    // Fetch all posts once, filter in code to avoid composite index requirement
+    const allPostsSnap = await db.collection('posts').get();
+    const allActive = allPostsSnap.docs
+      .map(doc => doc.data())
+      .filter(p => p.isActive !== false);
+
+    const totalPosts = allActive.length;
+
+    // Posts today
+    const postsToday = allActive.filter(p => {
+      const ts = p.createdAt?._seconds || (p.createdAt ? new Date(p.createdAt).getTime() / 1000 : 0);
+      return ts >= todayStartSeconds;
+    }).length;
+
+    // Success stories count
+    const successStories = allActive.filter(p => p.type === 'success_story' || (p.postType && p.postType.includes('Success Story'))).length;
+
+    // Total interactions (only count real array-based data, not legacy number fields)
+    let totalInteractions = 0;
+    allActive.forEach(d => {
+      const likeCount = Array.isArray(d.likes) ? d.likes.length : 0;
+      const commentCount = Array.isArray(d.comments) ? d.comments.length : 0;
+      totalInteractions += likeCount + commentCount;
+    });
+
+    // User-specific counts
+    let followingCount = 0;
+    let followersCount = 0;
+    if (req.user) {
+      const userDoc = await db.collection('users').doc(req.user.uid).get();
+      const userData = userDoc.data() || {};
+      followingCount = (userData.followedArtisans || []).length;
+      // Compute followers dynamically
+      const followersSnap = await db.collection('users')
+        .where('followedArtisans', 'array-contains', req.user.uid)
+        .get();
+      followersCount = followersSnap.size;
+    }
+
+    res.json({
+      success: true,
+      data: {
+        totalPosts,
+        postsToday,
+        successStories,
+        totalInteractions,
+        followingCount,
+        followersCount
+      }
+    });
+  })
+);
+
+/**
+ * GET /api/social/followers
+ * Get list of users who follow the current user (profiles)
+ */
+router.get('/followers',
+  verifyToken,
+  asyncHandler(async (req, res) => {
+    const followersSnap = await db.collection('users')
+      .where('followedArtisans', 'array-contains', req.user.uid)
+      .get();
+
+    const followers = followersSnap.docs.map(doc => {
+      const d = doc.data();
+      const artisan = d.artisanProfile || {};
+      return {
+        uid: doc.id,
+        firstName: d.firstName || '',
+        lastName: d.lastName || '',
+        avatarUrl: d.avatarUrl || artisan.avatarUrl || null,
+        craftSpecialization: artisan.craftSpecialization || d.craftSpecialization || d.userType || '',
+        location: artisan.location || d.location || '',
+        isVerified: d.isVerified || artisan.isVerified || false
+      };
+    });
+
+    res.json({ success: true, data: { followers } });
+  })
+);
+
+/**
+ * GET /api/social/following
+ * Get list of users the current user follows (profiles)
+ */
+router.get('/following',
+  verifyToken,
+  asyncHandler(async (req, res) => {
+    const userDoc = await db.collection('users').doc(req.user.uid).get();
+    const userData = userDoc.data() || {};
+    const followedArtisans = userData.followedArtisans || [];
+
+    if (followedArtisans.length === 0) {
+      return res.json({ success: true, data: { following: [] } });
+    }
+
+    const following = [];
+    for (const uid of followedArtisans) {
+      try {
+        const doc = await db.collection('users').doc(uid).get();
+        if (doc.exists) {
+          const d = doc.data();
+          const artisan = d.artisanProfile || {};
+          following.push({
+            uid: doc.id,
+            firstName: d.firstName || '',
+            lastName: d.lastName || '',
+            avatarUrl: d.avatarUrl || artisan.avatarUrl || null,
+            craftSpecialization: artisan.craftSpecialization || d.craftSpecialization || d.userType || '',
+            location: artisan.location || d.location || '',
+            isVerified: d.isVerified || artisan.isVerified || false
+          });
+        }
+      } catch (e) { /* skip */ }
+    }
+
+    res.json({ success: true, data: { following } });
   })
 );
 
@@ -231,7 +542,8 @@ router.post('/posts/:postId/like',
     }
 
     const postData = postDoc.data();
-    const likes = postData.likes || [];
+    // Handle legacy data where likes may be a number instead of array
+    let likes = Array.isArray(postData.likes) ? postData.likes : [];
     const userIndex = likes.indexOf(req.user.uid);
     
     let action = '';

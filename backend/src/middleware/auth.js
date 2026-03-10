@@ -108,14 +108,16 @@ export const optionalAuth = async (req, res, next) => {
     }
 
     const token = authHeader.split(' ')[1];
-    const decodedToken = await auth.verifyIdToken(token);
+    
+    // Use JWT verification (same as verifyToken) since login generates JWT tokens
+    const decodedToken = jwt.verify(token, JWT_SECRET);
     const userDoc = await db.collection('users').doc(decodedToken.uid).get();
     
     if (userDoc.exists) {
       req.user = {
         uid: decodedToken.uid,
         email: decodedToken.email,
-        emailVerified: decodedToken.email_verified,
+        userType: decodedToken.userType,
         ...userDoc.data()
       };
     }

@@ -1,5 +1,15 @@
 {
   "projects": {
     "default": "artisan-connect-marketplace"
-  }
+  },
+  "targets": {
+    "artisan-connect-marketplace": {
+      "hosting": {
+        "artisan-marketplace-live": [
+          "artisan-marketplace-live"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }

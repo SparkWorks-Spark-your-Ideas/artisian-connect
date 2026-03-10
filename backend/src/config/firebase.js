@@ -18,6 +18,7 @@ export function initializeFirebase() {
     if (admin.apps.length > 0) {
       console.log('✅ Firebase already initialized');
       db = admin.firestore();
+      db.FieldValue = admin.firestore.FieldValue;
       auth = admin.auth();
       return { db, auth };
     }
@@ -48,6 +49,9 @@ export function initializeFirebase() {
     // Initialize Firestore and Auth
     db = admin.firestore();
     auth = admin.auth();
+
+    // Attach FieldValue to db for convenience (used throughout the codebase as db.FieldValue)
+    db.FieldValue = admin.firestore.FieldValue;
 
     // Configure Firestore settings
     db.settings({

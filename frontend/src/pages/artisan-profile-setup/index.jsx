@@ -19,6 +19,9 @@ const ArtisanProfileSetup = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
 
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const [draftSaved, setDraftSaved] = useState(false);
+
   // Profile state
   const [profilePhoto, setProfilePhoto] = useState(null);
   const [selectedCrafts, setSelectedCrafts] = useState([]);
@@ -410,7 +413,8 @@ const ArtisanProfileSetup = () => {
           <div className="flex flex-col sm:flex-row gap-3">
             <Button
               variant="secondary"
-              onClick={() => {
+              onClick={async () => {
+                setIsSavingDraft(true);
                 const draft = {
                   profilePhoto,
                   selectedCrafts,
@@ -422,12 +426,33 @@ const ArtisanProfileSetup = () => {
                   savedAt: new Date()?.toISOString()
                 };
                 localStorage.setItem('artisan-profile-draft', JSON.stringify(draft));
-                alert('Profile draft saved successfully!');
+                
+                // Also try saving to backend (partial save, no validation required)
+                try {
+                  const profileData = {
+                    profilePhoto,
+                    crafts: selectedCrafts,
+                    bio,
+                    location: locationData,
+                    portfolio: portfolioImages,
+                    contact: contactData,
+                    skills: skillsData
+                  };
+                  await api.user.updateArtisanProfile(profileData);
+                } catch (e) {
+                  // Backend save failed, but localStorage draft is saved
+                  console.log('Draft saved locally (backend save skipped):', e.message);
+                }
+                
+                setIsSavingDraft(false);
+                setDraftSaved(true);
+                setTimeout(() => setDraftSaved(false), 3000);
               }}
               iconName="Save"
               iconPosition="left"
+              loading={isSavingDraft}
             >
-              Save Draft
+              {draftSaved ? '✓ Draft Saved!' : 'Save Draft'}
             </Button>
 
             <Button
