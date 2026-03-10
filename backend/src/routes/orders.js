@@ -165,17 +165,36 @@ router.get('/list',
       query = query.where('orderStatus', '==', status);
     }
 
-    // Apply sorting and pagination
-    query = query
-      .orderBy(sortBy, sortOrder)
-      .limit(parseInt(limit))
-      .offset((parseInt(page) - 1) * parseInt(limit));
+    // Try with sorting (requires composite index), fallback to without
+    let ordersSnapshot;
+    try {
+      const sortedQuery = query
+        .orderBy(sortBy, sortOrder)
+        .limit(parseInt(limit))
+        .offset((parseInt(page) - 1) * parseInt(limit));
+      ordersSnapshot = await sortedQuery.get();
+    } catch (indexError) {
+      // Composite index may not exist, fetch without sorting
+      console.warn('Orders query index missing, fetching without sort:', indexError.message);
+      const fallbackQuery = query
+        .limit(parseInt(limit))
+        .offset((parseInt(page) - 1) * parseInt(limit));
+      ordersSnapshot = await fallbackQuery.get();
+    }
 
-    const ordersSnapshot = await query.get();
-    const orders = ordersSnapshot.docs.map(doc => ({
+    let orders = ordersSnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     }));
+
+    // Sort in memory if index-based sort failed
+    if (sortBy === 'createdAt') {
+      orders.sort((a, b) => {
+        const aTime = a.createdAt?._seconds || 0;
+        const bTime = b.createdAt?._seconds || 0;
+        return sortOrder === 'desc' ? bTime - aTime : aTime - bTime;
+      });
+    }
 
     // For artisans, filter items to show only their products
     if (req.user.userType === 'artisan') {

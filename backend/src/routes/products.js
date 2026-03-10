@@ -354,7 +354,7 @@ router.get('/list',
     let query = db.collection('products');
 
     const productsSnapshot = await query.get();
-    const allProducts = [];
+    const filteredProducts = [];
 
     for (const doc of productsSnapshot.docs) {
       const productData = doc.data();
@@ -368,7 +368,6 @@ router.get('/list',
       if (minPrice && productData.price < parseFloat(minPrice)) continue;
       if (maxPrice && productData.price > parseFloat(maxPrice)) continue;
       if (featured === 'true' && !productData.isFeatured) continue;
-      if (featured === 'true' && !productData.isFeatured) continue;
       
       // Apply search filter
       if (search) {
@@ -377,47 +376,50 @@ router.get('/list',
         if (!searchableText.includes(searchLower)) continue;
       }
 
-      // Get artisan information (simplified)
-      let artisan = {
-        uid: productData.artisanId,
-        firstName: 'Anonymous',
-        lastName: 'Artisan',
-        avatarUrl: null,
-        location: null,
-        rating: 0,
-        isVerified: false
-      };
+      filteredProducts.push({ id: doc.id, ...productData });
+    }
 
+    // Batch-fetch all unique artisans in parallel instead of one-by-one
+    const artisanIds = [...new Set(filteredProducts.map(p => p.artisanId).filter(Boolean))];
+    const artisanMap = {};
+    
+    // Firestore getAll supports up to 500 refs at once
+    if (artisanIds.length > 0) {
       try {
-        if (productData.artisanId) {
-          const artisanDoc = await db.collection('users').doc(productData.artisanId).get();
-          if (artisanDoc.exists) {
-            const artisanData = artisanDoc.data();
-            artisan = {
-              uid: artisanData.uid,
-              firstName: artisanData.firstName || 'Anonymous',
-              lastName: artisanData.lastName || 'Artisan',
-              avatarUrl: artisanData.avatarUrl,
-              location: artisanData.location,
-              rating: artisanData.artisanProfile?.rating || 0,
-              isVerified: artisanData.artisanProfile?.isVerified || false
+        const artisanRefs = artisanIds.map(uid => db.collection('users').doc(uid));
+        const artisanDocs = await db.getAll(...artisanRefs);
+        artisanDocs.forEach(doc => {
+          if (doc.exists) {
+            const data = doc.data();
+            artisanMap[doc.id] = {
+              uid: data.uid || doc.id,
+              firstName: data.firstName || 'Anonymous',
+              lastName: data.lastName || 'Artisan',
+              avatarUrl: data.avatarUrl || null,
+              location: data.location || null,
+              rating: data.artisanProfile?.rating || 0,
+              isVerified: data.artisanProfile?.isVerified || false
             };
           }
-        }
-      } catch (error) {
-        console.warn('Could not fetch artisan data:', error.message);
+        });
+      } catch (err) {
+        console.warn('Batch artisan fetch failed, skipping:', err.message);
       }
-
-      allProducts.push({
-        id: doc.id,
-        ...productData,
-        artisan
-      });
     }
+
+    const defaultArtisan = { uid: '', firstName: 'Anonymous', lastName: 'Artisan', avatarUrl: null, location: null, rating: 0, isVerified: false };
+
+    const allProducts = filteredProducts.map(p => ({
+      ...p,
+      artisan: artisanMap[p.artisanId] || { ...defaultArtisan, uid: p.artisanId }
+    }));
 
     // Sort products in JavaScript
     allProducts.sort((a, b) => {
-      if (sortBy === 'createdAt' && a.createdAt && b.createdAt) {
+      if (sortBy === 'price') {
+        return sortOrder === 'desc' ? (b.price || 0) - (a.price || 0) : (a.price || 0) - (b.price || 0);
+      }
+      if (a.createdAt && b.createdAt) {
         const dateA = a.createdAt.toDate ? a.createdAt.toDate() : new Date(a.createdAt);
         const dateB = b.createdAt.toDate ? b.createdAt.toDate() : new Date(b.createdAt);
         return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
@@ -475,7 +477,7 @@ router.get('/:id',
 
     const productData = productDoc.data();
     
-    if (!productData.isActive) {
+    if (productData.isActive === false) {
       return res.status(404).json({
         error: 'Product Not Available',
         message: 'Product is no longer available'
@@ -483,38 +485,53 @@ router.get('/:id',
     }
 
     // Get artisan information
-    const artisanDoc = await db.collection('users').doc(productData.artisanId).get();
-    const artisanData = artisanDoc.data();
-
-    // Get product reviews
-    const reviewsSnapshot = await db.collection('reviews')
-      .where('productId', '==', id)
-      .where('isActive', '==', true)
-      .orderBy('createdAt', 'desc')
-      .limit(10)
-      .get();
-
-    const reviews = [];
-    for (const reviewDoc of reviewsSnapshot.docs) {
-      const reviewData = reviewDoc.data();
-      const reviewerDoc = await db.collection('users').doc(reviewData.customerId).get();
-      const reviewerData = reviewerDoc.data();
-      
-      reviews.push({
-        id: reviewDoc.id,
-        ...reviewData,
-        customer: {
-          firstName: reviewerData.firstName,
-          lastName: reviewerData.lastName,
-          avatarUrl: reviewerData.avatarUrl
-        }
-      });
+    let artisanData = {};
+    try {
+      const artisanDoc = await db.collection('users').doc(productData.artisanId).get();
+      if (artisanDoc.exists) {
+        artisanData = artisanDoc.data();
+      }
+    } catch (err) {
+      console.warn('Could not fetch artisan:', err.message);
     }
 
-    // Increment view count
-    await db.collection('products').doc(id).update({
+    // Get product reviews (wrapped in try-catch to handle missing index)
+    const reviews = [];
+    try {
+      const reviewsSnapshot = await db.collection('reviews')
+        .where('productId', '==', id)
+        .limit(10)
+        .get();
+
+      for (const reviewDoc of reviewsSnapshot.docs) {
+        const reviewData = reviewDoc.data();
+        if (reviewData.isActive === false) continue;
+        let reviewer = { firstName: 'Anonymous', lastName: '' };
+        try {
+          if (reviewData.customerId) {
+            const reviewerDoc = await db.collection('users').doc(reviewData.customerId).get();
+            if (reviewerDoc.exists) reviewer = reviewerDoc.data();
+          }
+        } catch (e) { /* skip reviewer lookup failures */ }
+        
+        reviews.push({
+          id: reviewDoc.id,
+          ...reviewData,
+          customer: {
+            firstName: reviewer.firstName,
+            lastName: reviewer.lastName,
+            avatarUrl: reviewer.avatarUrl
+          }
+        });
+      }
+    } catch (reviewError) {
+      console.warn('Reviews query failed (missing index?):', reviewError.message);
+    }
+
+    // Increment view count (non-blocking)
+    db.collection('products').doc(id).update({
       views: db.FieldValue.increment(1)
-    });
+    }).catch(err => console.warn('View count update failed:', err.message));
 
     res.json({
       success: true,
@@ -524,16 +541,24 @@ router.get('/:id',
           id: productDoc.id,
           ...productData,
           artisan: {
-            uid: artisanData.uid,
-            firstName: artisanData.firstName,
-            lastName: artisanData.lastName,
-            avatarUrl: artisanData.avatarUrl,
-            location: artisanData.location,
+            uid: artisanData.uid || productData.artisanId,
+            firstName: artisanData.firstName || 'Anonymous',
+            lastName: artisanData.lastName || 'Artisan',
+            avatarUrl: artisanData.avatarUrl || null,
+            location: artisanData.location || null,
+            bio: artisanData.bio || '',
             rating: artisanData.artisanProfile?.rating || 0,
             totalReviews: artisanData.artisanProfile?.totalReviews || 0,
             totalSales: artisanData.artisanProfile?.totalSales || 0,
             isVerified: artisanData.artisanProfile?.isVerified || false,
-            skills: artisanData.artisanProfile?.skills || []
+            skills: artisanData.artisanProfile?.skills || [],
+            craftSpecializations: artisanData.artisanProfile?.craftSpecializations || artisanData.craftSpecializations || [],
+            craftTechniques: artisanData.artisanProfile?.craftTechniques || artisanData.craftTechniques || [],
+            yearsOfExperience: artisanData.artisanProfile?.yearsOfExperience || artisanData.yearsOfExperience || null,
+            portfolioImages: artisanData.artisanProfile?.portfolioImages || artisanData.portfolioImages || [],
+            awardsRecognition: artisanData.artisanProfile?.awardsRecognition || artisanData.awardsRecognition || [],
+            phone: artisanData.phone || null,
+            email: artisanData.email || null
           },
           reviews
         }
