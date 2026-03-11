@@ -71,17 +71,17 @@ const ProductSelector = ({ selectedProducts, onProductToggle, onProductsLoaded }
   const isSelected = (productId) => selectedProducts?.includes(productId);
 
   return (
-    <div className="bg-card rounded-lg border border-border p-6">
+    <div className="bg-white/70 backdrop-blur-sm border border-white/60 rounded-2xl ring-1 ring-orange-100/50 shadow-sm p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className="text-lg font-semibold text-foreground">Select Products</h3>
-          <p className="text-sm text-muted-foreground">Choose products to include in your marketing campaign</p>
+          <h3 className="text-lg font-semibold text-gray-900">Select Products</h3>
+          <p className="text-sm text-gray-500">Choose products to include in your marketing campaign</p>
         </div>
         <div className="flex items-center space-x-2">
           <button
             onClick={loadProducts}
             disabled={loading}
-            className="p-2 rounded-md border border-border hover:bg-accent transition-colors disabled:opacity-50"
+            className="p-2 rounded-xl border border-gray-200/60 hover:bg-orange-50/50 transition-colors disabled:opacity-50"
             title="Refresh products"
           >
             <Icon 
@@ -91,16 +91,16 @@ const ProductSelector = ({ selectedProducts, onProductToggle, onProductsLoaded }
           </button>
           <button
             onClick={() => setViewMode('grid')}
-            className={`p-2 rounded-md transition-colors ${
-              viewMode === 'grid' ?'bg-primary text-primary-foreground' :'bg-muted text-muted-foreground hover:bg-muted/80'
+            className={`p-2 rounded-xl transition-colors ${
+              viewMode === 'grid' ?'bg-orange-500 text-white' :'bg-white/50 text-gray-500 hover:bg-white/80'
             }`}
           >
             <Icon name="Grid3X3" size={16} />
           </button>
           <button
             onClick={() => setViewMode('list')}
-            className={`p-2 rounded-md transition-colors ${
-              viewMode === 'list' ?'bg-primary text-primary-foreground' :'bg-muted text-muted-foreground hover:bg-muted/80'
+            className={`p-2 rounded-xl transition-colors ${
+              viewMode === 'list' ?'bg-orange-500 text-white' :'bg-white/50 text-gray-500 hover:bg-white/80'
             }`}
           >
             <Icon name="List" size={16} />
@@ -108,7 +108,7 @@ const ProductSelector = ({ selectedProducts, onProductToggle, onProductsLoaded }
         </div>
       </div>
       <div className="mb-4 flex items-center justify-between">
-        <span className="text-sm text-muted-foreground">
+        <span className="text-sm text-gray-500">
           {selectedProducts?.length} of {products?.length} products selected
         </span>
         <button
@@ -119,7 +119,7 @@ const ProductSelector = ({ selectedProducts, onProductToggle, onProductsLoaded }
               products?.forEach(product => onProductToggle(product?.id, true));
             }
           }}
-          className="text-sm text-primary hover:text-primary/80 font-medium"
+          className="text-sm text-orange-500 hover:text-orange-600 font-medium"
         >
           {selectedProducts?.length === products?.length ? 'Deselect All' : 'Select All'}
         </button>
@@ -127,7 +127,7 @@ const ProductSelector = ({ selectedProducts, onProductToggle, onProductsLoaded }
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {Array.from({ length: 6 }).map((_, index) => (
-            <div key={index} className="animate-pulse bg-gray-200 h-40 rounded-lg"></div>
+            <div key={index} className="animate-pulse bg-gray-200/50 h-40 rounded-xl"></div>
           ))}
         </div>
       ) : error ? (
@@ -146,10 +146,10 @@ const ProductSelector = ({ selectedProducts, onProductToggle, onProductsLoaded }
           {products?.map((product) => (
             <div
               key={product?.id}
-              className={`relative bg-background rounded-lg border-2 transition-all duration-200 cursor-pointer ${
+              className={`relative bg-white/50 rounded-2xl border-2 transition-all duration-200 cursor-pointer ${
                 isSelected(product?.id)
-                  ? 'border-primary shadow-warm-md'
-                  : 'border-border hover:border-primary/50'
+                  ? 'border-orange-400 shadow-md shadow-orange-100/50'
+                  : 'border-white/60 hover:border-orange-200'
               }`}
               onClick={() => onProductToggle(product?.id, !isSelected(product?.id))}
             >
@@ -162,7 +162,7 @@ const ProductSelector = ({ selectedProducts, onProductToggle, onProductsLoaded }
                   }}
                 />
               </div>
-              <div className="aspect-square overflow-hidden rounded-t-lg">
+              <div className="aspect-square overflow-hidden rounded-t-2xl">
                 <Image
                   src={product?.image}
                   alt={product?.name}
@@ -170,15 +170,15 @@ const ProductSelector = ({ selectedProducts, onProductToggle, onProductsLoaded }
                 />
               </div>
               <div className="p-4">
-                <h4 className="font-medium text-foreground text-sm mb-1 line-clamp-1">
+                <h4 className="font-medium text-gray-900 text-sm mb-1 line-clamp-1">
                   {product?.name}
                 </h4>
-                <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
+                <p className="text-xs text-gray-500 mb-2 line-clamp-2">
                   {product?.description}
                 </p>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold text-primary">₹{product?.price?.toLocaleString('en-IN')}</span>
-                  <span className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded-full">
+                  <span className="text-sm font-semibold text-orange-500">₹{product?.price?.toLocaleString('en-IN')}</span>
+                  <span className="text-xs bg-orange-50 text-orange-600 px-2 py-1 rounded-full">
                     {product?.category}
                   </span>
                 </div>
@@ -191,10 +191,10 @@ const ProductSelector = ({ selectedProducts, onProductToggle, onProductsLoaded }
           {products?.map((product) => (
             <div
               key={product?.id}
-              className={`flex items-center space-x-4 p-4 bg-background rounded-lg border-2 transition-all duration-200 cursor-pointer ${
+              className={`flex items-center space-x-4 p-4 bg-white/50 rounded-2xl border-2 transition-all duration-200 cursor-pointer ${
                 isSelected(product?.id)
-                  ? 'border-primary shadow-warm-md'
-                  : 'border-border hover:border-primary/50'
+                  ? 'border-orange-400 shadow-md shadow-orange-100/50'
+                  : 'border-white/60 hover:border-orange-200'
               }`}
               onClick={() => onProductToggle(product?.id, !isSelected(product?.id))}
             >
@@ -205,7 +205,7 @@ const ProductSelector = ({ selectedProducts, onProductToggle, onProductsLoaded }
                   onProductToggle(product?.id, e?.target?.checked);
                 }}
               />
-              <div className="w-16 h-16 overflow-hidden rounded-lg flex-shrink-0">
+              <div className="w-16 h-16 overflow-hidden rounded-xl flex-shrink-0">
                 <Image
                   src={product?.image}
                   alt={product?.name}
@@ -213,15 +213,15 @@ const ProductSelector = ({ selectedProducts, onProductToggle, onProductsLoaded }
                 />
               </div>
               <div className="flex-1 min-w-0">
-                <h4 className="font-medium text-foreground text-sm mb-1">
+                <h4 className="font-medium text-gray-900 text-sm mb-1">
                   {product?.name}
                 </h4>
-                <p className="text-xs text-muted-foreground mb-2 line-clamp-1">
+                <p className="text-xs text-gray-500 mb-2 line-clamp-1">
                   {product?.description}
                 </p>
                 <div className="flex items-center space-x-4">
-                  <span className="text-sm font-semibold text-primary">₹{product?.price?.toLocaleString('en-IN')}</span>
-                  <span className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded-full">
+                  <span className="text-sm font-semibold text-orange-500">₹{product?.price?.toLocaleString('en-IN')}</span>
+                  <span className="text-xs bg-orange-50 text-orange-600 px-2 py-1 rounded-full">
                     {product?.category}
                   </span>
                 </div>

@@ -98,7 +98,7 @@ const CustomerShop = () => {
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
-        <title>Shop Handcrafted Products | ArtisanConnect</title>
+        <title>Shop Handcrafted Products | Artisian Connect</title>
       </Helmet>
 
       <CustomerHeader />

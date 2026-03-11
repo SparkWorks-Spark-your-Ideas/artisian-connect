@@ -341,13 +341,14 @@ router.get('/followers',
     const followers = followersSnap.docs.map(doc => {
       const d = doc.data();
       const artisan = d.artisanProfile || {};
+      const loc = artisan.location || d.location || '';
       return {
         uid: doc.id,
         firstName: d.firstName || '',
         lastName: d.lastName || '',
         avatarUrl: d.avatarUrl || artisan.avatarUrl || null,
         craftSpecialization: artisan.craftSpecialization || d.craftSpecialization || d.userType || '',
-        location: artisan.location || d.location || '',
+        location: typeof loc === 'object' ? [loc.city, loc.district, loc.state].filter(Boolean).join(', ') : loc,
         isVerified: d.isVerified || artisan.isVerified || false
       };
     });
@@ -378,13 +379,14 @@ router.get('/following',
         if (doc.exists) {
           const d = doc.data();
           const artisan = d.artisanProfile || {};
+          const loc = artisan.location || d.location || '';
           following.push({
             uid: doc.id,
             firstName: d.firstName || '',
             lastName: d.lastName || '',
             avatarUrl: d.avatarUrl || artisan.avatarUrl || null,
             craftSpecialization: artisan.craftSpecialization || d.craftSpecialization || d.userType || '',
-            location: artisan.location || d.location || '',
+            location: typeof loc === 'object' ? [loc.city, loc.district, loc.state].filter(Boolean).join(', ') : loc,
             isVerified: d.isVerified || artisan.isVerified || false
           });
         }

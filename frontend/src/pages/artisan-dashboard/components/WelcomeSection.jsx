@@ -75,25 +75,11 @@ const WelcomeSection = () => {
   };
 
   const getGreeting = () => {
-    const hour = currentTime?.getHours();
     const greetings = {
-      en: {
-        morning: "Good Morning",
-        afternoon: "Good Afternoon", 
-        evening: "Good Evening"
-      },
-      hi: {
-        morning: "सुप्रभात",
-        afternoon: "नमस्कार",
-        evening: "शुभ संध्या"
-      }
+      en: "Welcome",
+      hi: "स्वागत है"
     };
-
-    let timeOfDay = 'morning';
-    if (hour >= 12 && hour < 17) timeOfDay = 'afternoon';
-    else if (hour >= 17) timeOfDay = 'evening';
-
-    return greetings?.[currentLanguage]?.[timeOfDay];
+    return greetings?.[currentLanguage] || greetings.en;
   };
 
   const getWelcomeText = () => {
@@ -160,75 +146,67 @@ const WelcomeSection = () => {
   const text = getWelcomeText();
 
   return (
-    <div className="bg-gradient-to-r from-primary/10 via-accent/5 to-success/10 border border-border rounded-lg p-6 shadow-warm">
-      <div className="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6">
-        {/* Profile Section */}
-        <div className="flex items-center space-x-4">
-          <div className="relative">
+    <div className="relative overflow-hidden bg-gradient-to-br from-orange-500 via-orange-600 to-amber-600 rounded-2xl p-6 md:p-8 text-white shadow-lg">
+      {/* Decorative elements */}
+      <div className="absolute -top-12 -right-12 w-48 h-48 bg-white/10 rounded-full blur-2xl" />
+      <div className="absolute -bottom-8 -left-8 w-36 h-36 bg-amber-400/20 rounded-full blur-2xl" />
+      <div className="absolute top-1/2 right-1/3 w-20 h-20 bg-white/5 rounded-full" />
+
+      <div className="relative flex flex-col md:flex-row items-start md:items-center gap-5">
+        {/* Profile Photo */}
+        <div className="flex items-center gap-4">
+          <div className="relative shrink-0">
             {loading ? (
-              <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-muted animate-pulse border-4 border-primary/20" />
+              <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-white/20 animate-pulse" />
             ) : (
               <Image
                 src={getUserProfilePhoto()}
                 alt="Artisan Profile"
-                className="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover border-4 border-primary/20"
+                className="w-16 h-16 md:w-20 md:h-20 rounded-2xl object-cover ring-4 ring-white/25 shadow-lg"
               />
             )}
             {(userProfile?.isVerified || userProfile?.artisanProfile?.isVerified) && (
-              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-success rounded-full border-2 border-card flex items-center justify-center">
+              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-400 rounded-full border-2 border-white flex items-center justify-center shadow">
                 <Icon name="Check" size={12} color="white" />
               </div>
             )}
           </div>
           
-          <div>
-            <h1 className="text-xl md:text-2xl font-bold text-foreground">
+          <div className="md:hidden">
+            <h1 className="text-xl font-bold leading-tight">
               {getGreeting()}, {getUserDisplayName()}!
             </h1>
-            <p className="text-sm text-primary font-medium">{text?.subtitle}</p>
           </div>
         </div>
 
-        {/* Welcome Content */}
+        {/* Main content */}
         <div className="flex-1">
-          <h2 className="text-lg font-semibold text-foreground mb-2">
-            {text?.welcome}
-          </h2>
-          <p className="text-sm text-muted-foreground mb-3">
-            {text?.description}
-          </p>
+          <h1 className="hidden md:block text-2xl lg:text-3xl font-bold leading-tight mb-1">
+            {getGreeting()}, {getUserDisplayName()}!
+          </h1>
           
-          {/* Date and Time */}
-          <div className="flex items-center space-x-2 text-xs text-muted-foreground">
-            <Icon name="Calendar" size={14} />
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 mt-3">
+            <p className="text-sm text-orange-100 leading-relaxed max-w-lg">
+              {text?.description}
+            </p>
+          </div>
+          
+          <div className="flex items-center gap-2 mt-3 text-xs text-orange-200/80">
+            <Icon name="Calendar" size={13} />
             <span>{text?.todayIs} {formatDate()}</span>
           </div>
         </div>
 
-        {/* Achievement Badge - only show if verified */}
+        {/* Verified badge */}
         {(userProfile?.isVerified || userProfile?.artisanProfile?.isVerified) && (
-          <div className="hidden md:flex flex-col items-center space-y-2">
-            <div className="w-16 h-16 bg-success rounded-full flex items-center justify-center">
-              <Icon name="Award" size={24} color="white" />
+          <div className="hidden md:flex flex-col items-center gap-1.5 bg-white/15 backdrop-blur-sm rounded-2xl p-4">
+            <div className="w-12 h-12 bg-green-400/90 rounded-xl flex items-center justify-center shadow">
+              <Icon name="Award" size={22} color="white" />
             </div>
-            <div className="text-center">
-              <p className="text-xs font-medium text-success">Verified</p>
-              <p className="text-xs text-muted-foreground">Artisan</p>
-            </div>
+            <span className="text-[10px] font-semibold text-green-200 uppercase tracking-wider">Verified</span>
           </div>
         )}
       </div>
-      {/* Mobile Achievement Badge */}
-      {(userProfile?.isVerified || userProfile?.artisanProfile?.isVerified) && (
-        <div className="md:hidden mt-4 flex items-center justify-center space-x-4 pt-4 border-t border-border">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-success rounded-full flex items-center justify-center">
-              <Icon name="Award" size={16} color="white" />
-            </div>
-            <span className="text-sm font-medium text-success">Verified Artisan</span>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

@@ -48,24 +48,24 @@ const InventoryAnalytics = ({ analytics }) => {
   ];
 
   const StatCard = ({ icon, title, value, subtitle, trend, trendValue }) => (
-    <div className="bg-card border border-border rounded-lg p-4">
+    <div className="bg-white/70 backdrop-blur-sm border border-white/60 rounded-2xl p-4 ring-1 ring-orange-100/50 shadow-sm">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
-            <Icon name={icon} size={16} className="text-primary" />
+          <div className="w-9 h-9 bg-orange-50 rounded-xl flex items-center justify-center">
+            <Icon name={icon} size={16} className="text-orange-500" />
           </div>
-          <span className="text-sm font-medium text-muted-foreground">{title}</span>
+          <span className="text-xs font-semibold text-gray-500">{title}</span>
         </div>
         {trend && (
-          <div className={`flex items-center space-x-1 text-xs ${trend === 'up' ? 'text-success' : 'text-destructive'}`}>
-            <Icon name={trend === 'up' ? 'TrendingUp' : 'TrendingDown'} size={12} />
+          <div className={`flex items-center space-x-1 text-[11px] font-semibold ${trend === 'up' ? 'text-emerald-500' : 'text-red-500'}`}>
+            <Icon name={trend === 'up' ? 'TrendingUp' : 'TrendingDown'} size={11} />
             <span>{trendValue}</span>
           </div>
         )}
       </div>
       <div>
-        <p className="text-2xl font-bold text-foreground">{value}</p>
-        {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
+        <p className="text-2xl font-bold text-gray-900">{value}</p>
+        {subtitle && <p className="text-xs text-gray-400">{subtitle}</p>}
       </div>
     </div>
   );
@@ -109,8 +109,8 @@ const InventoryAnalytics = ({ analytics }) => {
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Category Distribution */}
-        <div className="bg-card border border-border rounded-lg p-6">
-          <h3 className="font-semibold text-foreground mb-4">Products by Category</h3>
+        <div className="bg-white/70 backdrop-blur-sm border border-white/60 rounded-2xl p-5 ring-1 ring-orange-100/50 shadow-sm">
+          <h3 className="text-sm font-bold text-gray-900 mb-4">Products by Category</h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -134,19 +134,18 @@ const InventoryAnalytics = ({ analytics }) => {
           <div className="grid grid-cols-2 gap-2 mt-4">
             {categoryData?.map((item, index) => (
               <div key={index} className="flex items-center space-x-2">
-                <div 
-                  className="w-3 h-3 rounded-full" 
+                <div className="w-3 h-3 rounded-full" 
                   style={{ backgroundColor: item?.color }}
                 />
-                <span className="text-sm text-muted-foreground">{item?.name}</span>
+                <span className="text-xs text-gray-500">{item?.name}</span>
               </div>
             ))}
           </div>
         </div>
 
         {/* Performance Trends */}
-        <div className="bg-card border border-border rounded-lg p-6">
-          <h3 className="font-semibold text-foreground mb-4">Performance Trends</h3>
+        <div className="bg-white/70 backdrop-blur-sm border border-white/60 rounded-2xl p-5 ring-1 ring-orange-100/50 shadow-sm">
+          <h3 className="text-sm font-bold text-gray-900 mb-4">Performance Trends</h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={performanceData}>
@@ -175,19 +174,19 @@ const InventoryAnalytics = ({ analytics }) => {
         </div>
       </div>
       {/* Top Performing Products */}
-      <div className="bg-card border border-border rounded-lg p-6">
+      <div className="bg-white/70 backdrop-blur-sm border border-white/60 rounded-2xl p-5 ring-1 ring-orange-100/50 shadow-sm">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-foreground">Top Performing Products</h3>
-          <span className="text-sm text-muted-foreground">Last 30 days</span>
+          <h3 className="text-sm font-bold text-gray-900">Top Performing Products</h3>
+          <span className="text-[11px] text-gray-400">Last 30 days</span>
         </div>
-        <div className="space-y-4">
+        <div className="space-y-3">
           {topProducts?.map((product, index) => (
-            <div key={product?.id} className="flex items-center space-x-4 p-3 rounded-lg hover:bg-muted/50 transition-colors">
+            <div key={product?.id} className="flex items-center space-x-4 p-3 rounded-xl hover:bg-white/60 transition-colors">
               <div className="flex items-center space-x-3">
-                <span className="w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-medium">
+                <span className="w-6 h-6 bg-gradient-to-br from-orange-500 to-amber-500 text-white rounded-lg flex items-center justify-center text-xs font-bold">
                   {index + 1}
                 </span>
-                <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted">
+                <div className="w-10 h-10 rounded-xl overflow-hidden bg-gray-100 ring-1 ring-gray-200/50">
                   <img 
                     src={product?.image} 
                     alt={product?.name}
@@ -197,41 +196,41 @@ const InventoryAnalytics = ({ analytics }) => {
               </div>
               
               <div className="flex-1 min-w-0">
-                <h4 className="font-medium text-foreground truncate">{product?.name}</h4>
-                <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                <h4 className="text-sm font-semibold text-gray-900 truncate">{product?.name}</h4>
+                <div className="flex items-center space-x-4 text-xs text-gray-400">
                   <span className="flex items-center space-x-1">
-                    <Icon name="Eye" size={12} />
+                    <Icon name="Eye" size={11} />
                     <span>{product?.views}</span>
                   </span>
                   <span className="flex items-center space-x-1">
-                    <Icon name="ShoppingCart" size={12} />
+                    <Icon name="ShoppingCart" size={11} />
                     <span>{product?.sales} sales</span>
                   </span>
                 </div>
               </div>
               
               <div className="text-right">
-                <p className="font-semibold text-foreground">₹{product?.revenue?.toLocaleString('en-IN')}</p>
-                <p className="text-sm text-muted-foreground">Revenue</p>
+                <p className="font-bold text-sm text-gray-900">₹{product?.revenue?.toLocaleString('en-IN')}</p>
+                <p className="text-[11px] text-gray-400">Revenue</p>
               </div>
             </div>
           ))}
         </div>
       </div>
       {/* Low Stock Alerts */}
-      <div className="bg-card border border-border rounded-lg p-6">
+      <div className="bg-white/70 backdrop-blur-sm border border-white/60 rounded-2xl p-5 ring-1 ring-orange-100/50 shadow-sm">
         <div className="flex items-center space-x-2 mb-4">
-          <Icon name="AlertTriangle" size={20} className="text-warning" />
-          <h3 className="font-semibold text-foreground">Low Stock Alerts</h3>
-          <span className="bg-warning/10 text-warning px-2 py-1 rounded-full text-xs font-medium">
+          <Icon name="AlertTriangle" size={18} className="text-amber-500" />
+          <h3 className="text-sm font-bold text-gray-900">Low Stock Alerts</h3>
+          <span className="bg-amber-50 text-amber-600 px-2 py-0.5 rounded-full text-[11px] font-semibold ring-1 ring-amber-100">
             {analytics?.lowStockCount} items
           </span>
         </div>
         <div className="space-y-3">
           {analytics?.lowStockItems?.map((item) => (
-            <div key={item?.id} className="flex items-center justify-between p-3 bg-warning/5 border border-warning/20 rounded-lg">
+            <div key={item?.id} className="flex items-center justify-between p-3 bg-amber-50/50 border border-amber-100/60 rounded-xl">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-lg overflow-hidden bg-muted">
+                <div className="w-10 h-10 rounded-xl overflow-hidden bg-gray-100 ring-1 ring-gray-200/50">
                   <img 
                     src={item?.image} 
                     alt={item?.name}
@@ -239,13 +238,13 @@ const InventoryAnalytics = ({ analytics }) => {
                   />
                 </div>
                 <div>
-                  <h4 className="font-medium text-foreground">{item?.name}</h4>
-                  <p className="text-sm text-muted-foreground">SKU: {item?.sku}</p>
+                  <h4 className="text-sm font-semibold text-gray-900">{item?.name}</h4>
+                  <p className="text-xs text-gray-400">SKU: {item?.sku}</p>
                 </div>
               </div>
               <div className="text-right">
-                <p className="font-semibold text-warning">{item?.stock} left</p>
-                <p className="text-xs text-muted-foreground">Reorder soon</p>
+                <p className="font-bold text-sm text-amber-600">{item?.stock} left</p>
+                <p className="text-[11px] text-gray-400">Reorder soon</p>
               </div>
             </div>
           ))}

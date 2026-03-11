@@ -113,7 +113,7 @@ const CustomerOrders = () => {
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
-        <title>My Orders | ArtisanConnect</title>
+        <title>My Orders | Artisian Connect</title>
       </Helmet>
 
       <CustomerHeader />

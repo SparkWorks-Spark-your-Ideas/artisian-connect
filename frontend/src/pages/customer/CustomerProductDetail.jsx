@@ -221,7 +221,7 @@ const CustomerProductDetail = () => {
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
-        <title>{product.name} | ArtisanConnect Shop</title>
+        <title>{product.name} | Artisian Connect</title>
       </Helmet>
 
       <CustomerHeader />

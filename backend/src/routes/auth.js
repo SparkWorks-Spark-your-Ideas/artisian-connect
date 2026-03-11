@@ -5,7 +5,7 @@ import { db, auth } from '../config/firebase.js';
 import { validate, schemas } from '../middleware/validation.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import { verifyToken } from '../middleware/auth.js';
-import config from '../config/index.js';
+import { config } from '../config/index.js';
 
 const router = Router();
 

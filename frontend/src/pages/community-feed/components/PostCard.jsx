@@ -56,7 +56,7 @@ const PostCard = ({ post, onLike, onComment, onFollow, onShare, onAuthorClick })
   const comments = post?.comments || [];
 
   return (
-    <div className="bg-card border border-border rounded-lg shadow-warm p-6 mb-6">
+    <div className="bg-white/70 backdrop-blur-sm border border-white/60 rounded-2xl ring-1 ring-orange-100/50 shadow-sm p-6 mb-6">
       {/* Post Header */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center space-x-3">
@@ -64,17 +64,17 @@ const PostCard = ({ post, onLike, onComment, onFollow, onShare, onAuthorClick })
             <Image
               src={post?.author?.avatar}
               alt={post?.author?.name}
-              className="w-12 h-12 rounded-full object-cover hover:ring-2 hover:ring-primary transition-all cursor-pointer"
+              className="w-12 h-12 rounded-full object-cover hover:ring-2 hover:ring-orange-300 transition-all cursor-pointer"
             />
           </button>
           <div>
             <button 
               onClick={() => onAuthorClick && onAuthorClick(post?.author?.id)}
-              className="font-semibold text-foreground hover:text-primary transition-colors cursor-pointer text-left"
+              className="font-semibold text-gray-900 hover:text-orange-500 transition-colors cursor-pointer text-left"
             >
               {post?.author?.name}
             </button>
-            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+            <div className="flex items-center space-x-2 text-sm text-gray-500">
               <span>{post?.author?.craftType}</span>
               <span>•</span>
               <span>{formatTimeAgo(post?.timestamp)}</span>
@@ -93,7 +93,7 @@ const PostCard = ({ post, onLike, onComment, onFollow, onShare, onAuthorClick })
         
         <div className="flex items-center space-x-2">
           {post?.type === 'success_story' && (
-            <div className="bg-success text-success-foreground px-2 py-1 rounded-full text-xs font-medium">
+            <div className="bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200 px-2 py-1 rounded-full text-xs font-medium">
               <Icon name="Trophy" size={12} className="inline mr-1" />
               Success Story
             </div>
@@ -109,14 +109,14 @@ const PostCard = ({ post, onLike, onComment, onFollow, onShare, onAuthorClick })
       </div>
       {/* Post Content */}
       <div className="mb-4">
-        <p className="text-foreground mb-3 leading-relaxed">{post?.content}</p>
+        <p className="text-gray-900 mb-3 leading-relaxed">{post?.content}</p>
         
         {post?.tags && post?.tags?.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-3">
             {post?.tags?.map((tag, index) => (
               <span
                 key={index}
-                className="bg-muted text-muted-foreground px-2 py-1 rounded-full text-xs"
+                className="bg-orange-50 text-orange-600 px-2 py-1 rounded-full text-xs"
               >
                 #{tag}
               </span>
@@ -142,13 +142,13 @@ const PostCard = ({ post, onLike, onComment, onFollow, onShare, onAuthorClick })
         )}
       </div>
       {/* Post Actions */}
-      <div className="flex items-center justify-between pt-4 border-t border-border">
+      <div className="flex items-center justify-between pt-4 border-t border-gray-200/60">
         <div className="flex items-center space-x-6">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => onLike && onLike(post?.id)}
-            className={`flex items-center space-x-2 ${post?.isLiked ? 'text-destructive' : 'text-muted-foreground'}`}
+            className={`flex items-center space-x-2 ${post?.isLiked ? 'text-red-500' : 'text-gray-400'}`}
           >
             <Icon name="Heart" size={18} />
             <span>{post?.likes || 0}</span>
@@ -158,7 +158,7 @@ const PostCard = ({ post, onLike, onComment, onFollow, onShare, onAuthorClick })
             variant="ghost"
             size="sm"
             onClick={() => setShowComments(!showComments)}
-            className="flex items-center space-x-2 text-muted-foreground"
+            className="flex items-center space-x-2 text-gray-400"
           >
             <Icon name="MessageCircle" size={18} />
             <span>{comments?.length || 0}</span>
@@ -168,20 +168,20 @@ const PostCard = ({ post, onLike, onComment, onFollow, onShare, onAuthorClick })
             variant="ghost"
             size="sm"
             onClick={() => onShare && onShare(post?.id)}
-            className="flex items-center space-x-2 text-muted-foreground"
+            className="flex items-center space-x-2 text-gray-400"
           >
             <Icon name="Share2" size={18} />
             <span>Share</span>
           </Button>
         </div>
         
-        <Button variant="ghost" size="sm" className="text-muted-foreground">
+        <Button variant="ghost" size="sm" className="text-gray-400">
           <Icon name="Bookmark" size={18} />
         </Button>
       </div>
       {/* Comments Section */}
       {showComments && (
-        <div className="mt-4 pt-4 border-t border-border">
+        <div className="mt-4 pt-4 border-t border-gray-200/60">
           {/* Add Comment */}
           <div className="flex items-start space-x-3 mb-4">
             <Image
@@ -196,7 +196,7 @@ const PostCard = ({ post, onLike, onComment, onFollow, onShare, onAuthorClick })
                 value={newComment}
                 onChange={(e) => setNewComment(e?.target?.value)}
                 onKeyPress={(e) => e?.key === 'Enter' && handleAddComment()}
-                className="flex-1 px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                className="flex-1 px-3 py-2 bg-white/60 border border-gray-200/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-200 placeholder:text-gray-400"
               />
               <Button
                 size="sm"
@@ -218,14 +218,14 @@ const PostCard = ({ post, onLike, onComment, onFollow, onShare, onAuthorClick })
                   className="w-8 h-8 rounded-full object-cover"
                 />
                 <div className="flex-1">
-                  <div className="bg-muted rounded-lg px-3 py-2">
-                    <div className="font-medium text-sm text-foreground">{comment?.author}</div>
-                    <p className="text-sm text-foreground">{comment?.content}</p>
+                  <div className="bg-white/60 rounded-xl px-3 py-2">
+                    <div className="font-medium text-sm text-gray-900">{comment?.author}</div>
+                    <p className="text-sm text-gray-700">{comment?.content}</p>
                   </div>
-                  <div className="flex items-center space-x-4 mt-1 text-xs text-muted-foreground">
+                  <div className="flex items-center space-x-4 mt-1 text-xs text-gray-400">
                     <span>{formatTimeAgo(comment?.timestamp)}</span>
-                    <button className="hover:text-foreground">Like</button>
-                    <button className="hover:text-foreground">Reply</button>
+                    <button className="hover:text-gray-700">Like</button>
+                    <button className="hover:text-gray-700">Reply</button>
                   </div>
                 </div>
               </div>

@@ -49,10 +49,10 @@ const HashtagResearch = ({ selectedHashtags, onHashtagToggle }) => {
 
   const getEngagementColor = (engagement) => {
     switch (engagement) {
-      case 'High': return 'text-success';
-      case 'Medium': return 'text-warning';
-      case 'Low': return 'text-destructive';
-      default: return 'text-muted-foreground';
+      case 'High': return 'text-emerald-500';
+      case 'Medium': return 'text-amber-500';
+      case 'Low': return 'text-red-500';
+      default: return 'text-gray-500';
     }
   };
 
@@ -66,35 +66,35 @@ const HashtagResearch = ({ selectedHashtags, onHashtagToggle }) => {
 
   const getTrendColor = (trend) => {
     switch (trend) {
-      case 'up': return 'text-success';
-      case 'down': return 'text-destructive';
-      default: return 'text-muted-foreground';
+      case 'up': return 'text-emerald-500';
+      case 'down': return 'text-red-500';
+      default: return 'text-gray-500';
     }
   };
 
   const isSelected = (hashtag) => selectedHashtags?.includes(hashtag);
 
   return (
-    <div className="bg-card rounded-lg border border-border p-6">
+    <div className="bg-white/70 backdrop-blur-sm border border-white/60 rounded-2xl ring-1 ring-orange-100/50 shadow-sm p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className="text-lg font-semibold text-foreground">Hashtag Research</h3>
-          <p className="text-sm text-muted-foreground">Discover trending hashtags for better reach</p>
+          <h3 className="text-lg font-semibold text-gray-900">Hashtag Research</h3>
+          <p className="text-sm text-gray-500">Discover trending hashtags for better reach</p>
         </div>
-        <div className="text-sm text-muted-foreground">
+        <div className="text-sm text-gray-500">
           {selectedHashtags?.length} selected
         </div>
       </div>
       {/* Tabs */}
-      <div className="flex space-x-1 mb-6 bg-muted p-1 rounded-lg">
+      <div className="flex space-x-1 mb-6 bg-white/50 p-1 rounded-xl">
         {tabs?.map((tab) => (
           <button
             key={tab?.id}
             onClick={() => setActiveTab(tab?.id)}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+            className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
               activeTab === tab?.id
-                ? 'bg-background text-foreground shadow-sm'
-                : 'text-muted-foreground hover:text-foreground'
+                ? 'bg-white text-gray-900 shadow-sm ring-1 ring-gray-200/50'
+                : 'text-gray-500 hover:text-gray-900'
             }`}
           >
             <Icon name={tab?.icon} size={16} />
@@ -107,10 +107,10 @@ const HashtagResearch = ({ selectedHashtags, onHashtagToggle }) => {
         {hashtagData?.[activeTab]?.map((hashtag, index) => (
           <div
             key={index}
-            className={`flex items-center justify-between p-4 bg-background rounded-lg border transition-all duration-200 ${
+            className={`flex items-center justify-between p-4 bg-white/50 rounded-xl border-2 transition-all duration-200 ${
               isSelected(hashtag?.tag)
-                ? 'border-primary shadow-warm-sm'
-                : 'border-border hover:border-primary/50'
+                ? 'border-orange-400 shadow-md shadow-orange-100/50'
+                : 'border-white/60 hover:border-orange-200'
             }`}
           >
             <div className="flex items-center space-x-3">
@@ -119,9 +119,9 @@ const HashtagResearch = ({ selectedHashtags, onHashtagToggle }) => {
                 onChange={(e) => onHashtagToggle(hashtag?.tag, e?.target?.checked)}
               />
               <div>
-                <p className="font-medium text-foreground">{hashtag?.tag}</p>
+                <p className="font-medium text-gray-900">{hashtag?.tag}</p>
                 <div className="flex items-center space-x-4 mt-1">
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-xs text-gray-500">
                     {hashtag?.posts} posts
                   </span>
                   <span className={`text-xs font-medium ${getEngagementColor(hashtag?.engagement)}`}>
@@ -141,7 +141,7 @@ const HashtagResearch = ({ selectedHashtags, onHashtagToggle }) => {
         ))}
       </div>
       {/* Actions */}
-      <div className="flex items-center justify-between mt-6 pt-4 border-t border-border">
+      <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200/60">
         <Button
           variant="outline"
           size="sm"
@@ -178,18 +178,18 @@ const HashtagResearch = ({ selectedHashtags, onHashtagToggle }) => {
       </div>
       {/* Selected Hashtags Summary */}
       {selectedHashtags?.length > 0 && (
-        <div className="mt-6 p-4 bg-muted rounded-lg">
-          <h4 className="text-sm font-medium text-foreground mb-3">Selected Hashtags</h4>
+        <div className="mt-6 p-4 bg-orange-50/50 rounded-xl">
+          <h4 className="text-sm font-medium text-gray-900 mb-3">Selected Hashtags</h4>
           <div className="flex flex-wrap gap-2">
             {selectedHashtags?.map((hashtag, index) => (
               <span
                 key={index}
-                className="inline-flex items-center px-3 py-1 bg-primary/10 text-primary text-sm rounded-full"
+                className="inline-flex items-center px-3 py-1 bg-orange-100 text-orange-600 text-sm rounded-full"
               >
                 {hashtag}
                 <button
                   onClick={() => onHashtagToggle(hashtag, false)}
-                  className="ml-2 hover:text-primary/80"
+                  className="ml-2 hover:text-orange-800"
                 >
                   <Icon name="X" size={12} />
                 </button>

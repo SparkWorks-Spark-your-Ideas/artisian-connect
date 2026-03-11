@@ -30,19 +30,19 @@ const PlatformSelector = ({ selectedPlatform, onPlatformChange }) => {
   ];
 
   return (
-    <div className="bg-card rounded-lg border border-border p-6">
+    <div className="bg-white/70 backdrop-blur-sm border border-white/60 rounded-2xl ring-1 ring-orange-100/50 shadow-sm p-6">
       <div className="mb-6">
-        <h3 className="text-lg font-semibold text-foreground mb-2">Choose Platform</h3>
-        <p className="text-sm text-muted-foreground">Select the social media platform for content generation</p>
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">Choose Platform</h3>
+        <p className="text-sm text-gray-500">Select the social media platform for content generation</p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {platforms?.map((platform) => (
           <div
             key={platform?.id}
-            className={`relative p-6 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
+            className={`relative p-6 rounded-2xl border-2 cursor-pointer transition-all duration-200 ${
               selectedPlatform === platform?.id
-                ? 'border-primary shadow-warm-md bg-primary/5'
-                : 'border-border hover:border-primary/50 bg-background'
+                ? 'border-orange-400 shadow-md shadow-orange-100/50 bg-orange-50/30'
+                : 'border-white/60 hover:border-orange-200 bg-white/50'
             }`}
             onClick={() => onPlatformChange(platform?.id)}
           >
@@ -51,10 +51,10 @@ const PlatformSelector = ({ selectedPlatform, onPlatformChange }) => {
                 <Icon name={platform?.icon} size={20} color="white" />
               </div>
               <div>
-                <h4 className="font-semibold text-foreground">{platform?.name}</h4>
+                <h4 className="font-semibold text-gray-900">{platform?.name}</h4>
                 {selectedPlatform === platform?.id && (
                   <div className="absolute top-3 right-3">
-                    <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+                    <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
                       <Icon name="Check" size={14} color="white" />
                     </div>
                   </div>
@@ -62,17 +62,17 @@ const PlatformSelector = ({ selectedPlatform, onPlatformChange }) => {
               </div>
             </div>
 
-            <p className="text-sm text-muted-foreground mb-4">
+            <p className="text-sm text-gray-500 mb-4">
               {platform?.description}
             </p>
 
             <div className="space-y-2">
-              <h5 className="text-xs font-medium text-foreground uppercase tracking-wide">Features</h5>
+              <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Features</h5>
               <ul className="space-y-1">
                 {platform?.features?.map((feature, index) => (
                   <li key={index} className="flex items-center space-x-2">
-                    <Icon name="Check" size={12} className="text-success flex-shrink-0" />
-                    <span className="text-xs text-muted-foreground">{feature}</span>
+                    <Icon name="Check" size={12} className="text-emerald-500 flex-shrink-0" />
+                    <span className="text-xs text-gray-500">{feature}</span>
                   </li>
                 ))}
               </ul>
@@ -81,12 +81,12 @@ const PlatformSelector = ({ selectedPlatform, onPlatformChange }) => {
         ))}
       </div>
       {selectedPlatform && (
-        <div className="mt-6 p-4 bg-muted rounded-lg">
+        <div className="mt-6 p-4 bg-orange-50/50 rounded-xl">
           <div className="flex items-center space-x-2 mb-2">
-            <Icon name="Info" size={16} className="text-primary" />
-            <span className="text-sm font-medium text-foreground">Platform Guidelines</span>
+            <Icon name="Info" size={16} className="text-orange-500" />
+            <span className="text-sm font-medium text-gray-900">Platform Guidelines</span>
           </div>
-          <div className="text-xs text-muted-foreground">
+          <div className="text-xs text-gray-500">
             {selectedPlatform === 'instagram' && (
               <p>Optimal post times: 11 AM - 1 PM, 7 PM - 9 PM. Use 5-10 relevant hashtags. Square images perform best (1080x1080px).</p>
             )}

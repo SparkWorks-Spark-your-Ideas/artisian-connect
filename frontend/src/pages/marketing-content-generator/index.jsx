@@ -199,79 +199,79 @@ const MarketingContentGenerator = () => {
   );
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50/30 to-white">
       <Header />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}
         <div className="mb-8">
           <div className="flex items-center space-x-3 mb-4">
-            <div className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center">
+            <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl flex items-center justify-center shadow-md shadow-orange-200/50">
               <Icon name="Megaphone" size={24} color="white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-foreground">Marketing Content Generator</h1>
-              <p className="text-muted-foreground">Create AI-powered social media content for your crafts</p>
+              <h1 className="text-3xl font-bold text-gray-900">Marketing Content Generator</h1>
+              <p className="text-gray-500">Create AI-powered social media content for your crafts</p>
             </div>
           </div>
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-card rounded-lg border border-border p-4">
+            <div className="bg-white/70 backdrop-blur-sm border border-white/60 rounded-2xl ring-1 ring-orange-100/50 shadow-sm p-4">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                  <Icon name="Package" size={20} className="text-primary" />
+                <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center">
+                  <Icon name="Package" size={20} className="text-orange-500" />
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-foreground">{selectedProducts?.length}</div>
-                  <div className="text-sm text-muted-foreground">Products Selected</div>
+                  <div className="text-2xl font-bold text-gray-900">{selectedProducts?.length}</div>
+                  <div className="text-sm text-gray-500">Products Selected</div>
                 </div>
               </div>
             </div>
-            <div className="bg-card rounded-lg border border-border p-4">
+            <div className="bg-white/70 backdrop-blur-sm border border-white/60 rounded-2xl ring-1 ring-orange-100/50 shadow-sm p-4">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-success/10 rounded-lg flex items-center justify-center">
-                  <Icon name="Smartphone" size={20} className="text-success" />
+                <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
+                  <Icon name="Smartphone" size={20} className="text-emerald-500" />
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-foreground">{selectedPlatform ? 1 : 0}</div>
-                  <div className="text-sm text-muted-foreground">Platform Selected</div>
+                  <div className="text-2xl font-bold text-gray-900">{selectedPlatform ? 1 : 0}</div>
+                  <div className="text-sm text-gray-500">Platform Selected</div>
                 </div>
               </div>
             </div>
-            <div className="bg-card rounded-lg border border-border p-4">
+            <div className="bg-white/70 backdrop-blur-sm border border-white/60 rounded-2xl ring-1 ring-orange-100/50 shadow-sm p-4">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-warning/10 rounded-lg flex items-center justify-center">
-                  <Icon name="Hash" size={20} className="text-warning" />
+                <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center">
+                  <Icon name="Hash" size={20} className="text-amber-500" />
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-foreground">{selectedHashtags?.length}</div>
-                  <div className="text-sm text-muted-foreground">Hashtags Selected</div>
+                  <div className="text-2xl font-bold text-gray-900">{selectedHashtags?.length}</div>
+                  <div className="text-sm text-gray-500">Hashtags Selected</div>
                 </div>
               </div>
             </div>
-            <div className="bg-card rounded-lg border border-border p-4">
+            <div className="bg-white/70 backdrop-blur-sm border border-white/60 rounded-2xl ring-1 ring-orange-100/50 shadow-sm p-4">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-accent/10 rounded-lg flex items-center justify-center">
-                  <Icon name="FileText" size={20} className="text-accent" />
+                <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                  <Icon name="FileText" size={20} className="text-blue-500" />
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-foreground">{generatedContent ? 1 : 0}</div>
-                  <div className="text-sm text-muted-foreground">Content Generated</div>
+                  <div className="text-2xl font-bold text-gray-900">{generatedContent ? 1 : 0}</div>
+                  <div className="text-sm text-gray-500">Content Generated</div>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Tab Navigation */}
-          <div className="flex space-x-1 bg-muted p-1 rounded-lg">
+          <div className="flex space-x-1 bg-white/50 p-1 rounded-xl">
             {tabs?.map((tab) => (
               <button
                 key={tab?.id}
                 onClick={() => setActiveTab(tab?.id)}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
                   activeTab === tab?.id
-                    ? 'bg-background text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
+                    ? 'bg-white text-gray-900 shadow-sm ring-1 ring-gray-200/50'
+                    : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
                 <Icon name={tab?.icon} size={16} />
@@ -289,9 +289,9 @@ const MarketingContentGenerator = () => {
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-card rounded-lg border border-border p-6">
+        <div className="bg-white/70 backdrop-blur-sm border border-white/60 rounded-2xl ring-1 ring-orange-100/50 shadow-sm p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-foreground">Quick Actions</h3>
+            <h3 className="text-lg font-semibold text-gray-900">Quick Actions</h3>
             {actionFeedback && (
               <span className="text-sm font-medium text-green-600 flex items-center gap-1">
                 <Icon name="CheckCircle" size={14} /> {actionFeedback}
@@ -342,43 +342,43 @@ const MarketingContentGenerator = () => {
 
           {/* Saved Templates Panel */}
           {showAnalytics && (
-            <div className="mt-4 pt-4 border-t border-border">
-              <h4 className="text-sm font-semibold text-foreground mb-3">Saved Templates</h4>
+            <div className="mt-4 pt-4 border-t border-gray-200/60">
+              <h4 className="text-sm font-semibold text-gray-900 mb-3">Saved Templates</h4>
               {getSavedTemplates().length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">No saved templates yet. Generate content and click "Save Template" to save.</p>
+                <p className="text-sm text-gray-500 text-center py-4">No saved templates yet. Generate content and click "Save Template" to save.</p>
               ) : (
                 <div className="space-y-3 max-h-80 overflow-y-auto">
                   {getSavedTemplates().map((tpl) => (
-                    <div key={tpl.id} className="bg-muted/30 rounded-lg p-3 border border-border">
+                    <div key={tpl.id} className="bg-white/50 rounded-xl p-3 border border-gray-200/60">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-medium bg-primary/10 text-primary px-2 py-0.5 rounded-full capitalize">{tpl.platform}</span>
-                          <span className="text-xs text-muted-foreground capitalize">{tpl.tone}</span>
+                          <span className="text-xs font-medium bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full capitalize">{tpl.platform}</span>
+                          <span className="text-xs text-gray-500 capitalize">{tpl.tone}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-xs text-muted-foreground">{new Date(tpl.savedAt).toLocaleDateString()}</span>
+                          <span className="text-xs text-gray-400">{new Date(tpl.savedAt).toLocaleDateString()}</span>
                           <button
                             onClick={() => {
                               const text = [tpl.caption, '', (tpl.hashtags || []).join(' ')].join('\n').trim();
                               navigator.clipboard.writeText(text).then(() => showFeedback('Copied!'));
                             }}
-                            className="text-muted-foreground hover:text-primary p-1"
+                            className="text-gray-400 hover:text-orange-500 p-1"
                             title="Copy to clipboard"
                           >
                             <Icon name="Copy" size={14} />
                           </button>
                           <button
                             onClick={() => deleteTemplate(tpl.id)}
-                            className="text-muted-foreground hover:text-red-500 p-1"
+                            className="text-gray-400 hover:text-red-500 p-1"
                             title="Delete template"
                           >
                             <Icon name="Trash2" size={14} />
                           </button>
                         </div>
                       </div>
-                      <p className="text-xs text-foreground line-clamp-2">{tpl.caption}</p>
+                      <p className="text-xs text-gray-700 line-clamp-2">{tpl.caption}</p>
                       {tpl.hashtags?.length > 0 && (
-                        <p className="text-xs text-primary mt-1 truncate">{tpl.hashtags.slice(0, 5).join(' ')}</p>
+                        <p className="text-xs text-orange-500 mt-1 truncate">{tpl.hashtags.slice(0, 5).join(' ')}</p>
                       )}
                     </div>
                   ))}
@@ -389,28 +389,28 @@ const MarketingContentGenerator = () => {
         </div>
 
         {/* Tips Section */}
-        <div className="mt-8 bg-gradient-to-r from-primary/5 to-accent/5 rounded-lg border border-primary/20 p-6">
+        <div className="mt-8 bg-white/70 backdrop-blur-sm border border-white/60 rounded-2xl ring-1 ring-orange-100/50 shadow-sm p-6">
           <div className="flex items-start space-x-4">
-            <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-              <Icon name="Lightbulb" size={20} className="text-primary" />
+            <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center flex-shrink-0">
+              <Icon name="Lightbulb" size={20} className="text-orange-500" />
             </div>
             <div>
-              <h4 className="font-semibold text-foreground mb-2">Marketing Tips</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
+              <h4 className="font-semibold text-gray-900 mb-2">Marketing Tips</h4>
+              <ul className="space-y-2 text-sm text-gray-500">
                 <li className="flex items-start space-x-2">
-                  <Icon name="Check" size={14} className="text-success mt-0.5 flex-shrink-0" />
+                  <Icon name="Check" size={14} className="text-emerald-500 mt-0.5 flex-shrink-0" />
                   <span>Post consistently to maintain audience engagement and build brand recognition</span>
                 </li>
                 <li className="flex items-start space-x-2">
-                  <Icon name="Check" size={14} className="text-success mt-0.5 flex-shrink-0" />
+                  <Icon name="Check" size={14} className="text-emerald-500 mt-0.5 flex-shrink-0" />
                   <span>Use high-quality images that showcase the craftsmanship and details of your products</span>
                 </li>
                 <li className="flex items-start space-x-2">
-                  <Icon name="Check" size={14} className="text-success mt-0.5 flex-shrink-0" />
+                  <Icon name="Check" size={14} className="text-emerald-500 mt-0.5 flex-shrink-0" />
                   <span>Include storytelling elements about the artisan's journey and traditional techniques</span>
                 </li>
                 <li className="flex items-start space-x-2">
-                  <Icon name="Check" size={14} className="text-success mt-0.5 flex-shrink-0" />
+                  <Icon name="Check" size={14} className="text-emerald-500 mt-0.5 flex-shrink-0" />
                   <span>Engage with your audience by responding to comments and messages promptly</span>
                 </li>
               </ul>

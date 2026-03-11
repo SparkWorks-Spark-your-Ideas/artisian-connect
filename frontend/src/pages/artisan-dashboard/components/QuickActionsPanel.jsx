@@ -1,79 +1,69 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import Button from '../../../components/ui/Button';
+import Icon from '../../../components/AppIcon';
 
 const QuickActionsPanel = () => {
   const navigate = useNavigate();
 
   const quickActions = [
     {
-      label: "Upload New Product",
+      label: "Upload Product",
       icon: "Plus",
-      variant: "default",
       onClick: () => navigate('/product-upload-wizard'),
-      description: "Add new craft to catalog"
+      description: "Add new craft to catalog",
+      gradient: "from-orange-500 to-amber-500",
+      iconBg: "bg-orange-500"
     },
     {
       label: "Create Post",
       icon: "PenTool",
-      variant: "outline",
       onClick: () => navigate('/community-feed'),
-      description: "Share with community"
+      description: "Share with community",
+      gradient: null,
+      iconBg: "bg-blue-500"
     },
     {
       label: "View Messages",
       icon: "MessageCircle",
-      variant: "outline",
       onClick: () => navigate('/community-feed'),
-      description: "Check conversations"
+      description: "Check conversations",
+      gradient: null,
+      iconBg: "bg-violet-500"
     },
     {
-      label: "Generate Marketing",
+      label: "AI Marketing",
       icon: "Megaphone",
-      variant: "secondary",
       onClick: () => navigate('/marketing-content-generator'),
-      description: "AI-powered content"
+      description: "Generate content",
+      gradient: "from-emerald-500 to-teal-500",
+      iconBg: "bg-emerald-500"
     }
   ];
 
   return (
-    <div className="bg-card border border-border rounded-lg p-6 shadow-warm">
-      <h2 className="text-lg font-semibold text-foreground mb-4">Quick Actions</h2>
-      {/* Desktop Layout */}
-      <div className="hidden md:grid grid-cols-2 gap-4">
-        {quickActions?.map((action, index) => (
-          <Button
+    <div className="bg-white/70 backdrop-blur-sm border border-white/60 rounded-2xl p-5 shadow-sm ring-1 ring-orange-100/50 h-full">
+      <h2 className="text-base font-bold text-gray-900 mb-4">Quick Actions</h2>
+      <div className="grid grid-cols-2 gap-3">
+        {quickActions.map((action, index) => (
+          <button
             key={index}
-            variant={action?.variant}
-            onClick={action?.onClick}
-            iconName={action?.icon}
-            iconPosition="left"
-            className="justify-start h-auto p-4"
+            onClick={action.onClick}
+            className={`group relative overflow-hidden rounded-xl p-4 text-left transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${
+              action.gradient 
+                ? `bg-gradient-to-br ${action.gradient} text-white` 
+                : 'bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-100'
+            }`}
           >
-            <div className="text-left">
-              <div className="font-medium">{action?.label}</div>
-              <div className="text-xs opacity-75 mt-1">{action?.description}</div>
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center mb-2.5 ${
+              action.gradient ? 'bg-white/20' : action.iconBg
+            }`}>
+              <Icon name={action.icon} size={16} color="white" />
             </div>
-          </Button>
-        ))}
-      </div>
-      {/* Mobile Layout */}
-      <div className="md:hidden space-y-3">
-        {quickActions?.map((action, index) => (
-          <Button
-            key={index}
-            variant={action?.variant}
-            onClick={action?.onClick}
-            iconName={action?.icon}
-            iconPosition="left"
-            fullWidth
-            className="justify-start h-auto p-4"
-          >
-            <div className="text-left">
-              <div className="font-medium">{action?.label}</div>
-              <div className="text-xs opacity-75 mt-1">{action?.description}</div>
+            <div className="font-semibold text-sm leading-tight">{action.label}</div>
+            <div className={`text-[11px] mt-0.5 ${action.gradient ? 'text-white/70' : 'text-gray-400'}`}>
+              {action.description}
             </div>
-          </Button>
+          </button>
         ))}
       </div>
     </div>

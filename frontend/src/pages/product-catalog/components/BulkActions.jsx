@@ -55,75 +55,74 @@ const BulkActions = ({ selectedProducts, onBulkAction, onClearSelection }) => {
 
   return (
     <>
-      <div className="bg-card border border-border rounded-lg p-4 mb-6">
+      <div className="bg-white/70 backdrop-blur-sm border border-white/60 rounded-2xl p-4 mb-6 ring-1 ring-orange-100/50 shadow-sm">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="flex items-center space-x-2">
-              <Icon name="CheckSquare" size={20} className="text-primary" />
-              <span className="font-medium text-foreground">
+              <div className="w-8 h-8 bg-orange-50 rounded-lg flex items-center justify-center">
+                <Icon name="CheckSquare" size={16} className="text-orange-500" />
+              </div>
+              <span className="text-sm font-semibold text-gray-900">
                 {selectedProducts?.length} product{selectedProducts?.length > 1 ? 's' : ''} selected
               </span>
             </div>
-            <Button variant="ghost" size="sm" onClick={onClearSelection}>
-              <Icon name="X" size={16} className="mr-1" />
+            <button onClick={onClearSelection} className="flex items-center text-xs font-medium text-gray-400 hover:text-gray-600 transition-colors">
+              <Icon name="X" size={14} className="mr-1" />
               Clear
-            </Button>
+            </button>
           </div>
           
           <div className="flex items-center space-x-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <button 
               onClick={() => handleBulkAction('price')}
+              className="inline-flex items-center px-3 py-2 text-xs font-medium text-gray-600 bg-white/60 hover:bg-white border border-gray-200/60 rounded-xl transition-all hover:shadow-sm"
             >
-              <Icon name="DollarSign" size={16} className="mr-2" />
+              <Icon name="DollarSign" size={14} className="mr-1.5" />
               Update Prices
-            </Button>
+            </button>
             
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <button 
               onClick={() => handleBulkAction('category')}
+              className="inline-flex items-center px-3 py-2 text-xs font-medium text-gray-600 bg-white/60 hover:bg-white border border-gray-200/60 rounded-xl transition-all hover:shadow-sm"
             >
-              <Icon name="Tag" size={16} className="mr-2" />
+              <Icon name="Tag" size={14} className="mr-1.5" />
               Change Category
-            </Button>
+            </button>
             
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <button 
               onClick={() => handleBulkAction('status')}
+              className="inline-flex items-center px-3 py-2 text-xs font-medium text-gray-600 bg-white/60 hover:bg-white border border-gray-200/60 rounded-xl transition-all hover:shadow-sm"
             >
-              <Icon name="Package" size={16} className="mr-2" />
+              <Icon name="Package" size={14} className="mr-1.5" />
               Update Status
-            </Button>
+            </button>
             
             <div className="relative">
-              <Button variant="outline" size="sm">
-                <Icon name="MoreHorizontal" size={16} className="mr-2" />
+              <button className="inline-flex items-center px-3 py-2 text-xs font-medium text-gray-600 bg-white/60 hover:bg-white border border-gray-200/60 rounded-xl transition-all hover:shadow-sm">
+                <Icon name="MoreHorizontal" size={14} className="mr-1.5" />
                 More Actions
-              </Button>
-              <div className="absolute right-0 top-full mt-1 w-48 bg-popover border border-border rounded-lg shadow-warm-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                <div className="p-2">
+              </button>
+              <div className="absolute right-0 top-full mt-1 w-48 bg-white/90 backdrop-blur-xl border border-white/60 rounded-xl shadow-lg ring-1 ring-gray-200/30 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                <div className="p-1.5">
                   <button
                     onClick={() => handleBulkAction('tags')}
-                    className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-popover-foreground hover:bg-muted rounded-md"
+                    className="w-full flex items-center space-x-2 px-3 py-2 text-xs text-gray-700 hover:bg-orange-50 rounded-lg transition-colors"
                   >
-                    <Icon name="Hash" size={14} />
+                    <Icon name="Hash" size={13} />
                     <span>Add Tags</span>
                   </button>
                   <button
                     onClick={() => handleBulkAction('duplicate')}
-                    className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-popover-foreground hover:bg-muted rounded-md"
+                    className="w-full flex items-center space-x-2 px-3 py-2 text-xs text-gray-700 hover:bg-orange-50 rounded-lg transition-colors"
                   >
-                    <Icon name="Copy" size={14} />
+                    <Icon name="Copy" size={13} />
                     <span>Duplicate Products</span>
                   </button>
                   <button
                     onClick={() => handleBulkAction('archive')}
-                    className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-destructive hover:bg-muted rounded-md"
+                    className="w-full flex items-center space-x-2 px-3 py-2 text-xs text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                   >
-                    <Icon name="Archive" size={14} />
+                    <Icon name="Archive" size={13} />
                     <span>Archive Products</span>
                   </button>
                 </div>
@@ -135,10 +134,10 @@ const BulkActions = ({ selectedProducts, onBulkAction, onClearSelection }) => {
       {/* Bulk Action Modal */}
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="fixed inset-0 bg-black/50" onClick={() => setIsOpen(false)} />
-          <div className="relative bg-card border border-border rounded-lg p-6 w-full max-w-md mx-4">
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setIsOpen(false)} />
+          <div className="relative bg-white/90 backdrop-blur-xl border border-white/60 rounded-2xl p-6 w-full max-w-md mx-4 shadow-2xl ring-1 ring-gray-200/30">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-foreground">
+              <h3 className="text-base font-bold text-gray-900">
                 {actionType === 'price' && 'Update Prices'}
                 {actionType === 'category' && 'Change Category'}
                 {actionType === 'status' && 'Update Status'}
@@ -146,26 +145,26 @@ const BulkActions = ({ selectedProducts, onBulkAction, onClearSelection }) => {
                 {actionType === 'duplicate' && 'Duplicate Products'}
                 {actionType === 'archive' && 'Archive Products'}
               </h3>
-              <Button variant="ghost" size="sm" onClick={() => setIsOpen(false)}>
-                <Icon name="X" size={20} />
-              </Button>
+              <button onClick={() => setIsOpen(false)} className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+                <Icon name="X" size={18} />
+              </button>
             </div>
 
             <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs text-gray-500">
                 This action will be applied to {selectedProducts?.length} selected product{selectedProducts?.length > 1 ? 's' : ''}.
               </p>
 
               {actionType === 'price' && (
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
+                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
                       Adjustment Type
                     </label>
                     <select
                       value={actionData?.adjustmentType}
                       onChange={(e) => setActionData({...actionData, adjustmentType: e?.target?.value})}
-                      className="w-full px-3 py-2 border border-border rounded-lg bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                      className="w-full px-3 py-2.5 bg-white/60 border border-gray-200/60 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-300 transition-all"
                     >
                       <option value="percentage">Percentage</option>
                       <option value="fixed">Fixed Amount</option>
@@ -178,7 +177,7 @@ const BulkActions = ({ selectedProducts, onBulkAction, onClearSelection }) => {
                     value={actionData?.priceAdjustment}
                     onChange={(e) => setActionData({...actionData, priceAdjustment: e?.target?.value})}
                   />
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-[11px] text-gray-400">
                     Use negative values to decrease prices
                   </p>
                 </div>
@@ -186,13 +185,13 @@ const BulkActions = ({ selectedProducts, onBulkAction, onClearSelection }) => {
 
               {actionType === 'category' && (
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
                     New Category
                   </label>
                   <select
                     value={actionData?.category}
                     onChange={(e) => setActionData({...actionData, category: e?.target?.value})}
-                    className="w-full px-3 py-2 border border-border rounded-lg bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    className="w-full px-3 py-2.5 bg-white/60 border border-gray-200/60 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-300 transition-all"
                   >
                     <option value="">Select category...</option>
                     {categories?.map((category) => (
@@ -204,13 +203,13 @@ const BulkActions = ({ selectedProducts, onBulkAction, onClearSelection }) => {
 
               {actionType === 'status' && (
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
                     New Status
                   </label>
                   <select
                     value={actionData?.status}
                     onChange={(e) => setActionData({...actionData, status: e?.target?.value})}
-                    className="w-full px-3 py-2 border border-border rounded-lg bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    className="w-full px-3 py-2.5 bg-white/60 border border-gray-200/60 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-300 transition-all"
                   >
                     <option value="">Select status...</option>
                     {statusOptions?.map((status) => (
@@ -231,8 +230,8 @@ const BulkActions = ({ selectedProducts, onBulkAction, onClearSelection }) => {
               )}
 
               {(actionType === 'duplicate' || actionType === 'archive') && (
-                <div className="bg-muted/50 p-3 rounded-lg">
-                  <p className="text-sm text-foreground">
+                <div className="bg-orange-50/50 p-3 rounded-xl border border-orange-100/60">
+                  <p className="text-xs text-gray-600">
                     {actionType === 'duplicate' ?'This will create copies of the selected products with "(Copy)" added to their names.' :'This will move the selected products to the archived section. They can be restored later.'
                     }
                   </p>
@@ -241,10 +240,10 @@ const BulkActions = ({ selectedProducts, onBulkAction, onClearSelection }) => {
             </div>
 
             <div className="flex items-center justify-end space-x-3 mt-6">
-              <Button variant="outline" onClick={() => setIsOpen(false)}>
+              <button onClick={() => setIsOpen(false)} className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 bg-white/60 hover:bg-white border border-gray-200/60 rounded-xl transition-all">
                 Cancel
-              </Button>
-              <Button 
+              </button>
+              <button 
                 onClick={executeBulkAction}
                 disabled={
                   (actionType === 'price' && !actionData?.priceAdjustment) ||
@@ -252,9 +251,10 @@ const BulkActions = ({ selectedProducts, onBulkAction, onClearSelection }) => {
                   (actionType === 'status' && !actionData?.status) ||
                   (actionType === 'tags' && !actionData?.tags)
                 }
+                className="px-5 py-2 text-sm font-semibold text-white bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl shadow-md shadow-orange-200/50 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
                 Apply Changes
-              </Button>
+              </button>
             </div>
           </div>
         </div>

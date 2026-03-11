@@ -257,11 +257,7 @@ const ArtisanDashboard = () => {
   };
 
   const getPageTitle = () => {
-    const titles = {
-      en: "Artisan Dashboard - ArtisanConnect",
-      hi: "कारीगर डैशबोर्ड - ArtisanConnect"
-    };
-    return titles?.[currentLanguage];
+    return "Artisian Connect";
   };
 
   const getMetricsData = () => {
@@ -309,30 +305,29 @@ const ArtisanDashboard = () => {
         <title>{getPageTitle()}</title>
         <meta name="description" content="Artisan dashboard for managing crafts, orders, and community engagement on ArtisanConnect platform" />
       </Helmet>
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50/30 to-white">
         <Header />
         
-        <main className="container mx-auto px-4 py-6 lg:px-6">
+        <main className="max-w-7xl mx-auto px-4 py-6 lg:px-6">
           {/* Welcome Section */}
-          <div className="mb-8">
+          <div className="mb-6">
             <WelcomeSection />
           </div>
 
           {/* Metrics Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             {loading ? (
-              // Loading skeleton
               Array.from({ length: 4 }).map((_, index) => (
                 <div key={index} className="animate-pulse">
-                  <div className="bg-gray-200 h-24 rounded-lg"></div>
+                  <div className="bg-white/60 backdrop-blur h-28 rounded-2xl border border-orange-100/40"></div>
                 </div>
               ))
             ) : error ? (
-              <div className="col-span-full p-4 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-red-600">{error}</p>
+              <div className="col-span-full p-5 bg-red-50/80 backdrop-blur border border-red-200/50 rounded-2xl">
+                <p className="text-red-600 text-sm">{error}</p>
                 <button 
                   onClick={loadDashboardData}
-                  className="mt-2 px-4 py-2 bg-red-100 text-red-700 rounded hover:bg-red-200"
+                  className="mt-2 px-4 py-1.5 bg-red-100 text-red-700 rounded-lg text-sm hover:bg-red-200 transition-colors"
                 >
                   Retry
                 </button>
@@ -353,35 +348,30 @@ const ArtisanDashboard = () => {
           </div>
 
           {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-6">
             {/* Left Column - Quick Actions */}
-            <div className="lg:col-span-1">
+            <div className="lg:col-span-2">
               <QuickActionsPanel />
             </div>
 
             {/* Right Column - Activity Feed */}
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-3">
               <ActivityFeed />
             </div>
           </div>
 
           {/* Module Navigation */}
-          <div className="mb-8">
+          <div className="mb-6">
             <ModuleNavigation moduleStats={moduleStats} />
           </div>
 
           {/* Footer Section */}
-          <div className="mt-12 pt-8 border-t border-border">
+          <div className="mt-8 pt-6 border-t border-orange-100/50">
             <div className="text-center">
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs text-gray-400">
                 {currentLanguage === 'hi' 
                   ? `© ${new Date()?.getFullYear()} ArtisanConnect. सभी अधिकार सुरक्षित।`
                   : `© ${new Date()?.getFullYear()} ArtisanConnect. All rights reserved.`
-                }
-              </p>
-              <p className="text-xs text-muted-foreground mt-2">
-                {currentLanguage === 'hi'
-                  ? "भारतीय कारीगरों के लिए डिजिटल प्लेटफॉर्म" :"Empowering Indian artisans through digital innovation"
                 }
               </p>
             </div>
