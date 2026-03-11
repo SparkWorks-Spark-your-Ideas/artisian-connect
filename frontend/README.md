@@ -1,374 +1,308 @@
-# Artisan Connect Frontend
+# Artisan Connect — Frontend
 
-A modern React.js frontend application for the Artisan Connect platform, designed to connect artisans with customers and provide comprehensive business management tools.
+A React + Vite frontend for the ArtisanConnect marketplace platform. Provides role-based experiences for **artisans** (dashboard, product management, AI marketing tools, community feed, profile setup) and **customers** (product shop, product detail with artisan info, ordering, order history). Built with Tailwind CSS and a warm terracotta theme.
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 - Node.js 18+ and npm
-- Backend API running on `http://localhost:5001/YOUR_PROJECT_ID/us-central1/api`
+- Backend API running at `http://localhost:3000`
 
-### Installation & Setup
+### Installation
+
 ```bash
-# Install dependencies
+cd frontend
 npm install
+```
 
-# Set up environment variables
-cp .env.example .env.local
-# Configure VITE_API_URL in .env.local
+### Environment Variables
 
-# Start development server
+Create a `.env` file:
+
+```env
+VITE_API_URL=http://localhost:3000/api
+VITE_GEMINI_API_KEY=your-gemini-api-key
+```
+
+### Run
+
+```bash
 npm run dev
 ```
 
-The application will be available at `http://localhost:4028`
+The app will be available at **http://localhost:4028**.
 
-## � Technology Stack
+## Technology Stack
 
-- **Frontend Framework**: React 18.2.0 with Vite
-- **Styling**: Tailwind CSS 3.x
-- **State Management**: Redux Toolkit
-- **Routing**: React Router Dom v6
-- **HTTP Client**: Axios
-- **UI Components**: Custom component library
-- **Icons**: Lucide React
-- **Build Tool**: Vite 5.x
+| Technology | Version | Purpose |
+|-----------|---------|---------|
+| React | 18.2.0 | UI framework |
+| Vite | 5.4.20 | Build tool & dev server |
+| Tailwind CSS | 3.4.6 | Utility-first styling |
+| React Router DOM | 6.0.2 | Client-side routing |
+| Redux Toolkit | 2.6.1 | State management |
+| Axios | 1.8.4 | HTTP client with interceptors |
+| Lucide React | 0.484.0 | Icon library |
+| React Hook Form | 7.55.0 | Form handling & validation |
+| Recharts | 2.15.2 | Charts & data visualization |
+| D3 | 7.9.0 | Advanced data visualization |
+| Framer Motion | 10.16.4 | Animations & transitions |
+| React Dropzone | 14.2.3 | Drag-and-drop file uploads |
+| date-fns | 4.1.0 | Date formatting utilities |
+| clsx / tailwind-merge | — | Class name utilities |
 
-## 📁 Project Structure
+## Project Structure
 
 ```
-frontend/
-├── src/
-│   ├── components/          # Reusable UI components
-│   │   ├── ui/             # Base UI components (Button, Input, Header, etc.)
-│   │   ├── AppIcon.jsx     # Icon component wrapper
-│   │   ├── AppImage.jsx    # Image component with fallbacks
-│   │   └── ErrorBoundary.jsx
-│   ├── pages/              # Page components and route handlers
-│   │   ├── artisan-dashboard/
-│   │   ├── community-feed/
-│   │   ├── product-catalog/
-│   │   ├── product-upload-wizard/
-│   │   ├── marketing-content-generator/
-│   │   └── artisan-profile-setup/
-│   ├── utils/
-│   │   ├── api.js          # API service layer
-│   │   └── cn.js           # Utility functions
-│   ├── styles/             # Global styles and Tailwind config
-│   ├── App.jsx             # Main app component
-│   ├── Routes.jsx          # Route definitions
-│   └── index.jsx           # Entry point
-├── public/                 # Static assets
-└── package.json
+frontend/src/
+├── components/                     # Shared UI components
+│   ├── ui/                         # Base components
+│   │   ├── Button.jsx              # Button with variants
+│   │   ├── Input.jsx               # Form input
+│   │   ├── Header.jsx              # App header
+│   │   ├── Select.jsx              # Dropdown select
+│   │   └── Checkbox.jsx            # Checkbox input
+│   ├── AppIcon.jsx                 # Lucide icon wrapper
+│   ├── AppImage.jsx                # Image with fallback
+│   ├── ErrorBoundary.jsx           # React error boundary
+│   └── ScrollToTop.jsx             # Route scroll restoration
+├── pages/
+│   ├── Login.jsx                   # Auth page (artisan/customer tabs)
+│   ├── NotFound.jsx                # 404 page
+│   ├── artisan-dashboard/          # Artisan main dashboard
+│   │   ├── index.jsx               # Dashboard with real-time metrics
+│   │   └── components/
+│   │       ├── WelcomeSection.jsx   # Greeting & stats cards
+│   │       ├── MetricsCard.jsx      # Stat display card
+│   │       ├── QuickActionsPanel.jsx # Action shortcuts
+│   │       ├── ModuleNavigation.jsx  # Feature navigation grid
+│   │       └── ActivityFeed.jsx      # Recent activity list
+│   ├── artisan-profile-setup/      # Profile editor
+│   │   ├── index.jsx               # Multi-section profile form
+│   │   └── components/
+│   │       ├── BioDescriptionSection.jsx
+│   │       ├── ContactInformationSection.jsx
+│   │       ├── CraftSpecializationSelector.jsx
+│   │       ├── LocationDetailsSection.jsx
+│   │       ├── PortfolioShowcase.jsx
+│   │       └── ...
+│   ├── product-catalog/            # Artisan product management
+│   │   ├── index.jsx
+│   │   └── components/
+│   ├── product-upload-wizard/      # Multi-step product creation
+│   │   ├── index.jsx
+│   │   └── components/
+│   ├── marketing-content-generator/ # AI marketing tools
+│   │   ├── index.jsx
+│   │   └── components/
+│   ├── community-feed/             # Social feed & interactions
+│   │   ├── index.jsx
+│   │   └── components/
+│   └── customer/                   # Customer e-commerce pages
+│       ├── CustomerShop.jsx         # Product listing (Flipkart-style)
+│       ├── CustomerProductDetail.jsx # Product detail & ordering
+│       ├── CustomerOrders.jsx       # Order history
+│       └── components/
+│           └── CustomerHeader.jsx   # Customer navigation header
+├── utils/
+│   ├── api.js                      # Axios API client (all endpoints)
+│   ├── cn.js                       # Tailwind class merge utility
+│   └── geminiAPI.js                # Frontend Gemini AI integration
+├── styles/
+│   ├── index.css                   # Global styles & CSS variables
+│   └── tailwind.css                # Tailwind imports
+├── App.jsx                         # Root component
+├── Routes.jsx                      # Role-based routing configuration
+└── index.jsx                       # Entry point
 ```
 
-## 🔌 API Integration
+## Routing & Authentication
 
-### Base Configuration
+### Role-Based Navigation
+
+The app uses role-based routing with two user types:
+
+| Role | Home Route | Available Pages |
+|------|-----------|-----------------|
+| **Artisan** | `/dashboard` | Dashboard, Product Catalog, Product Upload, Marketing Generator, Community Feed, Profile Setup |
+| **Customer** | `/shop` | Product Shop, Product Detail, Order History |
+
+### Route Configuration
+
+| Path | Auth | Guard | Component | Description |
+|------|------|-------|-----------|-------------|
+| `/login` | No | — | Login | Auth page with artisan/customer toggle tabs |
+| `/` | Yes | Smart Redirect | HomeRedirect | Redirects artisans to `/dashboard`, customers to `/shop` |
+| `/shop` | Yes | ProtectedRoute | CustomerShop | Product browsing with search, filters, sort |
+| `/shop/product/:id` | Yes | ProtectedRoute | CustomerProductDetail | Product detail, artisan info, ordering |
+| `/shop/orders` | Yes | ProtectedRoute | CustomerOrders | Order history with status badges |
+| `/dashboard` | Yes | ArtisanRoute | ArtisanDashboard | Metrics, quick actions, activity feed |
+| `/artisan-dashboard` | Yes | ArtisanRoute | ArtisanDashboard | Alias for `/dashboard` |
+| `/product-catalog` | Yes | ArtisanRoute | ProductCatalog | Product list & management |
+| `/product-upload-wizard` | Yes | ArtisanRoute | ProductUploadWizard | Multi-step product creation |
+| `/marketing-content-generator` | Yes | ArtisanRoute | MarketingContentGenerator | AI content tools |
+| `/artisan-profile-setup` | Yes | ArtisanRoute | ArtisanProfileSetup | Profile editor |
+| `/community-feed` | Yes | ArtisanRoute | CommunityFeed | Social feed & interactions |
+| `*` | — | — | NotFound | 404 page |
+
+### Auth Flow
+- JWT tokens stored in `localStorage.authToken`
+- Axios interceptor auto-adds `Authorization: Bearer` header
+- 401 responses auto-redirect to `/login`
+- Login page has artisan/customer toggle with role-based redirect after login
+
+## Pages
+
+### Customer Experience
+
+#### Product Shop (`/shop`)
+- Hero banner with search
+- Category filter chips (12+ categories: Textiles, Pottery, Jewelry, Woodwork, etc.)
+- Sort by: newest, price (low/high), rating
+- Responsive product grid (2-5 columns)
+- Product cards: image, name, artisan name with verified badge, price (INR), location, category tag
+- Pagination (20 items/page)
+- URL search parameter support (`/shop?search=silk`)
+- Loading skeleton states
+
+#### Product Detail (`/shop/product/:id`)
+- Image gallery with thumbnail selection
+- Product info: name, price, stock status, description
+- Product details grid: materials, dimensions (formatted from object), weight, listed date
+- Tags display
+- Quantity selector + "Buy Now" button
+- **Order Form**: expandable with name, phone, street, city, state, PIN code, payment method (COD)
+- Order success confirmation with order ID
+- **Artisan Expandable Section**: bio, stats (sales/rating/experience), specializations, techniques, portfolio images, awards, location, contact phone
+- All array fields wrapped in `Array.isArray()` safety checks
+
+#### Order History (`/shop/orders`)
+- Order list with product images, name, quantity, date, total (INR)
+- Color-coded status badges: green (delivered/completed), blue (processing/shipped), orange (pending), red (cancelled)
+- Empty state with "Browse Products" CTA
+- Loading skeleton states
+
+### Artisan Experience
+
+#### Dashboard (`/dashboard`)
+- **Welcome Section**: greeting, profile avatar
+- **Stats Cards**: real follower count (from social API), monthly earnings (from actual orders), total products, campaigns count
+- **Quick Actions**: Upload Product, Create Marketing, Update Profile, View Community
+- **Module Navigation**: grid of all feature shortcuts
+- **Activity Feed**: recent notifications
+
+#### Product Catalog (`/product-catalog`)
+- Product list with filters, search, sort
+- Grid/list view modes
+- Inventory analytics
+- Product edit and delete
+
+#### Product Upload Wizard (`/product-upload-wizard`)
+- Step-by-step product creation
+- Image upload via Cloudinary (up to 10)
+- AI description generation via Gemini
+- Category, pricing, materials, dimensions fields
+
+#### Marketing Content Generator (`/marketing-content-generator`)
+- Product selection for marketing context
+- AI content generation via Gemini (captions, hashtags, tips)
+- Platform selection (Instagram, Facebook, Twitter)
+- Tone selection (professional, casual, enthusiastic)
+- Template save/load with localStorage persistence
+- Poster design generation
+
+#### Artisan Profile Setup (`/artisan-profile-setup`)
+- Bio & description section
+- Contact information (phone, email, address)
+- Craft specialization selector
+- Location details
+- Portfolio showcase with image upload
+- Awards & recognition
+- Certification upload
+
+#### Community Feed (`/community-feed`)
+- Social post feed with images
+- Post creation with image upload
+- Like and comment interactions
+- Follow/unfollow artisans
+- Success stories filter
+- Follower/following lists
+
+## API Integration
+
+### Configuration
+
 ```javascript
-// Base URL Configuration (utils/api.js)
+// Base URL detection
 const getBaseURL = () => {
   if (import.meta.env.DEV) {
-    return import.meta.env.VITE_API_URL || 'http://localhost:5001/YOUR_PROJECT_ID/us-central1/api';
-  } else {
-    return import.meta.env.VITE_API_URL || 'http://localhost:5001/YOUR_PROJECT_ID/us-central1/api';
+    return import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
   }
+  return import.meta.env.VITE_API_URL || 'https://us-central1-artisan-connect-marketplace.cloudfunctions.net/api';
 };
 ```
 
-### Authentication
-- **Token Storage**: JWT tokens stored in `localStorage.authToken`
-- **Auto-injection**: Axios interceptor automatically adds `Authorization: Bearer {token}` header
-- **Auto-redirect**: 401 responses redirect to login page
+### API Client Methods
 
-## 📡 API Endpoints Usage
+All API calls are centralized in `src/utils/api.js`:
 
-### Authentication Endpoints
-| Endpoint | Method | Used In | Purpose |
-|----------|--------|---------|---------|
-| `/auth/register` | POST | Registration Flow | User account creation |
-| `/auth/login` | POST | Login Flow | User authentication |
-| `/auth/logout` | POST | Logout Flow | Session termination |
-| `/auth/verify-email` | POST | Email Verification | Account verification |
-| `/auth/reset-password` | POST | Password Reset | Password recovery |
+```
+api.auth        — register, login, logout, verifyEmail, resetPassword
+api.user        — getProfile, updateProfile, uploadAvatar, getPublicProfile, updateArtisanProfile
+api.products    — create, list, get, update, delete, getCategories, generateDescription, analyzeImage, uploadImages, favorite
+api.orders      — create, list, get, updateStatus, cancel, review
+api.social      — getFeed, createPost, getPost, likePost, commentPost, getGroups, joinGroup, leaveGroup, uploadImages, followArtisan, getStats, getFollowers, getFollowing
+api.marketing   — generateContent, generatePoster, getTips, getContentHistory
+api.analytics   — getOverview, getSales, getEngagement, getProducts, getTrends
+api.translate   — text, batch, detect, getLanguages, product
+```
 
-### User Management
-| Endpoint | Method | Used In | Purpose |
-|----------|--------|---------|---------|
-| `/user/profile` | GET | Profile Display | Fetch user profile data |
-| `/user/profile` | PUT | Profile Update | Update user information |
-| `/user/profile/avatar` | POST | Avatar Upload | Profile picture upload |
-| `/user/profile/{uid}` | GET | Public Profiles | View other users' profiles |
-| `/user/dashboard` | GET | **Dashboard Page** | Load dashboard metrics and analytics |
-| `/user/artisan-profile` | PUT | **Profile Setup** | Update artisan-specific profile data |
+## Theme & Design
 
-### Product Management
-| Endpoint | Method | Used In | Purpose |
-|----------|--------|---------|---------|
-| `/products/create` | POST | **Product Upload Wizard** | Create new products |
-| `/products/list` | GET | **Product Catalog, Marketing Generator** | List products with filters |
-| `/products/{id}` | GET | Product Details | Get specific product information |
-| `/products/{id}` | PUT | Product Edit | Update existing products |
-| `/products/{id}` | DELETE | Product Management | Remove products |
-| `/products/categories` | GET | **Product Catalog Filter** | Load available categories |
-| `/products/auto-describe` | POST | **Product Upload Wizard** | AI-generated product descriptions |
-| `/products/{id}/favorite` | POST | Product Interaction | Add/remove from favorites |
+The app uses a warm terracotta/orange theme defined via CSS variables:
 
-### Social Features (Community Feed)
-| Endpoint | Method | Used In | Purpose |
-|----------|--------|---------|---------|
-| `/social/feed` | GET | **Community Feed** | Load social media posts and feed content |
-| `/social/post` | POST | **Community Feed - Post Creator** | Create new social posts |
-| `/social/posts/{id}` | GET | Post Details | Get specific post information |
-| `/social/posts/{id}/like` | POST | **Community Feed - Post Card** | Like/unlike posts |
-| `/social/posts/{id}/comment` | POST | **Community Feed - Post Card** | Add comments to posts |
-| `/social/groups` | GET | **Community Feed** | Load available artisan groups |
-| `/social/group/join` | POST | Group Management | Join artisan groups |
-| `/social/group/leave` | POST | Group Management | Leave artisan groups |
+```css
+--color-primary: #D2691E       /* Terracotta orange */
+--color-background: #FFF8F0    /* Warm cream */
+```
 
-### Marketing Tools
-| Endpoint | Method | Used In | Purpose |
-|----------|--------|---------|---------|
-| `/marketing/generate-content` | POST | **Marketing Content Generator** | AI-generated marketing content |
-| `/marketing/generate-poster` | POST | **Marketing Content Generator** | AI-generated poster designs |
-| `/marketing/tips` | GET | **Marketing Content Generator** | Get personalized marketing tips |
-| `/marketing/content/history` | GET | **Marketing Content Generator** | Load previously generated content |
+- Mobile-first responsive design
+- Consistent card-based layouts
+- Loading skeleton animations
+- Smooth page transitions
 
-### Analytics & Reports
-| Endpoint | Method | Used In | Purpose |
-|----------|--------|---------|---------|
-| `/analytics/overview` | GET | **Dashboard Page** | General business analytics |
-| `/analytics/sales` | GET | **Dashboard Page** | Sales performance data |
-| `/analytics/engagement` | GET | **Dashboard Page** | Community engagement metrics |
-| `/analytics/products` | GET | **Product Catalog Analytics** | Product performance insights |
-| `/analytics/trends` | GET | **Dashboard Page** | Market trend analysis |
+## Scripts
 
-### Translation Services
-| Endpoint | Method | Used In | Purpose |
-|----------|--------|---------|---------|
-| `/translate` | POST | Multi-language Support | Translate text content |
-| `/translate/batch` | POST | Bulk Operations | Translate multiple items |
-| `/translate/detect` | POST | Language Detection | Auto-detect text language |
-| `/translate/languages` | GET | Language Selection | Available language list |
-| `/translate/product` | POST | **Product Upload Wizard** | Translate product information |
+| Command | Description |
+|---------|-------------|
+| `npm run dev` / `npm start` | Start Vite dev server |
+| `npm run build` | Production build with source maps |
+| `npm run serve` | Preview production build |
 
-### Order Management
-| Endpoint | Method | Used In | Purpose |
-|----------|--------|---------|---------|
-| `/orders/create` | POST | Checkout Process | Create new orders |
-| `/orders/list` | GET | **Dashboard Page** | Load user orders |
-| `/orders/{id}` | GET | Order Details | Get specific order information |
-| `/orders/{id}/status` | PATCH | Order Management | Update order status |
-| `/orders/{id}/cancel` | POST | Order Management | Cancel orders |
-| `/orders/{id}/review` | POST | Post-Purchase | Add order reviews |
+## Error Handling
 
-## 🎯 Page-Specific API Usage
+- **Axios Interceptors**: Auto-redirect on 401
+- **Error Boundary**: Global React error boundary catches component crashes
+- **Fallback Data**: Empty arrays/defaults when API calls fail
+- **Try-Catch**: All API calls wrapped with loading/error states
+- **Type Safety**: `Array.isArray()` checks on Firestore data that may not be arrays
+- **Date Parsing**: Handles Firestore timestamp objects (`{_seconds, _nanoseconds}`)
+- **Dimension Handling**: Detects object vs string for `product.dimensions`
 
-### 📊 Artisan Dashboard (`/artisan-dashboard`)
-**Primary Endpoints:**
-- `GET /user/dashboard` - Main dashboard data
-- `GET /analytics/overview` - Business overview
-- `GET /analytics/sales` - Sales metrics
-- `GET /analytics/engagement` - Community metrics
-- `GET /orders/list` - Recent orders
+## Build & Deploy
 
-**Features:**
-- Real-time business metrics display
-- Performance analytics visualization
-- Quick action navigation
-- Multi-language support (Hindi/English)
-
-### 🛍️ Product Catalog (`/product-catalog`)
-**Primary Endpoints:**
-- `GET /products/list` - Product listing with filters
-- `GET /products/categories` - Available categories
-- `GET /analytics/products` - Product analytics
-- `PUT /products/{id}` - Product updates
-- `DELETE /products/{id}` - Product removal
-
-**Features:**
-- Advanced filtering and sorting
-- Bulk product operations
-- Inventory analytics dashboard
-- Grid/list view modes
-
-### 👥 Community Feed (`/community-feed`)
-**Primary Endpoints:**
-- `GET /social/feed` - Social media feed
-- `POST /social/post` - Create posts
-- `POST /social/posts/{id}/like` - Like posts
-- `POST /social/posts/{id}/comment` - Comment on posts
-- `GET /social/groups` - Available groups
-
-**Features:**
-- Real-time social feed
-- Post creation and interaction
-- Community engagement tools
-- Suggested artisan connections
-
-### 📤 Product Upload Wizard (`/product-upload-wizard`)
-**Primary Endpoints:**
-- `POST /products/create` - Create products
-- `POST /products/auto-describe` - AI descriptions
-- `GET /products/categories` - Product categories
-- `POST /translate/product` - Translate product info
-
-**Features:**
-- Step-by-step product creation
-- AI-powered description generation
-- Photo upload and management
-- SEO optimization tools
-
-### 📢 Marketing Content Generator (`/marketing-content-generator`)
-**Primary Endpoints:**
-- `POST /marketing/generate-content` - Generate content
-- `POST /marketing/generate-poster` - Create posters
-- `GET /marketing/tips` - Marketing tips
-- `GET /marketing/content/history` - Content history
-- `GET /products/list` - Available products
-
-**Features:**
-- AI-powered content generation
-- Multi-platform content creation
-- Hashtag research and suggestions
-- Content scheduling tools
-
-### 👤 Artisan Profile Setup (`/artisan-profile-setup`)
-**Primary Endpoints:**
-- `GET /user/profile` - Current profile data
-- `PUT /user/artisan-profile` - Update artisan profile
-- `POST /user/profile/avatar` - Upload profile picture
-
-**Features:**
-- Comprehensive profile creation
-- Skill and specialization selection
-- Portfolio showcase setup
-- Location and contact management
-
-## 🔧 Environment Configuration
-
-### Required Environment Variables
 ```bash
-# API Configuration
-VITE_API_URL=http://localhost:5001/YOUR_PROJECT_ID/us-central1/api
-
-# Development flags
-VITE_ENV=development
-VITE_DEBUG=true
-```
-
-### Vite-specific Notes
-- Use `import.meta.env.VITE_*` instead of `process.env.*`
-- Environment variables must be prefixed with `VITE_`
-- `import.meta.env.DEV` for development detection
-
-## 🚦 Error Handling
-
-### Global Error Handling
-- **Axios Interceptors**: Automatic 401 redirect to login
-- **Error Boundaries**: React error boundary for component crashes
-- **User Feedback**: Toast notifications for API errors
-- **Fallback Data**: Default values when API calls fail
-
-### Common Error Scenarios
-```javascript
-// API call with error handling
-const loadData = async () => {
-  try {
-    setLoading(true);
-    const response = await api.products.list();
-    setProducts(response.data.products || []);
-  } catch (error) {
-    console.error('Error loading products:', error);
-    setError('Failed to load products. Please try again.');
-    setProducts([]); // Fallback to empty array
-  } finally {
-    setLoading(false);
-  }
-};
-```
-
-## 🧪 Development Guidelines
-
-### Code Organization
-- **Page Components**: Located in `src/pages/{feature}/index.jsx`
-- **Feature Components**: Located in `src/pages/{feature}/components/`
-- **Shared Components**: Located in `src/components/`
-- **API Calls**: Centralized in `src/utils/api.js`
-
-### API Integration Best Practices
-1. **Always handle loading states** during API calls
-2. **Provide fallback data** when requests fail
-3. **Use try-catch blocks** for error handling
-4. **Display user-friendly error messages**
-5. **Implement retry mechanisms** for critical operations
-
-### Component Patterns
-```javascript
-// Standard component with API integration
-const FeatureComponent = () => {
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await api.feature.getData();
-      setData(response.data);
-    } catch (error) {
-      setError('Error message');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    // Component JSX with loading, error, and data states
-  );
-};
-```
-
-## � Debugging
-
-### Development Tools
-- **React DevTools**: Component state inspection
-- **Network Tab**: API request/response monitoring
-- **Console Logs**: Detailed error information
-- **Vite HMR**: Hot module replacement for fast development
-
-### Common Issues
-1. **Blank Screen**: Check console for environment variable errors
-2. **API Errors**: Verify backend is running and endpoints are correct
-3. **Build Failures**: Check for syntax errors and missing dependencies
-4. **Routing Issues**: Verify React Router configuration
-
-## 📦 Build & Deployment
-
-### Build Commands
-```bash
-# Development server
-npm run dev
-
 # Production build
-npm run build
+npm run build     # Outputs to dist/
 
-# Preview production build
-npm run preview
+# Deploy dist/ folder to:
+# - Vercel
+# - Netlify
+# - Firebase Hosting
+# - Any static file host
 ```
-
-### Build Output
-- **Dist folder**: Contains optimized production files
-- **Asset optimization**: Automatic code splitting and minification
-- **Environment handling**: Separate configs for dev/prod
 
 ---
 
-**Last Updated**: September 2025
+**Last Updated**: March 2026
 **Version**: 1.0.0
-**Maintainer**: Artisan Connect Development Team

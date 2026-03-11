@@ -1,387 +1,352 @@
-# 🎨 ArtisanConnect - AI-Powered Marketplace Prototype
+# 🎨 ArtisanConnect — AI-Powered Artisan Marketplace
 
-[![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)](https://github.com/SparkWorks-Spark-your-Ideas/artisian-connect)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/SparkWorks-Spark-your-Ideas/artisian-connect)
 [![Node.js](https://img.shields.io/badge/node.js-18+-green.svg)](https://nodejs.org/)
 [![React](https://img.shields.io/badge/react-18.2.0-blue.svg)](https://reactjs.org/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-> **An AI-powered marketplace connecting traditional artisans with global customers, featuring intelligent product management, real-time content generation, and community engagement tools.**
+> **A full-stack AI-powered marketplace connecting traditional Indian artisans with customers. Features role-based experiences for artisans (dashboard, product management, marketing tools) and customers (e-commerce shop, ordering), powered by Google Gemini AI, Firebase, and Cloudinary.**
 
 ## 🌟 Features
 
-### 🤖 AI-Powered Content Generation
-- **Gemini 2.5 Flash Integration**: Real-time social media content generation
-- **Product-Specific Marketing**: AI analyzes product details to create personalized marketing content
-- **Multi-Platform Support**: Optimized content for Instagram, Facebook, and Twitter
-- **Dynamic Tone Adjustment**: Professional, casual, or enthusiastic content styles
+### 🛒 Customer E-Commerce Experience
+- **Product Shop**: Flipkart/Amazon-style product browsing with search, category filters, and sort options
+- **Product Detail**: Image gallery, full artisan profile with contact info, quantity selection, and in-page ordering
+- **Order Placement**: Shipping address form, payment method selection, stock validation, and order confirmation
+- **Order History**: Track order status with color-coded badges (pending, processing, shipped, delivered, cancelled)
+
+### 📊 Artisan Dashboard
+- **Real-Time Metrics**: Live follower count, monthly earnings from actual orders, product count, and campaign stats
+- **Quick Actions**: One-click access to upload products, create marketing content, update profile, and view community
+- **Activity Feed**: Recent order notifications and social engagement activity
+- **Module Navigation**: Quick links to all artisan tools and features
+
+### 🤖 AI-Powered Tools
+- **Gemini AI Content Generation**: Social media posts, product descriptions, and marketing copy with tone/platform customization
+- **AI Product Descriptions**: Auto-generate SEO-optimized descriptions from product details and images
+- **Poster Design Suggestions**: AI-generated design briefs with color palettes, typography, and visual elements
+- **Marketing Tips**: Personalized marketing recommendations for artisan businesses
 
 ### 📦 Product Management
-- **Smart Product Catalog**: Advanced filtering, sorting, and search capabilities
-- **Inventory Analytics**: Real-time stock tracking and performance metrics
-- **Bulk Operations**: Efficient product management tools
-- **Image Management**: Responsive image handling with fallback support
+- **Product Upload Wizard**: Step-by-step creation with Cloudinary image upload (up to 10 images)
+- **Product Catalog**: Advanced filtering, sorting, search, grid/list views, and inventory analytics
+- **Image Analysis**: AI-powered image quality and content analysis via Everypixel
+- **Stock Tracking**: Real-time inventory management with automatic stock decrement on orders
 
-### 👥 Community Features
-- **Artisan Profiles**: Comprehensive artisan information and portfolios
-- **Social Feed**: Community engagement and content sharing
-- **Marketing Tools**: AI-assisted content creation for artisan promotion
+### 👥 Community & Social
+- **Social Feed**: Share posts with images, like/comment, follow artisans, and view success stories
+- **Artisan Profiles**: Comprehensive profiles with portfolios, skills, awards, certifications, and verification status
+- **Follower System**: Follow/unfollow artisans with real-time follower/following counts
 
-### 🎯 Marketing Suite
-- **Content Generator**: AI-powered social media content creation
-- **Platform Optimization**: Tailored content for different social platforms
-- **Hashtag Research**: Intelligent hashtag generation based on product analysis
-- **Scheduling Tools**: Content planning and timing optimization
+### 🌐 Localization
+- **Multi-Language Support**: Google Cloud Translate integration with 10+ Indian languages
+- **Product Translation**: Translate product info for different regional markets
+- **Language Detection**: Auto-detect source language
+
+### 📈 Analytics
+- **Sales Analytics**: Revenue tracking, top products, daily sales trends
+- **Engagement Metrics**: Social activity, conversion rates, community interaction
+- **Time-Frame Filters**: 7-day, 30-day, and 90-day analytics windows
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- **Node.js** (v18 or higher)
-- **npm** or **yarn**
-- **Git**
-- **Google Cloud Account** (for AI features)
+- **Node.js** v18 or higher
+- **npm**
+- **Firebase Project** with Firestore and Authentication enabled
+- **Google Cloud** APIs: Gemini AI, Cloud Translation, Cloud Vision
+- **Cloudinary** account for image storage
 
 ### Installation
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/SparkWorks-Spark-your-Ideas/artisian-connect.git
-   cd artisian-connect
-   ```
+```bash
+# Clone the repository
+git clone https://github.com/SparkWorks-Spark-your-Ideas/artisian-connect.git
+cd artisian-connect
 
-2. **Setup Frontend**
-   ```bash
-   cd frontend
-   npm install
-   ```
+# Setup Backend
+cd backend
+npm install
 
-3. **Setup Backend**
-   ```bash
-   cd ../backend
-   npm install
-   ```
+# Setup Frontend
+cd ../frontend
+npm install
+```
 
-4. **Environment Configuration**
-   ```bash
-   # Frontend (.env)
-   cd frontend
-   cp .env.example .env
-   ```
-   
-   Edit `frontend/.env`:
-   ```env
-   VITE_GEMINI_API_KEY=your-gemini-api-key-here
-   VITE_API_BASE_URL=http://localhost:3000/api
-   ```
+### Environment Configuration
 
-   ```bash
-   # Backend (.env)
-   cd ../backend
-   cp .env.example .env
-   ```
-   
-   Edit `backend/.env`:
-   ```env
-   GEMINI_API_KEY=your-gemini-api-key-here
-   FIREBASE_PROJECT_ID=your-project-id
-   FIREBASE_PRIVATE_KEY=your-private-key
-   FIREBASE_CLIENT_EMAIL=your-client-email
-   ```
+**Backend** (`backend/.env`):
+```env
+NODE_ENV=development
+PORT=3000
 
-5. **Start Development Servers**
-   ```bash
-   # Terminal 1 - Frontend
-   cd frontend
-   npm run dev
-   
-   # Terminal 2 - Backend
-   cd backend
-   npm run dev
-   ```
+# Firebase
+FIREBASE_PROJECT_ID=your-project-id
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+FIREBASE_CLIENT_EMAIL=your-client-email
+FIREBASE_STORAGE_BUCKET=your-project-id.appspot.com
 
-6. **Access the Application**
-   - Frontend: http://localhost:4028
-   - Backend API: http://localhost:3000
+# AI Services
+GEMINI_API_KEY=your-gemini-api-key
+
+# Cloudinary
+CLOUDINARY_CLOUD_NAME=your-cloud-name
+CLOUDINARY_API_KEY=your-api-key
+CLOUDINARY_API_SECRET=your-api-secret
+
+# Security
+JWT_SECRET=your-jwt-secret
+```
+
+**Frontend** (`frontend/.env`):
+```env
+VITE_API_URL=http://localhost:3000/api
+VITE_GEMINI_API_KEY=your-gemini-api-key
+```
+
+### Start Development
+
+```bash
+# Terminal 1 — Backend
+cd backend
+npm run dev
+
+# Terminal 2 — Frontend
+cd frontend
+npm run dev
+```
+
+- **Frontend**: http://localhost:4028
+- **Backend API**: http://localhost:3000
+- **Health Check**: http://localhost:3000/health
 
 ## 🏗️ Project Structure
 
 ```
 artisian-connect/
-├── 📁 frontend/                    # React Frontend Application
-│   ├── 📁 public/                  # Static assets
-│   │   └── 📁 assets/images/       # Image assets
-│   ├── 📁 src/
-│   │   ├── 📁 components/          # Reusable components
-│   │   │   ├── 📁 ui/              # UI component library
-│   │   │   ├── AppIcon.jsx         # Icon component
-│   │   │   └── AppImage.jsx        # Image component
-│   │   ├── 📁 pages/               # Application pages
-│   │   │   ├── 📁 artisan-dashboard/
-│   │   │   ├── 📁 product-catalog/
-│   │   │   ├── 📁 marketing-content-generator/
-│   │   │   └── 📁 community-feed/
-│   │   ├── 📁 styles/              # Global styles
-│   │   ├── 📁 utils/               # Utility functions
-│   │   │   ├── cn.js               # Class name utilities
-│   │   │   └── geminiAPI.js        # AI integration
-│   │   ├── App.jsx                 # Main app component
-│   │   ├── Routes.jsx              # Routing configuration
-│   │   └── index.jsx               # Entry point
-│   ├── package.json
+├── frontend/                        # React + Vite Frontend
+│   ├── public/                      # Static assets
+│   ├── src/
+│   │   ├── components/              # Shared UI components
+│   │   │   ├── ui/                  # Button, Input, Header, Select, Checkbox
+│   │   │   ├── AppIcon.jsx          # Icon wrapper (Lucide)
+│   │   │   ├── AppImage.jsx         # Image with fallback
+│   │   │   ├── ErrorBoundary.jsx    # React error boundary
+│   │   │   └── ScrollToTop.jsx      # Route scroll restoration
+│   │   ├── pages/
+│   │   │   ├── Login.jsx            # Auth page (artisan/customer tabs)
+│   │   │   ├── NotFound.jsx         # 404 page
+│   │   │   ├── artisan-dashboard/   # Dashboard with metrics & quick actions
+│   │   │   ├── artisan-profile-setup/ # Profile editor with portfolio
+│   │   │   ├── product-catalog/     # Product list & management
+│   │   │   ├── product-upload-wizard/ # Multi-step product creation
+│   │   │   ├── marketing-content-generator/ # AI content tools
+│   │   │   ├── community-feed/      # Social feed & interactions
+│   │   │   └── customer/            # Customer e-commerce pages
+│   │   │       ├── CustomerShop.jsx         # Product browsing
+│   │   │       ├── CustomerProductDetail.jsx # Product detail & ordering
+│   │   │       ├── CustomerOrders.jsx       # Order history
+│   │   │       └── components/
+│   │   │           └── CustomerHeader.jsx   # Customer navigation
+│   │   ├── utils/
+│   │   │   ├── api.js               # Axios API client
+│   │   │   ├── cn.js                # Tailwind class utilities
+│   │   │   └── geminiAPI.js         # Frontend Gemini integration
+│   │   ├── styles/                  # Global CSS & Tailwind
+│   │   ├── App.jsx                  # Root component
+│   │   ├── Routes.jsx               # Role-based routing
+│   │   └── index.jsx                # Entry point
 │   ├── vite.config.mjs
-│   └── tailwind.config.js
-├── 📁 backend/                     # Node.js Backend API
-│   ├── 📁 controllers/             # Route controllers
-│   ├── 📁 middleware/              # Express middleware
-│   ├── 📁 models/                  # Data models
-│   ├── 📁 routes/                  # API routes
-│   ├── 📁 services/                # Business logic
-│   ├── 📁 utils/                   # Utility functions
-│   ├── app.py                      # Flask application
-│   ├── server.js                   # Express server
+│   ├── tailwind.config.js
 │   └── package.json
-└── README.md                       # This file
+├── backend/                         # Node.js + Express Backend
+│   ├── src/
+│   │   ├── config/
+│   │   │   ├── firebase.js          # Firebase Admin SDK init
+│   │   │   └── index.js             # App configuration
+│   │   ├── middleware/
+│   │   │   ├── auth.js              # JWT verification & role checks
+│   │   │   ├── errorHandler.js      # Error handling & asyncHandler
+│   │   │   ├── logger.js            # Request/response logging
+│   │   │   ├── upload.js            # Multer file upload
+│   │   │   └── validation.js        # Joi input validation
+│   │   ├── routes/
+│   │   │   ├── auth.js              # Registration & login
+│   │   │   ├── user.js              # Profile management
+│   │   │   ├── products.js          # Product CRUD & AI tools
+│   │   │   ├── orders.js            # Order creation & tracking
+│   │   │   ├── social.js            # Social feed & interactions
+│   │   │   ├── marketing.js         # AI marketing generation
+│   │   │   ├── analytics.js         # Business analytics
+│   │   │   └── localization.js      # Translation services
+│   │   ├── services/
+│   │   │   ├── geminiAI.js          # Google Gemini integration
+│   │   │   ├── translation.js       # Cloud Translation API
+│   │   │   └── firebaseStorage.js   # Firebase Storage
+│   │   └── utils/
+│   │       ├── helpers.js           # Utility functions
+│   │       └── initializeData.js    # Seed data utilities
+│   ├── server.js                    # Express server entry
+│   ├── index.js                     # Firebase Functions entry
+│   ├── firestore.rules              # Firestore security rules
+│   ├── firestore.indexes.json       # Database indexes
+│   ├── storage.rules                # Storage security rules
+│   └── package.json
+└── README.md
 ```
 
 ## 🛠️ Technology Stack
 
 ### Frontend
-- **Framework**: React 18.2.0
-- **Build Tool**: Vite 5.4.20
-- **Styling**: Tailwind CSS 3.4.6
-- **State Management**: Redux Toolkit 2.6.1
-- **Routing**: React Router DOM 6.0.2
-- **Icons**: Lucide React 0.484.0
-- **Forms**: React Hook Form 7.55.0
-- **Animations**: Framer Motion 10.16.4
-- **Charts**: Recharts 2.15.2
+| Technology | Version | Purpose |
+|-----------|---------|---------|
+| React | 18.2.0 | UI framework |
+| Vite | 5.4.20 | Build tool & dev server |
+| Tailwind CSS | 3.4.6 | Utility-first styling |
+| React Router DOM | 6.0.2 | Client-side routing |
+| Redux Toolkit | 2.6.1 | State management |
+| Axios | 1.8.4 | HTTP client |
+| Lucide React | 0.484.0 | Icon library |
+| React Hook Form | 7.55.0 | Form handling |
+| Recharts | 2.15.2 | Data visualization |
+| Framer Motion | 10.16.4 | Animations |
+| date-fns | 4.1.0 | Date formatting |
 
 ### Backend
-- **Runtime**: Node.js 18+
-- **Framework**: Express.js 4.18.2
-- **Database**: Firebase Admin 13.5.0
-- **AI/ML**: Google Generative AI 0.2.1
-- **Authentication**: Google Auth Library 10.3.0
-- **File Upload**: Multer 1.4.5
-- **Validation**: Joi 17.9.2
-- **Security**: Helmet 7.0.0, CORS 2.8.5
+| Technology | Version | Purpose |
+|-----------|---------|---------|
+| Node.js | 18+ | Runtime |
+| Express.js | 4.18.2 | Web framework |
+| Firebase Admin | 13.5.0 | Firestore, Auth, Storage |
+| Google Generative AI | 0.24.1 | Gemini AI integration |
+| Google Cloud Translate | 8.5.1 | Multi-language support |
+| Google Cloud Vision | 4.3.3 | Image analysis |
+| Cloudinary | 2.8.0 | Image storage & CDN |
+| Multer | 1.4.5 | File upload handling |
+| Joi | 17.9.2 | Input validation |
+| Helmet | 7.0.0 | HTTP security headers |
+| express-rate-limit | 6.8.1 | API rate limiting |
 
-### AI & Cloud Services
-- **AI Model**: Google Gemini 2.5 Flash
-- **Cloud Platform**: Google Cloud Platform
-- **Vision API**: Google Cloud Vision 4.0.2
-- **Translation**: Google Cloud Translate 8.5.1
+### Cloud Services
+| Service | Usage |
+|---------|-------|
+| Firebase Firestore | NoSQL database |
+| Firebase Authentication | User auth & JWT |
+| Google Gemini AI | Content & description generation |
+| Google Cloud Translation | Multi-language support |
+| Google Cloud Vision | Image analysis |
+| Cloudinary | Image upload, storage & CDN |
 
-## 🔧 Development
+## 🔐 Authentication & Role-Based Access
 
-### Available Scripts
+The platform supports two user roles with distinct experiences:
 
-#### Frontend
+| Role | Login Tab | Home Route | Access |
+|------|-----------|------------|--------|
+| **Artisan** | Artisan tab | `/dashboard` | Dashboard, product management, marketing tools, community, profile setup |
+| **Customer** | Customer tab | `/shop` | Product shop, product details, order placement, order history |
+
+- JWT tokens stored in `localStorage` with automatic injection via Axios interceptors
+- Role-based route guards: `ArtisanRoute` (blocks customers), `ProtectedRoute` (requires auth)
+- Smart home redirect based on `userType`
+
+## 📱 API Overview
+
+### Base URL
+- **Local**: `http://localhost:3000/api`
+- **Production**: `https://us-central1-artisan-connect-marketplace.cloudfunctions.net/api`
+
+### Endpoints Summary
+
+| Module | Base Path | Key Operations |
+|--------|-----------|----------------|
+| **Auth** | `/api/auth` | Register, Login, Verify Email |
+| **User** | `/api/user` | Get/Update Profile, Upload Avatar, Public Profile |
+| **Products** | `/api/products` | CRUD, Image Upload, AI Descriptions, List with Filters |
+| **Orders** | `/api/orders` | Create Order, List Orders (customer & artisan views) |
+| **Social** | `/api/social` | Feed, Upload Images, Follow/Unfollow, Stats |
+| **Marketing** | `/api/marketing` | AI Content Generation, Poster Design, Tips |
+| **Analytics** | `/api/analytics` | Overview, Sales, Engagement, Product Performance |
+| **Localization** | `/api/localization` | Translate, Batch Translate, Detect Language, Product Translation |
+
+> See [backend/README.md](backend/README.md) for full endpoint documentation.
+
+## 🔧 Development Scripts
+
+### Frontend
 ```bash
-npm run dev        # Start development server
-npm run build      # Build for production
+npm run dev        # Start Vite dev server (port 4028)
+npm run build      # Production build with source maps
 npm run serve      # Preview production build
 ```
 
-#### Backend
+### Backend
 ```bash
-npm run dev        # Start development server with nodemon
+npm run dev        # Start with nodemon (auto-reload)
 npm start          # Start production server
-npm run test       # Run tests
-npm run lint       # Run ESLint
-```
-
-### Environment Variables
-
-#### Frontend (.env)
-```env
-# Required
-VITE_GEMINI_API_KEY=your-gemini-api-key
-
-# Optional
-VITE_API_BASE_URL=http://localhost:3000/api
-```
-
-#### Backend (.env)
-```env
-# Server Configuration
-NODE_ENV=development
-PORT=3000
-
-# Firebase Configuration
-FIREBASE_PROJECT_ID=your-project-id
-FIREBASE_PRIVATE_KEY=your-private-key
-FIREBASE_CLIENT_EMAIL=your-client-email
-
-# AI Configuration
-GEMINI_API_KEY=your-gemini-api-key
-GOOGLE_AI_API_KEY=your-google-ai-key
-
-# Security
-JWT_SECRET=your-jwt-secret
-ENCRYPTION_KEY=your-encryption-key
-```
-
-## 🎯 Key Features Implementation
-
-### AI Content Generation
-The application integrates Google's Gemini 2.5 Flash model for real-time content generation:
-
-```javascript
-// Example usage in frontend/src/utils/geminiAPI.js
-const generateMarketingContent = async (products, platform, tone) => {
-  // AI analyzes product details and generates platform-specific content
-  const response = await fetch(`${GEMINI_API_URL}?key=${API_KEY}`, {
-    method: 'POST',
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { temperature: 0.7, maxOutputTokens: 2048 }
-    })
-  });
-  // Returns structured content with caption, hashtags, and marketing tips
-};
-```
-
-### Product Management
-Advanced product catalog with filtering, sorting, and analytics:
-
-```javascript
-// Mock data structure for products
-const productSchema = {
-  id: 'unique-id',
-  name: 'Product Name',
-  description: 'Detailed description',
-  price: 15000,
-  category: 'Textiles',
-  materials: ['Pure Silk', 'Gold Thread'],
-  artisan: {
-    firstName: 'Artisan Name',
-    location: { city: 'City', state: 'State' }
-  },
-  imageUrls: ['image-url'],
-  status: 'published'
-};
-```
-
-### Responsive Design
-Built with Tailwind CSS for responsive, mobile-first design:
-
-```css
-/* Example responsive classes */
-.product-grid {
-  @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6;
-}
-
-.product-card {
-  @apply bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow;
-}
-```
-
-## 📱 API Documentation
-
-### Content Generation API
-```bash
-POST /api/content/generate
-Content-Type: application/json
-
-{
-  "products": [{ "id": "1", "name": "Product" }],
-  "platform": "instagram",
-  "tone": "enthusiastic"
-}
-```
-
-### Product Management API
-```bash
-GET /api/products              # Get all products
-POST /api/products             # Create product
-PUT /api/products/:id          # Update product
-DELETE /api/products/:id       # Delete product
+npm test           # Run Mocha tests
+npm run test-apis  # Test API endpoints
+npm run deploy     # Deploy to Firebase Functions
 ```
 
 ## 🧪 Testing
-
-### Frontend Testing
 ```bash
-cd frontend
-npm test                       # Run unit tests
-```
+# Backend unit tests
+cd backend && npm test
 
-### Backend Testing
-```bash
-cd backend
-npm test                       # Run API tests
-npm run test-apis             # Test API endpoints
+# Backend API endpoint tests
+cd backend && npm run test-apis
 ```
 
 ## 🚀 Deployment
 
-### Frontend Deployment (Vercel/Netlify)
+### Frontend
 ```bash
 cd frontend
-npm run build                  # Build production bundle
-# Deploy the 'dist' folder
+npm run build    # Outputs to dist/
+# Deploy dist/ folder to Vercel, Netlify, or Firebase Hosting
 ```
 
-### Backend Deployment (Firebase Functions)
+### Backend
 ```bash
 cd backend
-npm run deploy                 # Deploy to Firebase Functions
+npm run deploy   # Deploy to Firebase Functions
+# OR use server.js directly on any Node.js host
 ```
+
+## 🔧 Key Optimizations
+
+- **Batch Firestore Reads**: Product listings use `db.getAll()` to fetch artisan data in a single batch instead of N+1 queries
+- **Non-Blocking Operations**: View count increments and notification creation run asynchronously without blocking responses
+- **Fault-Tolerant Queries**: Missing Firestore composite indexes are handled gracefully with try-catch fallbacks
+- **Type-Safe Data Handling**: Array fields (`awardsRecognition`, `craftSpecializations`, etc.) are wrapped in `Array.isArray()` checks
+- **Smart Date Parsing**: Firestore timestamp objects (`{_seconds, _nanoseconds}`) are correctly converted to JavaScript Dates
 
 ## 🤝 Contributing
 
-1. **Fork the repository**
-2. **Create feature branch**: `git checkout -b feature/amazing-feature`
-3. **Commit changes**: `git commit -m 'Add amazing feature'`
-4. **Push to branch**: `git push origin feature/amazing-feature`
-5. **Open Pull Request**
-
-### Development Guidelines
-- Follow ESLint configuration
-- Write meaningful commit messages
-- Add tests for new features
-- Update documentation as needed
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/your-feature`
+3. Commit changes: `git commit -m 'Add your feature'`
+4. Push to branch: `git push origin feature/your-feature`
+5. Open a Pull Request
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License — see [LICENSE](LICENSE) for details.
 
 ## 🙏 Acknowledgments
 
-- **Google Gemini AI** for advanced content generation
-- **Firebase** for backend infrastructure
-- **Tailwind CSS** for styling framework
-- **React** ecosystem for frontend development
-- **Open Source Community** for amazing packages and tools
+- **Google Gemini AI** — Content generation and product description AI
+- **Firebase** — Database, authentication, and cloud infrastructure
+- **Cloudinary** — Image storage and CDN
+- **Tailwind CSS** — Utility-first CSS framework
+- **React & Vite** — Frontend framework and build tooling
 
 ## 📞 Support
 
-- **Issues**: [GitHub Issues](https://github.com/SparkWorks-Spark-your-Ideas/artisian-connect/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/SparkWorks-Spark-your-Ideas/artisian-connect/discussions)
-- **Email**: support@artisanconnect.com
-
-## 🔮 Roadmap
-
-### Phase 1 - Core Features ✅
-- [x] Basic product catalog
-- [x] AI content generation
-- [x] Marketing tools
-- [x] Responsive design
-
-### Phase 2 - Enhanced Features 🚧
-- [ ] User authentication
-- [ ] Payment integration
-- [ ] Order management
-- [ ] Advanced analytics
-
-### Phase 3 - Scale & Optimize 🎯
-- [ ] Mobile app
-- [ ] Multi-language support
-- [ ] Advanced AI features
-- [ ] Global marketplace
+- [GitHub Issues](https://github.com/SparkWorks-Spark-your-Ideas/artisian-connect/issues)
+- [GitHub Discussions](https://github.com/SparkWorks-Spark-your-Ideas/artisian-connect/discussions)
 
 ---
 
-**Built with ❤️ by the ArtisanConnect Team**
-
-*Empowering traditional artisans through modern technology*
+**Built with ❤️ for Indian Artisans** — *Empowering traditional craftsmanship through modern technology*
