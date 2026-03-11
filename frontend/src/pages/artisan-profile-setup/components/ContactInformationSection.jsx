@@ -88,29 +88,23 @@ const ContactInformationSection = ({ contactData, onContactChange }) => {
         </h4>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="relative">
-            <Input
-              label="Instagram Username"
-              type="text"
-              placeholder="your_username"
-              value={contactData?.instagram}
-              onChange={(e) => handleInputChange('instagram', e?.target?.value)}
-              error={contactData?.instagram && !validateInstagram(contactData?.instagram) ? 'Please enter a valid Instagram username' : ''}
-            />
-            <div className="absolute left-3 top-8 text-muted-foreground text-sm">@</div>
-          </div>
+          <Input
+            label="Instagram Username"
+            type="text"
+            placeholder="@your_username"
+            value={contactData?.instagram}
+            onChange={(e) => handleInputChange('instagram', e?.target?.value)}
+            error={contactData?.instagram && !validateInstagram(contactData?.instagram) ? 'Please enter a valid Instagram username' : ''}
+          />
 
-          <div className="relative">
-            <Input
-              label="Facebook Page/Profile"
-              type="text"
-              placeholder="your.page.name"
-              value={contactData?.facebook}
-              onChange={(e) => handleInputChange('facebook', e?.target?.value)}
-              error={contactData?.facebook && !validateFacebook(contactData?.facebook) ? 'Please enter a valid Facebook username' : ''}
-            />
-            <div className="absolute left-3 top-8 text-muted-foreground text-sm">fb.com/</div>
-          </div>
+          <Input
+            label="Facebook Page/Profile"
+            type="text"
+            placeholder="fb.com/your.page.name"
+            value={contactData?.facebook}
+            onChange={(e) => handleInputChange('facebook', e?.target?.value)}
+            error={contactData?.facebook && !validateFacebook(contactData?.facebook) ? 'Please enter a valid Facebook username' : ''}
+          />
         </div>
       </div>
       <div className="bg-muted/50 rounded-lg p-4">

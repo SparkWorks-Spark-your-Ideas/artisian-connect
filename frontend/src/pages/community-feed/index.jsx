@@ -19,6 +19,7 @@ const CommunityFeed = () => {
   const [profileUserId, setProfileUserId] = useState(null);
   const [peopleList, setPeopleList] = useState([]);
   const [loadingPeople, setLoadingPeople] = useState(false);
+  const [shareToast, setShareToast] = useState(null);
   const [stats, setStats] = useState({
     postsToday: 0,
     followingCount: 0,
@@ -126,7 +127,12 @@ const CommunityFeed = () => {
   const handleFilterChange = (filter) => {
     setActiveFilter(filter);
     setPage(1);
-    fetchPosts(filter, 1);
+    // Only fetch posts for feed tabs, not people tabs
+    if (filter !== 'followers' && filter !== 'following') {
+      fetchPosts(filter, 1);
+    } else {
+      setPosts([]);
+    }
     fetchPeopleList(filter);
   };
 
@@ -241,6 +247,47 @@ const CommunityFeed = () => {
     }
   };
 
+  const handleShare = async (postId) => {
+    const post = posts.find(p => p.id === postId);
+    if (!post) return;
+
+    const shareText = `${post.author?.name || 'An artisan'}: ${post.content || ''}`;
+    const shareUrl = `${window.location.origin}/community?post=${postId}`;
+
+    // Use Web Share API if available (mobile + modern browsers)
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `Post by ${post.author?.name || 'Artisan'} on ArtisanConnect`,
+          text: shareText.length > 200 ? shareText.slice(0, 197) + '...' : shareText,
+          url: shareUrl,
+        });
+        return;
+      } catch (err) {
+        // User cancelled or API failed — fall through to clipboard
+        if (err.name === 'AbortError') return;
+      }
+    }
+
+    // Fallback: copy link to clipboard
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setShareToast('Link copied to clipboard!');
+    } catch {
+      // Final fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = shareUrl;
+      textArea.style.position = 'fixed';
+      textArea.style.opacity = '0';
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      setShareToast('Link copied to clipboard!');
+    }
+    setTimeout(() => setShareToast(null), 2500);
+  };
+
   const handleLoadMore = () => {
     const nextPage = page + 1;
     setPage(nextPage);
@@ -248,8 +295,15 @@ const CommunityFeed = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50/30 to-white">
       <Header />
+      {/* Share toast notification */}
+      {shareToast && (
+        <div className="fixed top-4 right-4 z-50 bg-green-600 text-white px-4 py-3 rounded-lg shadow-lg flex items-center space-x-2 animate-fade-in">
+          <Icon name="Check" size={18} />
+          <span className="text-sm font-medium">{shareToast}</span>
+        </div>
+      )}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="grid grid-cols-1 gap-6">
           {/* Main Content - Full Width */}
@@ -261,20 +315,22 @@ const CommunityFeed = () => {
               stats={stats}
             />
             
-            <PostCreator onCreatePost={handleCreatePost} />
+            {activeFilter !== 'followers' && activeFilter !== 'following' && (
+              <PostCreator onCreatePost={handleCreatePost} />
+            )}
 
             {/* People List for Followers/Following tabs */}
             {(activeFilter === 'followers' || activeFilter === 'following') && (
               <div className="mb-6">
-                <h3 className="text-base font-semibold text-foreground mb-3">
+                <h3 className="text-base font-semibold text-gray-900 mb-3">
                   {activeFilter === 'followers' ? 'People who follow you' : 'People you follow'}
                 </h3>
                 {loadingPeople ? (
                   <div className="flex items-center justify-center py-4">
-                    <Icon name="Loader2" size={20} className="animate-spin text-muted-foreground" />
+                    <Icon name="Loader2" size={20} className="animate-spin text-orange-400" />
                   </div>
                 ) : peopleList.length === 0 ? (
-                  <div className="bg-card border border-border rounded-lg p-4 text-center text-muted-foreground text-sm">
+                  <div className="bg-white/70 backdrop-blur-sm border border-white/60 rounded-2xl ring-1 ring-orange-100/50 p-4 text-center text-gray-500 text-sm">
                     {activeFilter === 'followers' ? 'No one follows you yet.' : 'You are not following anyone yet.'}
                   </div>
                 ) : (
@@ -283,25 +339,25 @@ const CommunityFeed = () => {
                       <button
                         key={person.uid}
                         onClick={() => setProfileUserId({ id: person.uid, fallback: { name: `${person.firstName} ${person.lastName}`.trim(), avatar: person.avatarUrl, craftType: person.craftSpecialization } })}
-                        className="flex items-center space-x-3 bg-card border border-border rounded-lg p-3 hover:shadow-warm transition-shadow text-left w-full"
+                        className="flex items-center space-x-3 bg-white/70 backdrop-blur-sm border border-white/60 rounded-2xl ring-1 ring-orange-100/50 p-3 hover:shadow-md transition-all text-left w-full"
                       >
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden flex-shrink-0">
+                        <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center overflow-hidden flex-shrink-0">
                           {person.avatarUrl ? (
                             <img src={person.avatarUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
                           ) : (
-                            <Icon name="User" size={20} className="text-primary" />
+                            <Icon name="User" size={20} className="text-orange-500" />
                           )}
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center space-x-1">
-                            <p className="text-sm font-medium text-foreground truncate">
+                            <p className="text-sm font-medium text-gray-900 truncate">
                               {`${person.firstName} ${person.lastName}`.trim() || 'Artisan'}
                             </p>
-                            {person.isVerified && <Icon name="BadgeCheck" size={14} className="text-primary flex-shrink-0" />}
+                            {person.isVerified && <Icon name="BadgeCheck" size={14} className="text-orange-500 flex-shrink-0" />}
                           </div>
-                          <p className="text-xs text-muted-foreground truncate">
+                          <p className="text-xs text-gray-500 truncate">
                             {person.craftSpecialization || 'Artisan'}
-                            {person.location ? ` • ${person.location}` : ''}
+                            {person.location ? ` • ${typeof person.location === 'object' ? [person.location.city, person.location.district, person.location.state].filter(Boolean).join(', ') : person.location}` : ''}
                           </p>
                         </div>
                       </button>
@@ -325,7 +381,7 @@ const CommunityFeed = () => {
               </div>
             )}
             
-            {loading && posts?.length === 0 ? (
+            {activeFilter !== 'followers' && activeFilter !== 'following' && (loading && posts?.length === 0 ? (
               <LoadingSkeleton />
             ) : (
               <div className="space-y-6">
@@ -336,7 +392,7 @@ const CommunityFeed = () => {
                     onLike={handleLike}
                     onComment={handleComment}
                     onFollow={handleFollow}
-                    onShare={() => {}}
+                    onShare={handleShare}
                     onAuthorClick={(authorId) => {
                       const authorPost = posts.find(p => p.author?.id === authorId);
                       setProfileUserId({ id: authorId, fallback: authorPost?.author });
@@ -346,11 +402,11 @@ const CommunityFeed = () => {
 
                 {posts?.length === 0 && !loading && (
                   <div className="text-center py-12">
-                    <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Icon name="Users" size={32} className="text-muted-foreground" />
+                    <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Icon name="Users" size={32} className="text-orange-400" />
                     </div>
-                    <h3 className="text-lg font-medium text-foreground mb-2">No Posts Yet</h3>
-                    <p className="text-muted-foreground">
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No Posts Yet</h3>
+                    <p className="text-gray-500">
                       Be the first to share your craft journey with the community!
                     </p>
                   </div>
@@ -370,11 +426,11 @@ const CommunityFeed = () => {
 
                 {loading && posts?.length > 0 && (
                   <div className="text-center py-4">
-                    <Icon name="Loader2" size={24} className="animate-spin mx-auto text-muted-foreground" />
+                    <Icon name="Loader2" size={24} className="animate-spin mx-auto text-orange-400" />
                   </div>
                 )}
               </div>
-            )}
+            ))}
           </div>
         </div>
       </div>

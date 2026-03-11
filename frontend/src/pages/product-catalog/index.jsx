@@ -298,9 +298,7 @@ const ProductCatalog = () => {
   };
 
   const handleProductEdit = (productId) => {
-    console.log('Edit product:', productId);
-    // Navigate to product edit page (you can implement this later)
-    alert(`Edit functionality for product ${productId} - Coming soon!`);
+    navigate(`/product-upload-wizard/${productId}`);
   };
 
   const handleProductDuplicate = (productId) => {
@@ -319,30 +317,33 @@ const ProductCatalog = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50/30 to-white">
       <Header />
-      <div className="flex-1 p-4 lg:p-6">
+      <div className="flex-1 p-4 lg:p-6 max-w-7xl mx-auto">
         {/* Page Header */}
         <div className="mb-6">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-4">
             <div>
-              <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">Product Catalog</h1>
-              <p className="text-muted-foreground">
+              <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-1">Product Catalog</h1>
+              <p className="text-sm text-gray-500">
                 Manage your complete product inventory with comprehensive viewing and editing capabilities
               </p>
             </div>
             
             <div className="flex items-center space-x-3 mt-4 lg:mt-0">
-              <Button variant="outline" onClick={() => setShowAnalytics(!showAnalytics)}>
+              <button
+                onClick={() => setShowAnalytics(!showAnalytics)}
+                className="inline-flex items-center px-4 py-2.5 text-sm font-medium text-gray-600 bg-white/70 backdrop-blur-sm border border-white/60 rounded-xl ring-1 ring-gray-200/50 hover:bg-white hover:shadow-sm transition-all duration-200"
+              >
                 <Icon name="BarChart3" size={16} className="mr-2" />
                 {showAnalytics ? 'Hide Analytics' : 'Show Analytics'}
-              </Button>
+              </button>
               
               <Link to="/product-upload-wizard">
-                <Button>
+                <button className="inline-flex items-center px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl shadow-md shadow-orange-200/50 hover:shadow-lg hover:shadow-orange-200/60 hover:-translate-y-0.5 transition-all duration-200">
                   <Icon name="Plus" size={16} className="mr-2" />
                   Add New Product
-                </Button>
+                </button>
               </Link>
             </div>
           </div>
@@ -357,11 +358,11 @@ const ProductCatalog = () => {
 
         {/* Error Display */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-red-600">{error}</p>
+          <div className="mb-6 p-4 bg-red-50/80 backdrop-blur-sm border border-red-200/60 rounded-xl ring-1 ring-red-100/50">
+            <p className="text-red-600 text-sm">{error}</p>
             <button 
               onClick={loadProducts}
-              className="mt-2 px-4 py-2 bg-red-100 text-red-700 rounded hover:bg-red-200"
+              className="mt-2 px-4 py-2 bg-red-100 text-red-700 rounded-lg text-sm font-medium hover:bg-red-200 transition-colors"
             >
               Retry
             </button>
@@ -393,7 +394,7 @@ const ProductCatalog = () => {
             {/* Controls Bar */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 space-y-3 sm:space-y-0">
               <div className="flex items-center space-x-4">
-                <span className="text-sm text-muted-foreground">
+                <span className="text-sm font-medium text-gray-500">
                   {sortedProducts?.length} products
                 </span>
                 
@@ -403,9 +404,9 @@ const ProductCatalog = () => {
                       type="checkbox"
                       checked={selectedProducts?.length === sortedProducts?.length}
                       onChange={handleSelectAll}
-                      className="w-4 h-4 text-primary border-border rounded focus:ring-primary focus:ring-2"
+                      className="w-4 h-4 text-orange-500 border-gray-300 rounded focus:ring-orange-500 focus:ring-2"
                     />
-                    <span className="text-muted-foreground">Select all</span>
+                    <span className="text-gray-500">Select all</span>
                   </label>
                 )}
               </div>
@@ -422,52 +423,48 @@ const ProductCatalog = () => {
                   />
                 </div>
                 
-                <div className="flex items-center border border-border rounded-lg">
-                  <Button
-                    variant={viewMode === 'grid' ? 'default' : 'ghost'}
-                    size="sm"
+                <div className="flex items-center bg-white/70 backdrop-blur-sm border border-white/60 rounded-xl ring-1 ring-gray-200/50 overflow-hidden">
+                  <button
                     onClick={() => setViewMode('grid')}
-                    className="rounded-r-none border-r border-border"
+                    className={`p-2 transition-all duration-200 ${viewMode === 'grid' ? 'bg-orange-500 text-white shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
                   >
                     <Icon name="Grid3X3" size={16} />
-                  </Button>
-                  <Button
-                    variant={viewMode === 'list' ? 'default' : 'ghost'}
-                    size="sm"
+                  </button>
+                  <button
                     onClick={() => setViewMode('list')}
-                    className="rounded-l-none"
+                    className={`p-2 transition-all duration-200 ${viewMode === 'list' ? 'bg-orange-500 text-white shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
                   >
                     <Icon name="List" size={16} />
-                  </Button>
+                  </button>
                 </div>
               </div>
             </div>
 
             {/* Products Grid/List */}
             {loading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {Array.from({ length: 6 }).map((_, index) => (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                {Array.from({ length: 4 }).map((_, index) => (
                   <div key={index} className="animate-pulse">
-                    <div className="bg-gray-200 h-64 rounded-lg"></div>
+                    <div className="bg-white/50 h-72 rounded-2xl"></div>
                   </div>
                 ))}
               </div>
             ) : sortedProducts?.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Icon name="Package" size={24} className="text-muted-foreground" />
+              <div className="text-center py-16">
+                <div className="w-16 h-16 bg-orange-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <Icon name="Package" size={28} className="text-orange-300" />
                 </div>
-                <h3 className="font-semibold text-foreground mb-2">No products found</h3>
-                <p className="text-muted-foreground mb-4">
+                <h3 className="text-sm font-semibold text-gray-500 mb-1">No products found</h3>
+                <p className="text-xs text-gray-400 mb-4">
                   Try adjusting your filters or search terms
                 </p>
-                <Button variant="outline" onClick={handleClearFilters}>
+                <button onClick={handleClearFilters} className="text-sm font-medium text-orange-500 hover:text-orange-600 transition-colors">
                   Clear Filters
-                </Button>
+                </button>
               </div>
             ) : (
               <div className={
-                viewMode === 'grid' ?'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6' :'space-y-4'
+                viewMode === 'grid' ?'grid grid-cols-1 sm:grid-cols-2 gap-5' :'space-y-3'
               }>
                 {sortedProducts?.map((product) => (
                   <ProductCard

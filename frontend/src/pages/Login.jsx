@@ -36,51 +36,60 @@ const Login = () => {
     setLoading(true);
     setError(null);
 
-    try {
-      if (isLogin) {
-        const response = await api.auth.login({
-          email: formData.email,
-          password: formData.password
-        });
+    const maxRetries = 3;
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        if (isLogin) {
+          const response = await api.auth.login({
+            email: formData.email,
+            password: formData.password
+          });
 
-        if (response.data.data.token) {
-          localStorage.setItem('authToken', response.data.data.token);
-        }
-        if (response.data.data.user) {
-          localStorage.setItem('userProfile', JSON.stringify(response.data.data.user));
-        }
+          if (response.data.data.token) {
+            localStorage.setItem('authToken', response.data.data.token);
+          }
+          if (response.data.data.user) {
+            localStorage.setItem('userProfile', JSON.stringify(response.data.data.user));
+          }
 
-        const userType = response.data.data.user?.userType || loginRole;
-        navigate(getRedirectPath(userType));
-      } else {
-        const response = await api.auth.register({
-          email: formData.email,
-          password: formData.password,
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          userType: formData.userType
-        });
+          const userType = response.data.data.user?.userType || loginRole;
+          navigate(getRedirectPath(userType));
+        } else {
+          const response = await api.auth.register({
+            email: formData.email,
+            password: formData.password,
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            userType: formData.userType
+          });
 
-        if (response.data.data.token) {
-          localStorage.setItem('authToken', response.data.data.token);
-        }
-        if (response.data.data.user) {
-          localStorage.setItem('userProfile', JSON.stringify(response.data.data.user));
-        }
+          if (response.data.data.token) {
+            localStorage.setItem('authToken', response.data.data.token);
+          }
+          if (response.data.data.user) {
+            localStorage.setItem('userProfile', JSON.stringify(response.data.data.user));
+          }
 
-        navigate(getRedirectPath(formData.userType));
+          navigate(getRedirectPath(formData.userType));
+        }
+        return; // Success - exit retry loop
+      } catch (err) {
+        const isServerError = !err.response || err.response.status >= 500;
+        if (isServerError && attempt < maxRetries) {
+          // Transient server/network error - retry after a short delay
+          await new Promise(r => setTimeout(r, 1000 * attempt));
+          continue;
+        }
+        console.error('Authentication error:', err);
+        if (err.response?.data?.details && Array.isArray(err.response.data.details)) {
+          const errorList = err.response.data.details.map(d => `${d.field}: ${d.message}`).join(', ');
+          setError(errorList);
+        } else {
+          setError(err.response?.data?.message || err.message || 'Authentication failed');
+        }
       }
-    } catch (err) {
-      console.error('Authentication error:', err);
-      if (err.response?.data?.details && Array.isArray(err.response.data.details)) {
-        const errorList = err.response.data.details.map(d => `${d.field}: ${d.message}`).join(', ');
-        setError(errorList);
-      } else {
-        setError(err.response?.data?.message || err.message || 'Authentication failed');
-      }
-    } finally {
-      setLoading(false);
     }
+    setLoading(false);
   };
 
   return (

@@ -5,11 +5,11 @@ import Image from '../../../components/AppImage';
 const ContentPreview = ({ content, platform, selectedProducts }) => {
   if (!content || !platform) {
     return (
-      <div className="bg-card rounded-lg border border-border p-6">
-        <h3 className="text-lg font-semibold text-foreground mb-4">Content Preview</h3>
+      <div className="bg-white/70 backdrop-blur-sm border border-white/60 rounded-2xl ring-1 ring-orange-100/50 shadow-sm p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Content Preview</h3>
         <div className="text-center py-12">
-          <Icon name="Eye" size={48} className="text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground">Generate content to see preview</p>
+          <Icon name="Eye" size={48} className="text-gray-300 mx-auto mb-4" />
+          <p className="text-gray-500">Generate content to see preview</p>
         </div>
       </div>
     );
@@ -173,10 +173,10 @@ const ContentPreview = ({ content, platform, selectedProducts }) => {
   );
 
   return (
-    <div className="bg-card rounded-lg border border-border p-6">
+    <div className="bg-white/70 backdrop-blur-sm border border-white/60 rounded-2xl ring-1 ring-orange-100/50 shadow-sm p-6">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-foreground">Content Preview</h3>
-        <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+        <h3 className="text-lg font-semibold text-gray-900">Content Preview</h3>
+        <div className="flex items-center space-x-2 text-sm text-gray-500">
           <Icon name="Smartphone" size={16} />
           <span className="capitalize">{platform} Preview</span>
         </div>
@@ -188,12 +188,12 @@ const ContentPreview = ({ content, platform, selectedProducts }) => {
         {platform === 'whatsapp' && renderWhatsAppPreview()}
       </div>
 
-      <div className="mt-6 p-4 bg-muted rounded-lg">
+      <div className="mt-6 p-4 bg-orange-50/50 rounded-xl">
         <div className="flex items-center space-x-2 mb-2">
-          <Icon name="Info" size={16} className="text-primary" />
-          <span className="text-sm font-medium text-foreground">Preview Note</span>
+          <Icon name="Info" size={16} className="text-orange-500" />
+          <span className="text-sm font-medium text-gray-900">Preview Note</span>
         </div>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-gray-500">
           This is a mockup showing how your content will appear on {platform}. 
           Actual appearance may vary based on platform updates and user settings.
         </p>

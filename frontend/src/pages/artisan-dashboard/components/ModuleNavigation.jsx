@@ -42,60 +42,68 @@ const ModuleNavigation = ({ moduleStats = {} }) => {
 
   const getColorClasses = (colorType) => {
     const colors = {
-      primary: "bg-primary text-primary-foreground",
-      success: "bg-success text-success-foreground",
-      warning: "bg-warning text-warning-foreground",
-      accent: "bg-accent text-accent-foreground"
+      primary: "bg-orange-100 text-orange-600",
+      success: "bg-emerald-100 text-emerald-600",
+      warning: "bg-amber-100 text-amber-600",
+      accent: "bg-violet-100 text-violet-600"
     };
     return colors?.[colorType] || colors?.primary;
   };
 
-  const getBorderColor = (colorType) => {
+  const getAccentColor = (colorType) => {
     const colors = {
-      primary: "border-primary/20 hover:border-primary/40",
-      success: "border-success/20 hover:border-success/40",
-      warning: "border-warning/20 hover:border-warning/40",
-      accent: "border-accent/20 hover:border-accent/40"
+      primary: "group-hover:text-orange-600",
+      success: "group-hover:text-emerald-600",
+      warning: "group-hover:text-amber-600",
+      accent: "group-hover:text-violet-600"
+    };
+    return colors?.[colorType] || colors?.primary;
+  };
+
+  const getBadgeColor = (colorType) => {
+    const colors = {
+      primary: "bg-orange-50 text-orange-600 ring-orange-100/60",
+      success: "bg-emerald-50 text-emerald-600 ring-emerald-100/60",
+      warning: "bg-amber-50 text-amber-600 ring-amber-100/60",
+      accent: "bg-violet-50 text-violet-600 ring-violet-100/60"
     };
     return colors?.[colorType] || colors?.primary;
   };
 
   return (
-    <div className="bg-card border border-border rounded-lg p-6 shadow-warm">
-      <h2 className="text-lg font-semibold text-foreground mb-4">Platform Modules</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="bg-white/70 backdrop-blur-sm border border-white/60 rounded-2xl p-5 shadow-sm ring-1 ring-orange-100/50">
+      <h2 className="text-base font-bold text-gray-900 mb-4">Platform Modules</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {modules?.map((module, index) => (
           <div
             key={index}
             onClick={() => navigate(module.route)}
-            className={`group cursor-pointer border-2 ${getBorderColor(module.color)} rounded-lg p-4 transition-all duration-200 hover:shadow-warm-md bg-card hover:bg-muted/30`}
+            className="group cursor-pointer bg-white/60 hover:bg-white border border-gray-100 hover:border-gray-200 rounded-xl p-4 transition-all duration-200 hover:shadow-md"
           >
-            <div className="flex items-start space-x-4">
-              <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${getColorClasses(module.color)} group-hover:scale-105 transition-transform duration-200`}>
-                <Icon name={module.icon} size={24} />
+            <div className="flex items-start space-x-3">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${getColorClasses(module.color)} group-hover:scale-105 transition-transform duration-200`}>
+                <Icon name={module.icon} size={20} />
               </div>
               
               <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors duration-200">
+                <div className="flex items-center justify-between mb-1">
+                  <h3 className={`text-sm font-semibold text-gray-900 ${getAccentColor(module.color)} transition-colors duration-200`}>
                     {module.title}
                   </h3>
                   <Icon 
                     name="ArrowRight" 
-                    size={16} 
-                    className="text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all duration-200" 
+                    size={14} 
+                    className="text-gray-300 group-hover:text-gray-500 group-hover:translate-x-0.5 transition-all duration-200" 
                   />
                 </div>
                 
-                <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                <p className="text-xs text-gray-400 mb-2 line-clamp-1">
                   {module.description}
                 </p>
                 
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-full">
-                    {module.stats}
-                  </span>
-                </div>
+                <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ring-1 ${getBadgeColor(module.color)}`}>
+                  {module.stats}
+                </span>
               </div>
             </div>
           </div>

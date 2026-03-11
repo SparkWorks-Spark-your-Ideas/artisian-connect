@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { db } from '../config/firebase.js';
-// import { verifyToken, verifyArtisan } from '../middleware/auth.js';
+import { verifyToken, verifyArtisan } from '../middleware/auth.js';
 // import { validate, schemas } from '../middleware/validation.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import { 
@@ -18,8 +18,8 @@ const router = Router();
  * Generate AI marketing content for products or general promotion
  */
 router.post('/generate-content', 
-  // verifyToken,
-  // verifyArtisan,
+  verifyToken,
+  verifyArtisan,
   // validate(schemas.contentGeneration),
   asyncHandler(async (req, res) => {
     const { 
@@ -130,8 +130,8 @@ router.post('/generate-content',
  * Generate AI poster design prompts and suggestions
  */
 router.post('/generate-poster', 
-  // verifyToken,
-  // verifyArtisan,
+  verifyToken,
+  verifyArtisan,
   // validate(schemas.posterGeneration),
   asyncHandler(async (req, res) => {
     const { 
@@ -268,8 +268,8 @@ router.post('/generate-poster',
  * Get AI-generated marketing tips for artisans
  */
 router.get('/tips', 
-  // verifyToken,
-  // verifyArtisan,
+  verifyToken,
+  verifyArtisan,
   asyncHandler(async (req, res) => {
     try {
       // Get artisan's products to provide personalized tips
@@ -325,8 +325,8 @@ router.get('/tips',
  * Get artisan's marketing content history
  */
 router.get('/content/history', 
-  // verifyToken,
-  // verifyArtisan,
+  verifyToken,
+  verifyArtisan,
   // validate(schemas.pagination, 'query'),
   asyncHandler(async (req, res) => {
     const { page = 1, limit = 10, type } = req.query;
@@ -389,8 +389,8 @@ router.get('/content/history',
  * Mark marketing content as used
  */
 router.post('/content/:id/use', 
-  // verifyToken,
-  // verifyArtisan,
+  verifyToken,
+  verifyArtisan,
   asyncHandler(async (req, res) => {
     const { id } = req.params;
     const { platform, campaignName } = req.body;
@@ -439,8 +439,8 @@ router.post('/content/:id/use',
  * Get marketing performance analytics
  */
 router.get('/analytics', 
-  // verifyToken,
-  // verifyArtisan,
+  verifyToken,
+  verifyArtisan,
   asyncHandler(async (req, res) => {
     const { timeframe = '30d' } = req.query;
 
@@ -531,8 +531,8 @@ function getPlatformUsage(usedContent) {
  * Testing endpoint for generating various types of marketing content including images
  */
 router.post('/testing/generate-content', 
-  // verifyToken,
-  // verifyArtisan,
+  verifyToken,
+  verifyArtisan,
   asyncHandler(async (req, res) => {
     const { 
       type, 

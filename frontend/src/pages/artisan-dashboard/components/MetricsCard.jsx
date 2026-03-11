@@ -2,15 +2,13 @@ import React from 'react';
 import Icon from '../../../components/AppIcon';
 
 const MetricsCard = ({ title, value, change, changeType, icon, color = "primary" }) => {
-  const getColorClasses = (colorType) => {
-    const colors = {
-      primary: "bg-primary text-primary-foreground",
-      success: "bg-success text-success-foreground", 
-      warning: "bg-warning text-warning-foreground",
-      accent: "bg-accent text-accent-foreground"
-    };
-    return colors?.[colorType] || colors?.primary;
+  const colorMap = {
+    primary: { bg: 'bg-orange-500', light: 'bg-orange-50', text: 'text-orange-600', ring: 'ring-orange-100' },
+    success: { bg: 'bg-emerald-500', light: 'bg-emerald-50', text: 'text-emerald-600', ring: 'ring-emerald-100' },
+    warning: { bg: 'bg-amber-500', light: 'bg-amber-50', text: 'text-amber-600', ring: 'ring-amber-100' },
+    accent: { bg: 'bg-rose-500', light: 'bg-rose-50', text: 'text-rose-600', ring: 'ring-rose-100' },
   };
+  const c = colorMap[color] || colorMap.primary;
 
   const getTrendIcon = () => {
     if (changeType === 'increase') return 'TrendingUp';
@@ -18,30 +16,25 @@ const MetricsCard = ({ title, value, change, changeType, icon, color = "primary"
     return 'Minus';
   };
 
-  const getTrendColor = () => {
-    if (changeType === 'increase') return 'text-success';
-    if (changeType === 'decrease') return 'text-destructive';
-    return 'text-muted-foreground';
-  };
+  const trendColor = changeType === 'increase' ? 'text-emerald-500' : changeType === 'decrease' ? 'text-red-500' : 'text-gray-400';
 
   return (
-    <div className="bg-card border border-border rounded-lg p-6 shadow-warm hover:shadow-warm-md transition-shadow duration-200">
-      <div className="flex items-center justify-between mb-4">
-        <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${getColorClasses(color)}`}>
-          <Icon name={icon} size={24} />
+    <div className={`relative overflow-hidden bg-white/70 backdrop-blur-sm border border-white/60 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all duration-300 ring-1 ${c.ring}`}>
+      <div className="flex items-start justify-between mb-3">
+        <div className={`w-10 h-10 rounded-xl ${c.bg} flex items-center justify-center shadow-sm`}>
+          <Icon name={icon} size={20} color="white" />
         </div>
         {change && (
-          <div className={`flex items-center space-x-1 ${getTrendColor()}`}>
-            <Icon name={getTrendIcon()} size={16} />
-            <span className="text-sm font-medium">{change}</span>
+          <div className={`flex items-center gap-0.5 text-xs font-semibold ${trendColor}`}>
+            <Icon name={getTrendIcon()} size={13} />
+            <span>{change}</span>
           </div>
         )}
       </div>
-      
-      <div>
-        <h3 className="text-2xl font-bold text-foreground mb-1">{value}</h3>
-        <p className="text-sm text-muted-foreground">{title}</p>
-      </div>
+      <h3 className="text-2xl font-bold text-gray-900 leading-none">{value}</h3>
+      <p className="text-xs text-gray-500 mt-1 font-medium">{title}</p>
+      {/* Decorative corner blob */}
+      <div className={`absolute -bottom-4 -right-4 w-16 h-16 ${c.bg} opacity-[0.06] rounded-full`} />
     </div>
   );
 };

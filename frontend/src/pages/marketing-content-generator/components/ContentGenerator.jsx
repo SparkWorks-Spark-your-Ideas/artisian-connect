@@ -4,12 +4,15 @@ import Button from '../../../components/ui/Button';
 import Select from '../../../components/ui/Select';
 import { generateMarketingContent } from '../../../utils/geminiAPI';
 
-const ContentGenerator = ({ selectedProducts, allProducts, selectedPlatform, onContentGenerated }) => {
+const ContentGenerator = ({ selectedProducts, allProducts, selectedPlatform, onContentGenerated, onSaveTemplate }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedContent, setGeneratedContent] = useState(null);
   const [error, setError] = useState(null);
   const [contentTone, setContentTone] = useState('enthusiastic');
   const [progress, setProgress] = useState(0);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedCaption, setEditedCaption] = useState('');
+  const [feedback, setFeedback] = useState(null);
   const [availableTones] = useState([
     { value: 'enthusiastic', label: 'Enthusiastic' },
     { value: 'professional', label: 'Professional' },
@@ -154,11 +157,11 @@ const ContentGenerator = ({ selectedProducts, allProducts, selectedPlatform, onC
   };
 
   return (
-    <div className="bg-card rounded-lg border border-border p-6">
+    <div className="bg-white/70 backdrop-blur-sm border border-white/60 rounded-2xl ring-1 ring-orange-100/50 shadow-sm p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className="text-lg font-semibold text-foreground">AI Content Generator</h3>
-          <p className="text-sm text-muted-foreground">Generate platform-specific marketing content</p>
+          <h3 className="text-lg font-semibold text-gray-900">AI Content Generator</h3>
+          <p className="text-sm text-gray-500">Generate platform-specific marketing content</p>
         </div>
         <Button
           onClick={generateContent}
@@ -184,30 +187,30 @@ const ContentGenerator = ({ selectedProducts, allProducts, selectedPlatform, onC
       
       {selectedProducts?.length === 0 && (
         <div className="text-center py-8">
-          <Icon name="Package" size={48} className="text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground">Select products to generate content</p>
+          <Icon name="Package" size={48} className="text-gray-300 mx-auto mb-4" />
+          <p className="text-gray-500">Select products to generate content</p>
         </div>
       )}
       {!selectedPlatform && selectedProducts?.length > 0 && (
         <div className="text-center py-8">
-          <Icon name="Smartphone" size={48} className="text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground">Choose a platform to generate content</p>
+          <Icon name="Smartphone" size={48} className="text-gray-300 mx-auto mb-4" />
+          <p className="text-gray-500">Choose a platform to generate content</p>
         </div>
       )}
       {isGenerating && (
         <div className="text-center py-12">
           <div className="inline-flex items-center space-x-2">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-            <span className="text-muted-foreground">AI is crafting your content...</span>
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-500"></div>
+            <span className="text-gray-500">AI is crafting your content...</span>
           </div>
         </div>
       )}
       {generatedContent && !isGenerating && (
         <div className="space-y-6">
           {/* Caption */}
-          <div className="bg-background rounded-lg p-4 border border-border">
+          <div className="bg-white/50 rounded-xl p-4 border border-gray-200/60">
             <div className="flex items-center justify-between mb-3">
-              <h4 className="font-medium text-foreground">Generated Caption</h4>
+              <h4 className="font-medium text-gray-900">Generated Caption</h4>
               <Button
                 variant="ghost"
                 size="sm"
@@ -217,17 +220,25 @@ const ContentGenerator = ({ selectedProducts, allProducts, selectedPlatform, onC
                 Copy
               </Button>
             </div>
-            <div className="bg-muted rounded-md p-3">
-              <pre className="text-sm text-foreground whitespace-pre-wrap font-sans">
-                {generatedContent?.caption}
-              </pre>
-            </div>
+            {isEditing ? (
+              <textarea
+                className="w-full bg-white rounded-xl p-3 text-sm text-gray-700 border border-orange-300 focus:outline-none focus:ring-2 focus:ring-orange-400 min-h-[120px] resize-y"
+                value={editedCaption}
+                onChange={(e) => setEditedCaption(e.target.value)}
+              />
+            ) : (
+              <div className="bg-gray-50/50 rounded-xl p-3">
+                <pre className="text-sm text-gray-700 whitespace-pre-wrap font-sans">
+                  {generatedContent?.caption}
+                </pre>
+              </div>
+            )}
           </div>
 
           {/* Hashtags */}
-          <div className="bg-background rounded-lg p-4 border border-border">
+          <div className="bg-white/50 rounded-xl p-4 border border-gray-200/60">
             <div className="flex items-center justify-between mb-3">
-              <h4 className="font-medium text-foreground">Recommended Hashtags</h4>
+              <h4 className="font-medium text-gray-900">Recommended Hashtags</h4>
               <Button
                 variant="ghost"
                 size="sm"
@@ -241,7 +252,7 @@ const ContentGenerator = ({ selectedProducts, allProducts, selectedPlatform, onC
               {generatedContent?.hashtags?.map((hashtag, index) => (
                 <span
                   key={index}
-                  className="inline-flex items-center px-3 py-1 bg-primary/10 text-primary text-sm rounded-full cursor-pointer hover:bg-primary/20 transition-colors"
+                  className="inline-flex items-center px-3 py-1 bg-orange-100 text-orange-600 text-sm rounded-full cursor-pointer hover:bg-orange-200 transition-colors"
                   onClick={() => copyToClipboard(hashtag)}
                 >
                   {hashtag}
@@ -252,33 +263,70 @@ const ContentGenerator = ({ selectedProducts, allProducts, selectedPlatform, onC
 
           {/* Insights */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-background rounded-lg p-4 border border-border">
+            <div className="bg-white/50 rounded-xl p-4 border border-gray-200/60">
               <div className="flex items-center space-x-2 mb-2">
-                <Icon name="Clock" size={16} className="text-primary" />
-                <h4 className="font-medium text-foreground">Best Posting Time</h4>
+                <Icon name="Clock" size={16} className="text-orange-500" />
+                <h4 className="font-medium text-gray-900">Best Posting Time</h4>
               </div>
-              <p className="text-sm text-muted-foreground">{generatedContent?.bestTime}</p>
+              <p className="text-sm text-gray-500">{generatedContent?.bestTime}</p>
             </div>
-            <div className="bg-background rounded-lg p-4 border border-border">
+            <div className="bg-white/50 rounded-xl p-4 border border-gray-200/60">
               <div className="flex items-center space-x-2 mb-2">
-                <Icon name="TrendingUp" size={16} className="text-success" />
-                <h4 className="font-medium text-foreground">Engagement Insight</h4>
+                <Icon name="TrendingUp" size={16} className="text-emerald-500" />
+                <h4 className="font-medium text-gray-900">Engagement Insight</h4>
               </div>
-              <p className="text-sm text-muted-foreground">{generatedContent?.engagement}</p>
+              <p className="text-sm text-gray-500">{generatedContent?.engagement}</p>
             </div>
           </div>
 
           {/* Actions */}
           <div className="flex flex-wrap gap-3">
-            <Button variant="outline" iconName="Edit" iconPosition="left">
-              Edit Content
-            </Button>
-            <Button variant="outline" iconName="RefreshCw" iconPosition="left" onClick={generateContent}>
-              Regenerate
-            </Button>
-            <Button variant="outline" iconName="Save" iconPosition="left">
-              Save Template
-            </Button>
+            {feedback && (
+              <span className="flex items-center text-sm font-medium text-green-600 gap-1 mr-auto">
+                <Icon name="CheckCircle" size={14} /> {feedback}
+              </span>
+            )}
+            {isEditing ? (
+              <>
+                <Button variant="default" iconName="Check" iconPosition="left" onClick={() => {
+                  const updated = { ...generatedContent, caption: editedCaption };
+                  setGeneratedContent(updated);
+                  if (onContentGenerated) onContentGenerated(updated);
+                  setIsEditing(false);
+                  setFeedback('Content updated!');
+                  setTimeout(() => setFeedback(null), 2500);
+                }}>
+                  Save Changes
+                </Button>
+                <Button variant="outline" iconName="X" iconPosition="left" onClick={() => {
+                  setIsEditing(false);
+                  setEditedCaption(generatedContent?.caption || '');
+                }}>
+                  Cancel
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button variant="outline" iconName="Edit" iconPosition="left" onClick={() => {
+                  setEditedCaption(generatedContent?.caption || '');
+                  setIsEditing(true);
+                }}>
+                  Edit Content
+                </Button>
+                <Button variant="outline" iconName="RefreshCw" iconPosition="left" onClick={generateContent} loading={isGenerating}>
+                  Regenerate
+                </Button>
+                <Button variant="outline" iconName="Save" iconPosition="left" onClick={() => {
+                  if (onSaveTemplate) {
+                    onSaveTemplate();
+                    setFeedback('Template saved!');
+                    setTimeout(() => setFeedback(null), 2500);
+                  }
+                }}>
+                  Save Template
+                </Button>
+              </>
+            )}
           </div>
         </div>
       )}

@@ -93,17 +93,17 @@ const PostCreator = ({ onCreatePost }) => {
   };
 
   return (
-    <div className="bg-card border border-border rounded-lg shadow-warm p-6 mb-6">
+    <div className="bg-white/70 backdrop-blur-sm border border-white/60 rounded-2xl ring-1 ring-orange-100/50 shadow-sm p-6 mb-6">
       {/* Header */}
       <div className="flex items-center space-x-3 mb-4">
         <Image
           src={userAvatar}
           alt={userName}
-          className="w-10 h-10 rounded-full object-cover"
+          className="w-10 h-10 rounded-full object-cover ring-2 ring-orange-100"
         />
         <div className="flex-1">
-          <h3 className="font-medium text-foreground">Share your craft journey</h3>
-          <p className="text-sm text-muted-foreground">Posting as {userName}</p>
+          <h3 className="font-medium text-gray-900">Share your craft journey</h3>
+          <p className="text-sm text-gray-500">Posting as {userName}</p>
         </div>
       </div>
       {/* Post Type Selector */}
@@ -141,13 +141,13 @@ const PostCreator = ({ onCreatePost }) => {
         }
         value={content}
         onChange={(e) => setContent(e?.target?.value)}
-        className="w-full p-3 bg-background border border-border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
+        className="w-full p-3 bg-white/60 border border-gray-200/60 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-300 text-gray-900 placeholder:text-gray-400"
         rows={3}
       />
       {/* Image Upload Area */}
       <div
-        className={`mt-4 border-2 border-dashed rounded-lg p-4 transition-colors ${
-          isDragOver ? 'border-primary bg-primary/5' : 'border-border'
+        className={`mt-4 border-2 border-dashed rounded-xl p-4 transition-colors cursor-pointer ${
+          isDragOver ? 'border-orange-400 bg-orange-50/50' : 'border-gray-200/60'
         }`}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
@@ -165,11 +165,11 @@ const PostCreator = ({ onCreatePost }) => {
         
         {selectedImages?.length === 0 ? (
           <div className="text-center py-4">
-            <Icon name="ImagePlus" size={32} className="mx-auto text-muted-foreground mb-2" />
-            <p className="text-muted-foreground">
+            <Icon name="ImagePlus" size={32} className="mx-auto text-gray-400 mb-2" />
+            <p className="text-gray-500">
               Drag & drop images here or click to browse
             </p>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-xs text-gray-400 mt-1">
               Up to 4 images • JPG, PNG, GIF
             </p>
           </div>
@@ -194,7 +194,7 @@ const PostCreator = ({ onCreatePost }) => {
               </div>
             ))}
             {selectedImages?.length < 4 && (
-              <div className="border-2 border-dashed border-border rounded-lg h-20 flex items-center justify-center text-muted-foreground hover:border-primary transition-colors">
+              <div className="border-2 border-dashed border-gray-200/60 rounded-xl h-20 flex items-center justify-center text-gray-400 hover:border-orange-300 transition-colors">
                 <Icon name="Plus" size={20} />
               </div>
             )}
@@ -208,7 +208,7 @@ const PostCreator = ({ onCreatePost }) => {
           placeholder="Add tags (comma separated): pottery, handmade, traditional..."
           value={tags}
           onChange={(e) => setTags(e?.target?.value)}
-          className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
+          className="w-full px-3 py-2 bg-white/60 border border-gray-200/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-300 text-gray-900 placeholder:text-gray-400"
         />
         <div className="flex flex-wrap gap-1 mt-2">
           {craftTags?.slice(0, 5)?.map((tag) => (
@@ -219,7 +219,7 @@ const PostCreator = ({ onCreatePost }) => {
                   setTags(prev => prev ? `${prev}, ${tag}` : tag);
                 }
               }}
-              className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded-full hover:bg-primary hover:text-primary-foreground transition-colors"
+              className="text-xs bg-orange-50 text-orange-600 px-2 py-1 rounded-full hover:bg-orange-500 hover:text-white transition-colors"
             >
               #{tag}
             </button>
@@ -227,22 +227,7 @@ const PostCreator = ({ onCreatePost }) => {
         </div>
       </div>
       {/* Action Buttons */}
-      <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
-        <div className="flex items-center space-x-4 text-muted-foreground">
-          <button className="flex items-center space-x-1 hover:text-foreground transition-colors">
-            <Icon name="Mic" size={16} />
-            <span className="text-sm">Voice</span>
-          </button>
-          <button className="flex items-center space-x-1 hover:text-foreground transition-colors">
-            <Icon name="MapPin" size={16} />
-            <span className="text-sm">Location</span>
-          </button>
-          <button className="flex items-center space-x-1 hover:text-foreground transition-colors">
-            <Icon name="Smile" size={16} />
-            <span className="text-sm">Mood</span>
-          </button>
-        </div>
-        
+      <div className="flex items-center justify-end mt-4 pt-4 border-t border-gray-200/60">
         <Button
           onClick={handleSubmit}
           disabled={(!content?.trim() && selectedImages?.length === 0) || submitting}

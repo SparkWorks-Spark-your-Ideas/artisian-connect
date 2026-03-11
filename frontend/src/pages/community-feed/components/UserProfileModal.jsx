@@ -57,16 +57,16 @@ const UserProfileModal = ({ userId, authorFallback, onClose, onFollow, isFollowi
   const crafts = ap?.craftSpecializations || (ap?.craftSpecialization ? [ap.craftSpecialization] : []);
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div 
-        className="bg-card border border-border rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        className="bg-white/80 backdrop-blur-xl border border-white/60 rounded-2xl ring-1 ring-orange-100/50 shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header with gradient background */}
-        <div className="relative bg-gradient-to-br from-primary/20 via-primary/10 to-transparent rounded-t-2xl pt-6 pb-16 px-6">
+        <div className="relative bg-gradient-to-br from-orange-200/40 via-amber-100/20 to-transparent rounded-t-2xl pt-6 pb-16 px-6">
           <button 
             onClick={onClose} 
-            className="absolute top-4 right-4 text-muted-foreground hover:text-foreground bg-card/80 rounded-full p-1.5 backdrop-blur-sm z-10"
+            className="absolute top-4 right-4 text-gray-500 hover:text-gray-900 bg-white/80 rounded-full p-1.5 backdrop-blur-sm z-10"
           >
             <Icon name="X" size={20} />
           </button>
@@ -74,7 +74,7 @@ const UserProfileModal = ({ userId, authorFallback, onClose, onFollow, isFollowi
 
         {loading && (
           <div className="flex items-center justify-center py-20">
-            <Icon name="Loader2" size={36} className="animate-spin text-primary" />
+            <Icon name="Loader2" size={36} className="animate-spin text-orange-500" />
           </div>
         )}
 
@@ -86,24 +86,24 @@ const UserProfileModal = ({ userId, authorFallback, onClose, onFollow, isFollowi
                 <Image
                   src={displayAvatar}
                   alt={displayName}
-                  className="w-28 h-28 rounded-full object-cover border-4 border-card shadow-lg"
+                  className="w-28 h-28 rounded-full object-cover border-4 border-white shadow-lg"
                 />
                 {(profile.isVerified || ap?.isVerified) && (
-                  <div className="absolute -bottom-1 -right-1 bg-primary text-white rounded-full p-1.5">
+                  <div className="absolute -bottom-1 -right-1 bg-orange-500 text-white rounded-full p-1.5">
                     <Icon name="Check" size={14} />
                   </div>
                 )}
               </div>
               <div className="flex-1 text-center sm:text-left">
-                <h2 className="text-2xl font-bold text-foreground">{displayName}</h2>
+                <h2 className="text-2xl font-bold text-gray-900">{displayName}</h2>
                 {profile.userType && (
-                  <span className="inline-flex items-center gap-1 text-sm text-primary font-medium mt-0.5">
+                  <span className="inline-flex items-center gap-1 text-sm text-orange-600 font-medium mt-0.5">
                     <Icon name="Palette" size={14} />
                     {profile.userType === 'artisan' ? 'Artisan Craftsperson' : profile.userType}
                   </span>
                 )}
                 {(profile.location?.city || profile.location?.state) && (
-                  <div className="flex items-center justify-center sm:justify-start text-sm text-muted-foreground mt-1">
+                  <div className="flex items-center justify-center sm:justify-start text-sm text-gray-500 mt-1">
                     <Icon name="MapPin" size={14} className="mr-1" />
                     <span>
                       {[profile.location.city, profile.location.district, profile.location.state]
@@ -116,19 +116,19 @@ const UserProfileModal = ({ userId, authorFallback, onClose, onFollow, isFollowi
             </div>
 
             {/* Followers/Following Row */}
-            <div className="flex items-center justify-center sm:justify-start gap-6 mb-6 pb-5 border-b border-border">
+            <div className="flex items-center justify-center sm:justify-start gap-6 mb-6 pb-5 border-b border-gray-200/60">
               <div className="text-center">
-                <div className="text-lg font-bold text-foreground">{profile.followersCount ?? 0}</div>
-                <div className="text-xs text-muted-foreground">Followers</div>
+                <div className="text-lg font-bold text-gray-900">{profile.followersCount ?? 0}</div>
+                <div className="text-xs text-gray-500">Followers</div>
               </div>
               <div className="text-center">
-                <div className="text-lg font-bold text-foreground">{profile.followingCount ?? 0}</div>
-                <div className="text-xs text-muted-foreground">Following</div>
+                <div className="text-lg font-bold text-gray-900">{profile.followingCount ?? 0}</div>
+                <div className="text-xs text-gray-500">Following</div>
               </div>
               {ap?.totalSales > 0 && (
                 <div className="text-center">
-                  <div className="text-lg font-bold text-foreground">{ap.totalSales}</div>
-                  <div className="text-xs text-muted-foreground">Sales</div>
+                  <div className="text-lg font-bold text-gray-900">{ap.totalSales}</div>
+                  <div className="text-xs text-gray-500">Sales</div>
                 </div>
               )}
               {ap?.rating > 0 && (
@@ -137,7 +137,7 @@ const UserProfileModal = ({ userId, authorFallback, onClose, onFollow, isFollowi
                     <Icon name="Star" size={14} />
                     <span className="text-lg font-bold ml-0.5">{ap.rating}</span>
                   </div>
-                  <div className="text-xs text-muted-foreground">{ap.totalReviews || 0} Reviews</div>
+                  <div className="text-xs text-gray-500">{ap.totalReviews || 0} Reviews</div>
                 </div>
               )}
             </div>
@@ -145,11 +145,11 @@ const UserProfileModal = ({ userId, authorFallback, onClose, onFollow, isFollowi
             {/* Bio */}
             {(profile.bio || ap?.bio) && (
               <div className="mb-5">
-                <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                <div className="flex items-center gap-2 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
                   <Icon name="FileText" size={12} />
                   About
                 </div>
-                <p className="text-sm text-foreground leading-relaxed">
+                <p className="text-sm text-gray-700 leading-relaxed">
                   {profile.bio || ap?.bio}
                 </p>
               </div>
@@ -158,13 +158,13 @@ const UserProfileModal = ({ userId, authorFallback, onClose, onFollow, isFollowi
             {/* Craft Specializations */}
             {crafts.length > 0 && (
               <div className="mb-5">
-                <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                <div className="flex items-center gap-2 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
                   <Icon name="Hammer" size={12} />
                   Craft Specializations
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {crafts.map((craft, i) => (
-                    <span key={i} className="bg-primary/10 text-primary text-sm font-medium px-3 py-1.5 rounded-full capitalize">
+                    <span key={i} className="bg-orange-100 text-orange-600 text-sm font-medium px-3 py-1.5 rounded-full capitalize">
                       {craft.replace(/-/g, ' ')}
                     </span>
                   ))}
@@ -175,13 +175,13 @@ const UserProfileModal = ({ userId, authorFallback, onClose, onFollow, isFollowi
             {/* Portfolio Images */}
             {ap?.portfolioImages?.length > 0 && (
               <div className="mb-5">
-                <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                <div className="flex items-center gap-2 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
                   <Icon name="Image" size={12} />
                   Portfolio ({ap.portfolioImages.length} images)
                 </div>
                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                   {ap.portfolioImages.slice(0, 8).map((img, i) => (
-                    <div key={i} className="aspect-square rounded-lg overflow-hidden bg-muted">
+                    <div key={i} className="aspect-square rounded-xl overflow-hidden bg-gray-100">
                       <Image
                         src={img.src || img.url || img}
                         alt={`Portfolio ${i + 1}`}
@@ -197,35 +197,35 @@ const UserProfileModal = ({ userId, authorFallback, onClose, onFollow, isFollowi
             {(ap?.experienceLevel || ap?.yearsOfExperience || ap?.specializationFocus) && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
                 {ap.experienceLevel && (
-                  <div className="flex items-center gap-3 bg-muted/30 rounded-xl p-3">
-                    <div className="bg-primary/10 rounded-full p-2 flex-shrink-0">
-                      <Icon name="Award" size={16} className="text-primary" />
+                  <div className="flex items-center gap-3 bg-orange-50/50 rounded-xl p-3">
+                    <div className="bg-orange-100 rounded-full p-2 flex-shrink-0">
+                      <Icon name="Award" size={16} className="text-orange-500" />
                     </div>
                     <div>
-                      <div className="text-xs text-muted-foreground">Experience</div>
-                      <div className="text-sm font-semibold text-foreground capitalize">{ap.experienceLevel}</div>
+                      <div className="text-xs text-gray-500">Experience</div>
+                      <div className="text-sm font-semibold text-gray-900 capitalize">{ap.experienceLevel}</div>
                     </div>
                   </div>
                 )}
                 {ap.yearsOfExperience > 0 && (
-                  <div className="flex items-center gap-3 bg-muted/30 rounded-xl p-3">
-                    <div className="bg-primary/10 rounded-full p-2 flex-shrink-0">
-                      <Icon name="Clock" size={16} className="text-primary" />
+                  <div className="flex items-center gap-3 bg-orange-50/50 rounded-xl p-3">
+                    <div className="bg-orange-100 rounded-full p-2 flex-shrink-0">
+                      <Icon name="Clock" size={16} className="text-orange-500" />
                     </div>
                     <div>
-                      <div className="text-xs text-muted-foreground">Years of Practice</div>
-                      <div className="text-sm font-semibold text-foreground">{ap.yearsOfExperience} years</div>
+                      <div className="text-xs text-gray-500">Years of Practice</div>
+                      <div className="text-sm font-semibold text-gray-900">{ap.yearsOfExperience} years</div>
                     </div>
                   </div>
                 )}
                 {ap.specializationFocus && (
-                  <div className="flex items-center gap-3 bg-muted/30 rounded-xl p-3 sm:col-span-2">
-                    <div className="bg-primary/10 rounded-full p-2 flex-shrink-0">
-                      <Icon name="Target" size={16} className="text-primary" />
+                  <div className="flex items-center gap-3 bg-orange-50/50 rounded-xl p-3 sm:col-span-2">
+                    <div className="bg-orange-100 rounded-full p-2 flex-shrink-0">
+                      <Icon name="Target" size={16} className="text-orange-500" />
                     </div>
                     <div>
-                      <div className="text-xs text-muted-foreground">Specialization Focus</div>
-                      <div className="text-sm font-semibold text-foreground">{ap.specializationFocus}</div>
+                      <div className="text-xs text-gray-500">Specialization Focus</div>
+                      <div className="text-sm font-semibold text-gray-900">{ap.specializationFocus}</div>
                     </div>
                   </div>
                 )}
@@ -235,13 +235,13 @@ const UserProfileModal = ({ userId, authorFallback, onClose, onFollow, isFollowi
             {/* Traditional Techniques */}
             {ap?.craftTechniques?.length > 0 && (
               <div className="mb-5">
-                <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                <div className="flex items-center gap-2 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
                   <Icon name="Wrench" size={12} />
                   Traditional Techniques
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {ap.craftTechniques.map((tech, i) => (
-                    <span key={i} className="bg-primary/10 text-primary text-xs font-medium px-2.5 py-1.5 rounded-full border border-primary/20">
+                    <span key={i} className="bg-orange-100 text-orange-600 text-xs font-medium px-2.5 py-1.5 rounded-full border border-orange-200/60">
                       {tech.replace(/-/g, ' ')}
                     </span>
                   ))}
@@ -252,11 +252,11 @@ const UserProfileModal = ({ userId, authorFallback, onClose, onFollow, isFollowi
             {/* Tools & Equipment */}
             {ap?.toolsAndEquipment && (
               <div className="mb-5">
-                <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                <div className="flex items-center gap-2 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
                   <Icon name="Settings" size={12} />
                   Tools & Equipment
                 </div>
-                <p className="text-sm text-muted-foreground leading-relaxed bg-muted/20 rounded-lg p-3">
+                <p className="text-sm text-gray-500 leading-relaxed bg-gray-100/50 rounded-xl p-3">
                   {ap.toolsAndEquipment}
                 </p>
               </div>
@@ -265,11 +265,11 @@ const UserProfileModal = ({ userId, authorFallback, onClose, onFollow, isFollowi
             {/* Awards & Recognition */}
             {ap?.awardsRecognition?.trim() && (
               <div className="mb-5">
-                <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                <div className="flex items-center gap-2 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
                   <Icon name="Trophy" size={12} />
                   Awards & Recognition
                 </div>
-                <p className="text-sm text-muted-foreground leading-relaxed bg-muted/20 rounded-lg p-3">
+                <p className="text-sm text-gray-500 leading-relaxed bg-gray-100/50 rounded-xl p-3">
                   {ap.awardsRecognition}
                 </p>
               </div>
@@ -278,7 +278,7 @@ const UserProfileModal = ({ userId, authorFallback, onClose, onFollow, isFollowi
             {/* Social Links */}
             {ap?.socialLinks && Object.values(ap.socialLinks).some(v => v) && (
               <div className="mb-5">
-                <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                <div className="flex items-center gap-2 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
                   <Icon name="Share2" size={12} />
                   Connect
                 </div>
@@ -293,7 +293,7 @@ const UserProfileModal = ({ userId, authorFallback, onClose, onFollow, isFollowi
                           href={platform === 'whatsapp' ? `https://wa.me/${url}` : (url.startsWith('http') ? url : `https://${url}`)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-2 bg-muted/40 hover:bg-muted rounded-lg px-3 py-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+                          className="flex items-center gap-2 bg-gray-100/60 hover:bg-orange-50 rounded-xl px-3 py-2 text-sm text-gray-500 hover:text-orange-600 transition-colors"
                         >
                           <Icon name={iconMap[platform] || 'Globe'} size={16} />
                           <span className="capitalize">{platform}</span>
@@ -317,7 +317,7 @@ const UserProfileModal = ({ userId, authorFallback, onClose, onFollow, isFollowi
 
             {/* Joined Date */}
             {profile.joinedDate && (
-              <div className="text-center mt-4 text-xs text-muted-foreground">
+              <div className="text-center mt-4 text-xs text-gray-400">
                 <Icon name="Calendar" size={12} className="inline mr-1" />
                 Joined {new Date(profile.joinedDate._seconds ? profile.joinedDate._seconds * 1000 : profile.joinedDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
               </div>

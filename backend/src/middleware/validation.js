@@ -74,7 +74,7 @@ export const schemas = {
   // Product validation schemas
   productCreation: Joi.object({
     name: Joi.string().min(3).max(100).required(),
-    description: Joi.string().min(10).max(5000).required(), // Increased for AI-generated descriptions
+    description: Joi.string().min(10).required(),
     category: Joi.string().required(),
     price: Joi.number().positive().required(),
     currency: Joi.string().default('INR'),
@@ -105,16 +105,16 @@ export const schemas = {
 
   productUpdate: Joi.object({
     name: Joi.string().min(3).max(100).optional(),
-    description: Joi.string().min(10).max(1000).optional(),
+    description: Joi.string().min(10).optional(),
     category: Joi.string().optional(),
     price: Joi.number().positive().optional(),
     tags: Joi.array().items(Joi.string()).optional(),
     materials: Joi.array().items(Joi.string()).optional(),
     dimensions: Joi.object({
-      length: Joi.number().positive().optional(),
-      width: Joi.number().positive().optional(),
-      height: Joi.number().positive().optional(),
-      weight: Joi.number().positive().optional()
+      length: Joi.number().min(0).optional(),
+      width: Joi.number().min(0).optional(),
+      height: Joi.number().min(0).optional(),
+      weight: Joi.number().min(0).optional()
     }).optional(),
     customizable: Joi.boolean().optional(),
     stockQuantity: Joi.number().integer().min(0).optional(),
