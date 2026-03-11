@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import Header from '../../components/ui/Header';
 import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
@@ -13,6 +13,8 @@ import { api } from '../../utils/api';
 
 const ProductUploadWizard = () => {
   const navigate = useNavigate();
+  const { productId } = useParams();
+  const isEditMode = Boolean(productId);
   const [currentStep, setCurrentStep] = useState(1);
   const [photos, setPhotos] = useState([]);
   const [formData, setFormData] = useState({});
@@ -21,6 +23,67 @@ const ProductUploadWizard = () => {
   const [errors, setErrors] = useState({});
   const [isPublishing, setIsPublishing] = useState(false);
   const [isDraft, setIsDraft] = useState(false);
+  const [loadingProduct, setLoadingProduct] = useState(false);
+
+  // Load existing product data when in edit mode
+  useEffect(() => {
+    if (isEditMode) {
+      loadProductForEdit();
+    }
+  }, [productId]);
+
+  const loadProductForEdit = async () => {
+    try {
+      setLoadingProduct(true);
+      const response = await api.products.get(productId);
+      const product = response.data?.data?.product || response.data?.data || response.data;
+      console.log('📦 Loaded product for editing:', product);
+
+      // Pre-fill form data
+      setFormData({
+        name: product.name || '',
+        category: product.category || '',
+        price: product.price || '',
+        quantity: product.stockQuantity || '',
+        shortDescription: product.shortDescription || '',
+        materials: Array.isArray(product.materials) ? product.materials.join(', ') : (product.materials || ''),
+        length: product.dimensions?.length || '',
+        width: product.dimensions?.width || '',
+        height: product.dimensions?.height || '',
+        weight: product.dimensions?.weight || product.shippingInfo?.weight || '',
+      });
+
+      // Pre-fill description
+      setAiDescription(product.description || '');
+
+      // Pre-fill SEO data
+      setSeoData({
+        title: product.seoTitle || product.name || '',
+        metaDescription: product.metaDescription || '',
+        keywords: product.tags || [],
+      });
+
+      // Pre-fill photos from existing image URLs
+      const imageUrls = product.imageUrls || [];
+      if (imageUrls.length > 0) {
+        const existingPhotos = imageUrls.map((url, idx) => ({
+          id: `existing-${idx}`,
+          url,
+          preview: url,
+          uploaded: true,
+          uploading: false,
+          error: null,
+        }));
+        setPhotos(existingPhotos);
+      }
+    } catch (error) {
+      console.error('❌ Failed to load product for editing:', error);
+      alert('Failed to load product. It may have been deleted.');
+      navigate('/product-catalog');
+    } finally {
+      setLoadingProduct(false);
+    }
+  };
 
   const steps = [
     {
@@ -147,13 +210,7 @@ const ProductUploadWizard = () => {
         stockQuantity: parseInt(formData.quantity),
         materials: formData.materials ? formData.materials.split(',').map(m => m.trim()) : [],
         tags: Array.isArray(seoData.keywords) ? seoData.keywords : (seoData.keywords ? [seoData.keywords] : []),
-        dimensions: {
-          length: parseFloat(formData.length) || 0,
-          width: parseFloat(formData.width) || 0,
-          height: parseFloat(formData.height) || 0,
-          weight: parseFloat(formData.weight) || 0
-        },
-        imageUrls: uploadedPhotos.map(photo => photo.url), // Only successfully uploaded photos
+        imageUrls: uploadedPhotos.map(photo => photo.url),
         customizable: false,
         shippingInfo: {
           weight: parseFloat(formData.weight) || 0,
@@ -165,35 +222,45 @@ const ProductUploadWizard = () => {
         }
       };
 
+      // Only include dimensions if at least one value is set
+      const dimLength = parseFloat(formData.length) || 0;
+      const dimWidth = parseFloat(formData.width) || 0;
+      const dimHeight = parseFloat(formData.height) || 0;
+      const dimWeight = parseFloat(formData.weight) || 0;
+      if (dimLength > 0 || dimWidth > 0 || dimHeight > 0 || dimWeight > 0) {
+        productData.dimensions = { length: dimLength, width: dimWidth, height: dimHeight, weight: dimWeight };
+      }
+
       // Add SEO data if available
       if (seoData.title) {
         productData.seoTitle = seoData.title;
         productData.metaDescription = seoData.metaDescription;
       }
 
-      console.log('📤 Publishing product with data:', {
+      console.log(`📤 ${isEditMode ? 'Updating' : 'Publishing'} product with data:`, {
         name: productData.name,
         imageUrls: productData.imageUrls,
         uploadedPhotosCount: uploadedPhotos.length,
-        uploadedPhotos: uploadedPhotos,
-        allPhotos: photos
       });
 
-      console.log('📸 Image URLs being sent:', productData.imageUrls);
-
-      const response = await api.products.create(productData);
-      
-      console.log('✅ Product published successfully:', response.data);
+      let response;
+      if (isEditMode) {
+        response = await api.products.update(productId, productData);
+        console.log('✅ Product updated successfully:', response.data);
+      } else {
+        response = await api.products.create(productData);
+        console.log('✅ Product published successfully:', response.data);
+      }
       
       // Clear any saved draft
       localStorage.removeItem('product-draft');
       
-      // Navigate to product catalog with success message and force refresh
+      // Navigate to product catalog with success message
       navigate('/product-catalog', { 
         state: { 
-          message: 'Product published successfully!',
+          message: isEditMode ? 'Product updated successfully!' : 'Product published successfully!',
           newProduct: response.data,
-          refresh: Date.now() // Force refresh
+          refresh: Date.now()
         },
         replace: true
       });
@@ -274,10 +341,10 @@ const ProductUploadWizard = () => {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-foreground mb-2">
-              Product Upload Wizard
+              {isEditMode ? 'Edit Product' : 'Product Upload Wizard'}
             </h1>
             <p className="text-muted-foreground">
-              Create professional product listings with AI assistance
+              {isEditMode ? 'Update your product details' : 'Create professional product listings with AI assistance'}
             </p>
           </div>
           
@@ -300,7 +367,14 @@ const ProductUploadWizard = () => {
 
         {/* Step Content */}
         <div className="bg-card border border-border rounded-lg shadow-warm p-6 mb-8">
-          {renderStepContent()}
+          {loadingProduct ? (
+            <div className="flex flex-col items-center justify-center py-16">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500 mb-4"></div>
+              <p className="text-muted-foreground">Loading product data...</p>
+            </div>
+          ) : (
+            renderStepContent()
+          )}
         </div>
 
         {/* Navigation Buttons */}
@@ -344,11 +418,11 @@ const ProductUploadWizard = () => {
               <Button
                 onClick={handlePublish}
                 loading={isPublishing}
-                iconName="Upload"
+                iconName={isEditMode ? 'Save' : 'Upload'}
                 iconPosition="left"
                 disabled={isDraft}
               >
-                {isPublishing ? 'Publishing...' : 'Publish Product'}
+                {isPublishing ? (isEditMode ? 'Updating...' : 'Publishing...') : (isEditMode ? 'Update Product' : 'Publish Product')}
               </Button>
             )}
           </div>

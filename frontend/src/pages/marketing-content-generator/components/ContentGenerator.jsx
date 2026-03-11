@@ -4,12 +4,15 @@ import Button from '../../../components/ui/Button';
 import Select from '../../../components/ui/Select';
 import { generateMarketingContent } from '../../../utils/geminiAPI';
 
-const ContentGenerator = ({ selectedProducts, allProducts, selectedPlatform, onContentGenerated }) => {
+const ContentGenerator = ({ selectedProducts, allProducts, selectedPlatform, onContentGenerated, onSaveTemplate }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedContent, setGeneratedContent] = useState(null);
   const [error, setError] = useState(null);
   const [contentTone, setContentTone] = useState('enthusiastic');
   const [progress, setProgress] = useState(0);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedCaption, setEditedCaption] = useState('');
+  const [feedback, setFeedback] = useState(null);
   const [availableTones] = useState([
     { value: 'enthusiastic', label: 'Enthusiastic' },
     { value: 'professional', label: 'Professional' },
@@ -217,11 +220,19 @@ const ContentGenerator = ({ selectedProducts, allProducts, selectedPlatform, onC
                 Copy
               </Button>
             </div>
-            <div className="bg-gray-50/50 rounded-xl p-3">
-              <pre className="text-sm text-gray-700 whitespace-pre-wrap font-sans">
-                {generatedContent?.caption}
-              </pre>
-            </div>
+            {isEditing ? (
+              <textarea
+                className="w-full bg-white rounded-xl p-3 text-sm text-gray-700 border border-orange-300 focus:outline-none focus:ring-2 focus:ring-orange-400 min-h-[120px] resize-y"
+                value={editedCaption}
+                onChange={(e) => setEditedCaption(e.target.value)}
+              />
+            ) : (
+              <div className="bg-gray-50/50 rounded-xl p-3">
+                <pre className="text-sm text-gray-700 whitespace-pre-wrap font-sans">
+                  {generatedContent?.caption}
+                </pre>
+              </div>
+            )}
           </div>
 
           {/* Hashtags */}
@@ -270,15 +281,52 @@ const ContentGenerator = ({ selectedProducts, allProducts, selectedPlatform, onC
 
           {/* Actions */}
           <div className="flex flex-wrap gap-3">
-            <Button variant="outline" iconName="Edit" iconPosition="left">
-              Edit Content
-            </Button>
-            <Button variant="outline" iconName="RefreshCw" iconPosition="left" onClick={generateContent}>
-              Regenerate
-            </Button>
-            <Button variant="outline" iconName="Save" iconPosition="left">
-              Save Template
-            </Button>
+            {feedback && (
+              <span className="flex items-center text-sm font-medium text-green-600 gap-1 mr-auto">
+                <Icon name="CheckCircle" size={14} /> {feedback}
+              </span>
+            )}
+            {isEditing ? (
+              <>
+                <Button variant="default" iconName="Check" iconPosition="left" onClick={() => {
+                  const updated = { ...generatedContent, caption: editedCaption };
+                  setGeneratedContent(updated);
+                  if (onContentGenerated) onContentGenerated(updated);
+                  setIsEditing(false);
+                  setFeedback('Content updated!');
+                  setTimeout(() => setFeedback(null), 2500);
+                }}>
+                  Save Changes
+                </Button>
+                <Button variant="outline" iconName="X" iconPosition="left" onClick={() => {
+                  setIsEditing(false);
+                  setEditedCaption(generatedContent?.caption || '');
+                }}>
+                  Cancel
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button variant="outline" iconName="Edit" iconPosition="left" onClick={() => {
+                  setEditedCaption(generatedContent?.caption || '');
+                  setIsEditing(true);
+                }}>
+                  Edit Content
+                </Button>
+                <Button variant="outline" iconName="RefreshCw" iconPosition="left" onClick={generateContent} loading={isGenerating}>
+                  Regenerate
+                </Button>
+                <Button variant="outline" iconName="Save" iconPosition="left" onClick={() => {
+                  if (onSaveTemplate) {
+                    onSaveTemplate();
+                    setFeedback('Template saved!');
+                    setTimeout(() => setFeedback(null), 2500);
+                  }
+                }}>
+                  Save Template
+                </Button>
+              </>
+            )}
           </div>
         </div>
       )}

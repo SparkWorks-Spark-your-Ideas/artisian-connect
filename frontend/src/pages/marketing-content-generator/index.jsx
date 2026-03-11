@@ -174,6 +174,7 @@ const MarketingContentGenerator = () => {
           allProducts={allProducts}
           selectedPlatform={selectedPlatform}
           onContentGenerated={handleContentGenerated}
+          onSaveTemplate={handleSaveTemplate}
         />
         <ContentPreview
           content={generatedContent}

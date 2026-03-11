@@ -298,9 +298,7 @@ const ProductCatalog = () => {
   };
 
   const handleProductEdit = (productId) => {
-    console.log('Edit product:', productId);
-    // Navigate to product edit page (you can implement this later)
-    alert(`Edit functionality for product ${productId} - Coming soon!`);
+    navigate(`/product-upload-wizard/${productId}`);
   };
 
   const handleProductDuplicate = (productId) => {

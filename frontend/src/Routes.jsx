@@ -64,6 +64,7 @@ const Routes = () => {
         <Route path="/artisan-profile-setup" element={<ArtisanRoute><ArtisanProfileSetup /></ArtisanRoute>} />
         <Route path="/community-feed" element={<ArtisanRoute><CommunityFeed /></ArtisanRoute>} />
         <Route path="/product-upload-wizard" element={<ArtisanRoute><ProductUploadWizard /></ArtisanRoute>} />
+        <Route path="/product-upload-wizard/:productId" element={<ArtisanRoute><ProductUploadWizard /></ArtisanRoute>} />
         <Route path="*" element={<NotFound />} />
       </RouterRoutes>
       </ErrorBoundary>
