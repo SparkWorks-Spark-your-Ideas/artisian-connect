@@ -1,329 +1,326 @@
-# Artisan Marketplace Backend
+# Artisan Connect — Backend API
 
-A comprehensive Node.js backend for an AI-Powered Marketplace Platform supporting local artisans in India. Built with Firebase Functions, Firestore, and Google AI APIs.
-
-## Features
-
-### 🔐 Authentication & User Management
-- Firebase Auth integration with JWT tokens
-- User registration and login
-- Profile management for customers and artisans
-- Role-based access control
-
-### 🛍️ E-commerce Features
-- Product creation and management
-- Order processing and tracking
-- Shopping cart functionality
-- Review and rating system
-
-### 🤖 AI-Powered Features
-- AI product description generation (Gemini API)
-- Marketing content creation
-- Product image analysis
-- Personalized marketing tips
-
-### 👥 Social Features
-- Social feed for artisans
-- Skill-based groups
-- Post creation and engagement
-- Comments and likes system
-
-### 📊 Analytics & Insights
-- Sales analytics for artisans
-- Engagement metrics
-- Market trends analysis
-- Performance dashboards
-
-### 🌐 Localization
-- Multi-language support
-- Google Translate integration
-- Regional content adaptation
-- Cultural customization
+A Node.js/Express backend for the ArtisanConnect marketplace platform. Provides REST APIs for authentication, product management, e-commerce ordering, social features, AI-powered content generation, analytics, and multi-language support. Built on Firebase (Firestore + Auth), Google Gemini AI, and Cloudinary.
 
 ## Technology Stack
 
-- **Runtime**: Node.js 18+ with ES6 modules
-- **Framework**: Express.js with Firebase Functions
-- **Database**: Firestore (NoSQL)
-- **Authentication**: Firebase Auth
-- **Storage**: Firebase Storage
-- **AI Services**: Google Gemini API, Vertex AI, Cloud Vision, Cloud Translation
-- **Validation**: Joi
-- **Security**: Helmet, CORS, Rate limiting
+| Technology | Version | Purpose |
+|-----------|---------|---------|
+| Node.js | 18+ | Runtime (ES Modules) |
+| Express.js | 4.18.2 | Web framework |
+| Firebase Admin | 13.5.0 | Firestore database & authentication |
+| Google Generative AI | 0.24.1 | Gemini AI content generation |
+| Google Cloud Translate | 8.5.1 | Multi-language support |
+| Google Cloud Vision | 4.3.3 | Image analysis |
+| Cloudinary | 2.8.0 | Image upload, storage & CDN |
+| Multer | 1.4.5 | File upload handling |
+| Joi | 17.9.2 | Request validation |
+| Helmet | 7.0.0 | HTTP security headers |
+| express-rate-limit | 6.8.1 | API rate limiting |
+| CORS | 2.8.5 | Cross-origin resource sharing |
+| dotenv | 16.3.1 | Environment variable management |
 
 ## Project Structure
 
 ```
 backend/
 ├── src/
-│   ├── config/           # Configuration files
-│   ├── middleware/       # Express middleware
-│   ├── routes/          # API route handlers
-│   ├── services/        # External service integrations
-│   └── utils/           # Utility functions
-├── firestore.rules      # Firestore security rules
-├── firestore.indexes.json # Database indexes
-├── storage.rules        # Storage security rules
-├── firebase.json        # Firebase configuration
-├── package.json         # Dependencies and scripts
-├── index.js            # Main entry point
-└── README.md           # This file
+│   ├── config/
+│   │   ├── firebase.js          # Firebase Admin SDK initialization
+│   │   └── index.js             # App configuration constants
+│   ├── middleware/
+│   │   ├── auth.js              # JWT verification, role checks (verifyToken, verifyArtisan, optionalAuth)
+│   │   ├── errorHandler.js      # Centralized error handler & asyncHandler wrapper
+│   │   ├── logger.js            # Request/response logging
+│   │   ├── upload.js            # Multer file upload configuration
+│   │   └── validation.js        # Joi schema validation middleware
+│   ├── routes/
+│   │   ├── auth.js              # Registration & login
+│   │   ├── user.js              # Profile management & avatar upload
+│   │   ├── products.js          # Product CRUD, image upload, AI descriptions
+│   │   ├── orders.js            # Order creation & tracking
+│   │   ├── social.js            # Social feed, image upload, follow system
+│   │   ├── marketing.js         # AI content & poster generation
+│   │   ├── analytics.js         # Sales, engagement & product analytics
+│   │   └── localization.js      # Translation & language detection
+│   ├── services/
+│   │   ├── geminiAI.js          # Google Gemini API integration
+│   │   ├── translation.js       # Google Cloud Translation API
+│   │   └── firebaseStorage.js   # Firebase Cloud Storage integration
+│   └── utils/
+│       ├── helpers.js           # Utility functions
+│       └── initializeData.js    # Seed data utilities
+├── test/
+│   └── basic.test.js            # Unit tests
+├── server.js                    # Express server entry point
+├── index.js                     # Firebase Functions entry point
+├── firestore.rules              # Firestore security rules
+├── firestore.indexes.json       # Composite index definitions
+├── storage.rules                # Firebase Storage security rules
+├── firebase.json                # Firebase project configuration
+└── package.json
 ```
 
-### Base URL
-
-**Production**: `https://us-central1-YOUR_PROJECT_ID.cloudfunctions.net/api`
-
-**Local Development**: `http://localhost:5001/YOUR_PROJECT_ID/us-central1/api`
-
-> Replace `YOUR_PROJECT_ID` with your actual Firebase project ID
-
-### Authentication
-- `POST /api/auth/register` - Register new user
-- `POST /api/auth/login` - User login
-- `POST /api/auth/verify-email` - Send email verification
-- `POST /api/auth/reset-password` - Send password reset
-
-### User Management
-- `GET /api/user/profile` - Get user profile
-- `PUT /api/user/profile` - Update user profile
-- `POST /api/user/profile/avatar` - Upload avatar
-- `GET /api/user/profile/:uid` - Get public profile
-- `PUT /api/user/artisan-profile` - Update artisan profile
-- `POST /api/user/certifications` - Upload certifications
-- `GET /api/user/dashboard` - Get dashboard data
-
-### Products
-- `POST /api/products/create` - Create product (artisans)
-- `POST /api/products/auto-describe` - AI description generation
-- `POST /api/products/analyze-image` - AI image analysis
-- `GET /api/products/list` - List products with filters
-- `GET /api/products/:id` - Get product details
-- `PUT /api/products/:id` - Update product
-- `DELETE /api/products/:id` - Delete product
-- `POST /api/products/:id/favorite` - Add/remove favorite
-
-### Orders
-- `POST /api/orders/create` - Create new order
-- `GET /api/orders/list` - Get user orders
-- `GET /api/orders/:id` - Get order details
-- `PATCH /api/orders/:id/status` - Update order status
-- `POST /api/orders/:id/cancel` - Cancel order
-- `POST /api/orders/:id/review` - Add review
-
-### Social Features
-- `GET /api/social/feed` - Get social feed
-- `POST /api/social/post` - Create post
-- `GET /api/social/posts/:id` - Get post details
-- `POST /api/social/posts/:id/like` - Like/unlike post
-- `POST /api/social/posts/:id/comment` - Add comment
-- `GET /api/social/groups` - List groups
-- `POST /api/social/group/join` - Join group
-- `POST /api/social/group/leave` - Leave group
-
-### Marketing
-- `POST /api/marketing/generate-content` - Generate AI marketing content
-- `POST /api/marketing/generate-poster` - Generate poster designs
-- `GET /api/marketing/tips` - Get marketing tips
-- `GET /api/marketing/content/history` - Content history
-- `POST /api/marketing/content/:id/use` - Mark content as used
-
-### Analytics
-- `GET /api/analytics/overview` - Dashboard overview
-- `GET /api/analytics/sales` - Sales analytics (artisans)
-- `GET /api/analytics/engagement` - Engagement metrics
-- `GET /api/analytics/products` - Product performance
-- `GET /api/analytics/trends` - Market trends
-
-### Localization
-- `POST /api/translate` - Translate text
-- `POST /api/translate/batch` - Batch translation
-- `POST /api/translate/detect` - Detect language
-- `GET /api/translate/languages` - Supported languages
-- `POST /api/translate/product` - Translate product info
-- `POST /api/translate/content` - Translate marketing content
-
-## Setup Instructions
+## Quick Start
 
 ### Prerequisites
-- Node.js 18 or higher
-- Firebase CLI installed globally
-- Google Cloud Project with required APIs enabled
-- Firebase project configured
+- Node.js 18+
+- Firebase project with Firestore and Authentication enabled
+- Google Cloud APIs: Gemini AI, Cloud Translation, Cloud Vision
+- Cloudinary account
 
 ### Installation
 
-1. **Clone and navigate to backend directory**
-   ```bash
-   cd backend
-   ```
+```bash
+cd backend
+npm install
+```
 
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
+### Environment Variables
 
-3. **Configure environment variables**
-   ```bash
-   cp .env.example .env
-   ```
-   
-   Edit `.env` file with your configuration:
-   - Firebase project credentials
-   - Google Cloud AI API keys
-   - Security keys
-   - CORS origins
-
-4. **Configure Firebase**
-   ```bash
-   firebase login
-   firebase use --add
-   ```
-
-5. **Deploy to Firebase Functions**
-   ```bash
-   npm run deploy
-   ```
-
-### Local Development
-
-1. **Start Firebase emulators**
-   ```bash
-   npm run serve
-   ```
-
-2. **The API will be available at:**
-   ```
-   http://localhost:5001/your-project-id/us-central1/api
-   ```
-
-## Environment Variables
-
-Create a `.env` file with the following variables:
+Create a `.env` file:
 
 ```env
-# Firebase Configuration
+# Server
+NODE_ENV=development
+PORT=3000
+
+# Firebase
 FIREBASE_PROJECT_ID=your-project-id
 FIREBASE_PRIVATE_KEY_ID=your-private-key-id
-FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nyour-private-key\n-----END PRIVATE KEY-----\n"
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
 FIREBASE_CLIENT_EMAIL=your-client-email
 FIREBASE_CLIENT_ID=your-client-id
 FIREBASE_STORAGE_BUCKET=your-project-id.appspot.com
 
-# Google Cloud AI Configuration
-GOOGLE_CLOUD_PROJECT_ID=your-project-id
-GOOGLE_APPLICATION_CREDENTIALS=./serviceAccount.json
+# Google AI
 GEMINI_API_KEY=your-gemini-api-key
 
-# Security Configuration
-JWT_SECRET=your-jwt-secret-key
-ENCRYPTION_KEY=your-encryption-key
+# Cloudinary
+CLOUDINARY_CLOUD_NAME=your-cloud-name
+CLOUDINARY_API_KEY=your-api-key
+CLOUDINARY_API_SECRET=your-api-secret
 
-# CORS Configuration
-ALLOWED_ORIGINS=http://localhost:3000,https://your-frontend-domain.com
+# Security
+JWT_SECRET=your-jwt-secret
+
+# CORS
+ALLOWED_ORIGINS=http://localhost:3000,http://localhost:4028,http://localhost:5173
 ```
 
-## Security Features
+### Running
 
-- **Authentication**: Firebase JWT token validation
-- **Authorization**: Role-based access control
-- **Rate Limiting**: IP-based request throttling
-- **Input Validation**: Joi schema validation
-- **CORS**: Configurable cross-origin resource sharing
-- **File Upload**: Type and size restrictions
-- **Database Rules**: Firestore security rules
-- **Storage Rules**: Firebase Storage access control
+```bash
+# Development (with auto-reload)
+npm run dev
 
-## AI Integration
+# Production
+npm start
+```
 
-### Gemini AI
-- Product description generation
-- Marketing content creation
-- Image analysis and suggestions
+The API will be available at `http://localhost:3000`.
 
-### Google Cloud Translation
-- Multi-language support
-- Real-time translation
-- Batch translation capabilities
+## Scripts
 
-### Vertex AI
-- Advanced product recommendations
-- Market trend analysis
-- Customer behavior insights
+| Command | Description |
+|---------|-------------|
+| `npm start` | Start production server (`node server.js`) |
+| `npm run dev` | Start dev server with nodemon |
+| `npm test` | Run Mocha unit tests |
+| `npm run test-apis` | Run API endpoint tests |
+| `npm run deploy` | Deploy to Firebase Functions |
+| `npm run serve` | Start Firebase emulators |
 
-## Database Schema
+## API Endpoints
 
-### Collections
+### Base URLs
+- **Local**: `http://localhost:3000/api`
+- **Production**: `https://us-central1-artisan-connect-marketplace.cloudfunctions.net/api`
 
-- **users**: User profiles and artisan information
-- **products**: Product catalog with metadata
-- **orders**: Order management and tracking
-- **posts**: Social media posts and content
-- **comments**: Post comments and engagement
-- **reviews**: Product reviews and ratings
-- **groups**: Skill-based community groups
-- **notifications**: User notifications
-- **marketingContent**: AI-generated content
-- **posterDesigns**: Marketing poster designs
+### Health & Info
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/health` | Server health check |
+| GET | `/api` | API info & endpoint listing |
 
-## Performance Optimization
+---
 
-- **Firestore Indexes**: Optimized queries
-- **Caching**: Strategic caching implementation
-- **Image Optimization**: Automatic image compression
-- **Lazy Loading**: Efficient data loading
-- **Rate Limiting**: API protection
+### Authentication (`/api/auth`)
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | `/register` | ❌ | Register new user (artisan or customer). Creates Firebase Auth user + Firestore profile |
+| POST | `/login` | ❌ | Login with email/password. Returns JWT token and user profile |
+| POST | `/verify-email` | ✅ | Send email verification link |
+
+**Register** creates role-specific profiles: artisans get additional fields (skills, bio, certifications, rating, verification status).
+
+---
+
+### User Management (`/api/user`)
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/profile` | ✅ | Get current user's full profile with follower/following counts |
+| PUT | `/profile` | ✅ | Update user profile fields |
+| POST | `/profile/avatar` | ✅ | Upload profile photo to Cloudinary |
+| GET | `/profile/:uid` | ❌ | Get public artisan profile (filtered fields, verification status) |
+| PUT | `/artisan-profile` | ✅ | Update artisan-specific fields (skills, bio, specializations, portfolio, awards, contact) |
+
+---
+
+### Products (`/api/products`)
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | `/upload-images` | ✅ Artisan | Upload product images to Cloudinary (max 10) |
+| POST | `/create` | ✅ Artisan | Create new product with images, pricing, materials, dimensions |
+| POST | `/auto-describe` | ❌ | Generate AI product description via Gemini |
+| GET | `/list` | ❌ | List products with search, category filter, sort, and pagination |
+| GET | `/:id` | ❌ | Get product detail with artisan info, reviews, and view count increment |
+
+**Optimizations:**
+- Product list uses `db.getAll()` for batch artisan fetching (no N+1 queries)
+- View count increment is non-blocking (fire-and-forget)
+- Reviews query is fault-tolerant (handles missing composite indexes)
+- `isActive` check uses `=== false` to handle missing fields correctly
+
+---
+
+### Orders (`/api/orders`)
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | `/create` | ✅ | Create order with items, shipping address, and payment method |
+| GET | `/list` | ✅ | Get orders — customers see own orders, artisans see orders for their products |
+
+**Order creation includes:**
+- Stock validation and automatic decrement
+- Multi-artisan order support
+- Total price calculation
+- 7-day estimated delivery
+- Artisan notification creation
+
+**Request body for order creation:**
+```json
+{
+  "items": [{ "productId": "abc123", "quantity": 2 }],
+  "shippingAddress": {
+    "name": "Customer Name",
+    "phone": "9876543210",
+    "street": "123 Main St",
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "pincode": "400001",
+    "country": "India"
+  },
+  "paymentMethod": "COD"
+}
+```
+
+---
+
+### Social (`/api/social`)
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/feed` | Optional | Get social feed with pagination, filter by type (following, success stories) |
+| POST | `/upload-images` | ✅ | Upload images for social posts (max 4) |
+| POST | `/posts/:id/like` | ✅ | Like/unlike a post |
+| POST | `/posts/:id/comment` | ✅ | Add comment to a post |
+| POST | `/follow/:artisanId` | ✅ | Follow/unfollow an artisan |
+| GET | `/stats` | ✅ | Get social stats (followers, following, posts count) |
+| GET | `/followers` | ✅ | Get followers list |
+| GET | `/following` | ✅ | Get following list |
+
+---
+
+### Marketing (`/api/marketing`)
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | `/generate-content` | Optional | Generate AI marketing content with product context, target audience, tone, platform |
+| POST | `/generate-poster` | ✅ | Generate poster design briefs with color palettes, typography, visual elements |
+
+Content generation supports artisan context, Indian cultural themes, and platform-specific formatting (Instagram, Facebook, Twitter, Email).
+
+---
+
+### Analytics (`/api/analytics`)
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/overview` | ✅ | Dashboard overview with time-frame filter (7d/30d/90d) |
+| GET | `/sales` | ✅ Artisan | Sales metrics, revenue trends, top products |
+| GET | `/engagement` | ✅ | Social and market engagement metrics |
+| GET | `/products` | ✅ Artisan | Product performance analytics |
+
+Provides different analytics views for artisans (sales focus) vs customers (purchase history).
+
+---
+
+### Localization (`/api/localization`)
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | `/` | Optional | Translate text to target language |
+| POST | `/batch` | ✅ | Batch translate multiple texts (max 100) |
+| POST | `/detect` | Optional | Detect source language |
+| GET | `/languages` | Optional | Get supported languages list |
+| POST | `/product` | ✅ | Translate full product info for regional markets |
+
+**Supported Indian languages:** Hindi, Bengali, Telugu, Tamil, Marathi, Urdu, Gujarati, Kannada, Malayalam, Punjabi, and more.
+
+## Security
+
+| Feature | Implementation |
+|---------|---------------|
+| Authentication | Firebase Auth + JWT token verification |
+| Authorization | Role-based middleware (`verifyToken`, `verifyArtisan`, `optionalAuth`) |
+| Rate Limiting | 100 requests per 15 minutes per IP |
+| HTTP Headers | Helmet.js security headers |
+| Input Validation | Joi schema validation on all inputs |
+| CORS | Configurable allowed origins |
+| File Upload | Type and size restrictions via Multer |
+| Database | Firestore security rules |
+
+## Firestore Collections
+
+| Collection | Purpose |
+|-----------|---------|
+| `users` | User profiles (artisans & customers) |
+| `products` | Product catalog with metadata |
+| `orders` | Order management and tracking |
+| `posts` | Social feed posts |
+| `comments` | Post comments |
+| `reviews` | Product reviews and ratings |
+| `notifications` | User notifications |
+| `followers` | Follow relationships |
+
+## Deployment
+
+### Firebase Functions
+```bash
+npm run deploy
+```
+
+### Standalone Server
+The Express server in `server.js` can run on any Node.js hosting platform (Railway, Render, DigitalOcean, etc.):
+```bash
+NODE_ENV=production npm start
+```
 
 ## Testing
 
 ```bash
-# Run tests
+# Unit tests
 npm test
 
-# Run linting
-npm run lint
-
-# Check for syntax errors
-npm run check
+# API endpoint tests
+npm run test-apis
 ```
-
-## Deployment
-
-### Production Deployment
-```bash
-# Deploy all Firebase services
-firebase deploy
-
-# Deploy only functions
-firebase deploy --only functions
-
-# Deploy with environment variables
-firebase functions:config:set someservice.key="THE API KEY"
-```
-
-### Monitoring
-- Firebase Console for function logs
-- Google Cloud Console for AI service usage
-- Error tracking and performance monitoring
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Implement changes with tests
-4. Submit a pull request
-
-## License
-
-This project is licensed under the MIT License.
-
-## Support
-
-For support and questions:
-- Check the documentation
-- Review existing issues
-- Create a new issue with detailed information
 
 ---
 
-**Built with ❤️ for Indian Artisans**
+**Last Updated**: March 2026  
+**Version**: 1.0.0
