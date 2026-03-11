@@ -74,7 +74,7 @@ export const schemas = {
   // Product validation schemas
   productCreation: Joi.object({
     name: Joi.string().min(3).max(100).required(),
-    description: Joi.string().min(10).max(5000).required(), // Increased for AI-generated descriptions
+    description: Joi.string().min(10).required(),
     category: Joi.string().required(),
     price: Joi.number().positive().required(),
     currency: Joi.string().default('INR'),
@@ -105,7 +105,7 @@ export const schemas = {
 
   productUpdate: Joi.object({
     name: Joi.string().min(3).max(100).optional(),
-    description: Joi.string().min(10).max(5000).optional(),
+    description: Joi.string().min(10).optional(),
     category: Joi.string().optional(),
     price: Joi.number().positive().optional(),
     tags: Joi.array().items(Joi.string()).optional(),
