@@ -19,6 +19,7 @@ const CommunityFeed = () => {
   const [profileUserId, setProfileUserId] = useState(null);
   const [peopleList, setPeopleList] = useState([]);
   const [loadingPeople, setLoadingPeople] = useState(false);
+  const [shareToast, setShareToast] = useState(null);
   const [stats, setStats] = useState({
     postsToday: 0,
     followingCount: 0,
@@ -241,6 +242,47 @@ const CommunityFeed = () => {
     }
   };
 
+  const handleShare = async (postId) => {
+    const post = posts.find(p => p.id === postId);
+    if (!post) return;
+
+    const shareText = `${post.author?.name || 'An artisan'}: ${post.content || ''}`;
+    const shareUrl = `${window.location.origin}/community?post=${postId}`;
+
+    // Use Web Share API if available (mobile + modern browsers)
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `Post by ${post.author?.name || 'Artisan'} on ArtisanConnect`,
+          text: shareText.length > 200 ? shareText.slice(0, 197) + '...' : shareText,
+          url: shareUrl,
+        });
+        return;
+      } catch (err) {
+        // User cancelled or API failed — fall through to clipboard
+        if (err.name === 'AbortError') return;
+      }
+    }
+
+    // Fallback: copy link to clipboard
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setShareToast('Link copied to clipboard!');
+    } catch {
+      // Final fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = shareUrl;
+      textArea.style.position = 'fixed';
+      textArea.style.opacity = '0';
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      setShareToast('Link copied to clipboard!');
+    }
+    setTimeout(() => setShareToast(null), 2500);
+  };
+
   const handleLoadMore = () => {
     const nextPage = page + 1;
     setPage(nextPage);
@@ -250,6 +292,13 @@ const CommunityFeed = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
+      {/* Share toast notification */}
+      {shareToast && (
+        <div className="fixed top-4 right-4 z-50 bg-green-600 text-white px-4 py-3 rounded-lg shadow-lg flex items-center space-x-2 animate-fade-in">
+          <Icon name="Check" size={18} />
+          <span className="text-sm font-medium">{shareToast}</span>
+        </div>
+      )}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="grid grid-cols-1 gap-6">
           {/* Main Content - Full Width */}
@@ -336,7 +385,7 @@ const CommunityFeed = () => {
                     onLike={handleLike}
                     onComment={handleComment}
                     onFollow={handleFollow}
-                    onShare={() => {}}
+                    onShare={handleShare}
                     onAuthorClick={(authorId) => {
                       const authorPost = posts.find(p => p.author?.id === authorId);
                       setProfileUserId({ id: authorId, fallback: authorPost?.author });
