@@ -190,12 +190,24 @@ app.use((error, req, res, next) => {
   });
 });
 
+// Warm up Firebase Auth to pre-cache OAuth2 token (prevents socket hang up on first login)
+async function warmupFirebaseAuth() {
+  try {
+    await auth.listUsers(1);
+    console.log('✅ Firebase Auth warmed up (OAuth2 token cached)');
+  } catch (err) {
+    console.warn('⚠️  Firebase Auth warmup failed:', err.message, '- will retry on first request');
+  }
+}
+
 // Start server
 app.listen(PORT, () => {
   console.log(`🚀 Artisan Marketplace Backend running on port ${PORT}`);
   console.log(`📍 Health check: http://localhost:${PORT}/health`);
   console.log(`🔗 API Base URL: http://localhost:${PORT}/api`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+  // Warmup Firebase Auth after server starts
+  warmupFirebaseAuth();
 });
 
 export default app;

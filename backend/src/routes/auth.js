@@ -10,6 +10,26 @@ const router = Router();
 // JWT Secret (in production, use environment variable)
 const JWT_SECRET = process.env.JWT_SECRET || 'artisan-connect-secret-key-2024';
 
+// Retry wrapper for Firebase Auth calls (handles transient network failures like socket hang up)
+async function withRetry(fn, maxRetries = 3, delayMs = 1000) {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      const isTransient = error.message?.includes('socket hang up') ||
+        error.message?.includes('ECONNRESET') ||
+        error.message?.includes('ETIMEDOUT') ||
+        error.code === 'app/invalid-credential';
+      if (isTransient && attempt < maxRetries) {
+        console.warn(`Firebase auth attempt ${attempt} failed (${error.message}), retrying in ${delayMs}ms...`);
+        await new Promise(r => setTimeout(r, delayMs * attempt));
+        continue;
+      }
+      throw error;
+    }
+  }
+}
+
 // Generate JWT token
 const generateToken = (uid, email, userType) => {
   return jwt.sign(
@@ -27,13 +47,13 @@ router.post('/register', validate(schemas.userRegistration), asyncHandler(async 
   const { email, password, firstName, lastName, userType, phone, location } = req.body;
 
   try {
-    // Create user in Firebase Auth
-    const userRecord = await auth.createUser({
+    // Create user in Firebase Auth (with retry for transient network failures)
+    const userRecord = await withRetry(() => auth.createUser({
       email,
       password,
       displayName: `${firstName} ${lastName}`,
       emailVerified: false
-    });
+    }));
 
     // Create user profile in Firestore
     const userProfile = {
@@ -119,8 +139,8 @@ router.post('/login', validate(schemas.userLogin), asyncHandler(async (req, res)
   const { email, password } = req.body;
 
   try {
-    // Get user by email
-    const userRecord = await auth.getUserByEmail(email);
+    // Get user by email (with retry for transient network failures)
+    const userRecord = await withRetry(() => auth.getUserByEmail(email));
     
     if (!userRecord) {
       return res.status(404).json({
@@ -201,10 +221,10 @@ router.post('/verify-email', asyncHandler(async (req, res) => {
   const { email } = req.body;
 
   try {
-    const userRecord = await auth.getUserByEmail(email);
+    const userRecord = await withRetry(() => auth.getUserByEmail(email));
     
     // Generate email verification link
-    const link = await auth.generateEmailVerificationLink(email);
+    const link = await withRetry(() => auth.generateEmailVerificationLink(email));
 
     res.json({
       success: true,
@@ -235,7 +255,7 @@ router.post('/reset-password', asyncHandler(async (req, res) => {
 
   try {
     // Generate password reset link
-    const link = await auth.generatePasswordResetLink(email);
+    const link = await withRetry(() => auth.generatePasswordResetLink(email));
 
     res.json({
       success: true,
@@ -274,7 +294,7 @@ router.post('/refresh-token', asyncHandler(async (req, res) => {
   }
 
   try {
-    const customToken = await auth.createCustomToken(uid);
+    const customToken = await withRetry(() => auth.createCustomToken(uid));
 
     res.json({
       success: true,
