@@ -372,7 +372,8 @@ router.get('/list',
       // Apply search filter
       if (search) {
         const searchLower = search.toLowerCase();
-        const searchableText = `${productData.name || ''} ${productData.description || ''} ${productData.tags?.join(' ') || ''}`.toLowerCase();
+        const tags = Array.isArray(productData.tags) ? productData.tags.join(' ') : (productData.tags || '');
+        const searchableText = `${productData.name || ''} ${productData.description || ''} ${tags}`.toLowerCase();
         if (!searchableText.includes(searchLower)) continue;
       }
 

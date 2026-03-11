@@ -110,7 +110,7 @@ const CustomerShop = () => {
         <div className="absolute -bottom-16 -left-16 w-56 h-56 bg-amber-400/20 rounded-full blur-2xl" />
         <div className="absolute top-1/2 right-1/4 w-32 h-32 bg-white/5 rounded-full animate-float" />
 
-        <div className="relative max-w-7xl mx-auto px-4 py-10 lg:py-16">
+        <div className="relative max-w-7xl mx-auto px-4 py-6 lg:py-10">
           <div className="max-w-2xl">
             <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm rounded-full px-3 py-1 mb-4 text-xs font-medium text-orange-100">
               <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
