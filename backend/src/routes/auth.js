@@ -4,11 +4,16 @@ import jwt from 'jsonwebtoken';
 import { db, auth } from '../config/firebase.js';
 import { validate, schemas } from '../middleware/validation.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
+import { verifyToken } from '../middleware/auth.js';
+import config from '../config/index.js';
 
 const router = Router();
 
-// JWT Secret (in production, use environment variable)
-const JWT_SECRET = process.env.JWT_SECRET || 'artisan-connect-secret-key-2024';
+// JWT Secret — required, no fallback
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error('FATAL: JWT_SECRET environment variable is required. Server cannot start without it.');
+}
 
 // Retry wrapper for Firebase Auth calls (handles transient network failures like socket hang up)
 async function withRetry(fn, maxRetries = 3, delayMs = 1000) {
@@ -139,8 +144,63 @@ router.post('/login', validate(schemas.userLogin), asyncHandler(async (req, res)
   const { email, password } = req.body;
 
   try {
-    // Get user by email (with retry for transient network failures)
-    const userRecord = await withRetry(() => auth.getUserByEmail(email));
+    // Verify password via Firebase Auth REST API (Admin SDK cannot verify passwords)
+    const FIREBASE_API_KEY = process.env.FIREBASE_API_KEY;
+    if (!FIREBASE_API_KEY) {
+      console.error('FIREBASE_API_KEY not set — cannot verify passwords');
+      return res.status(500).json({
+        error: 'Server Configuration Error',
+        message: 'Authentication service is misconfigured'
+      });
+    }
+
+    let userRecord;
+    try {
+      const authResponse = await fetch(
+        `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${encodeURIComponent(FIREBASE_API_KEY)}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password, returnSecureToken: true })
+        }
+      );
+      const authData = await authResponse.json();
+
+      if (!authResponse.ok || authData.error) {
+        const fbError = authData.error?.message || 'INVALID_CREDENTIALS';
+        if (fbError === 'EMAIL_NOT_FOUND' || fbError === 'INVALID_LOGIN_CREDENTIALS') {
+          return res.status(401).json({
+            error: 'Invalid Credentials',
+            message: 'Invalid email or password'
+          });
+        }
+        if (fbError === 'INVALID_PASSWORD') {
+          return res.status(401).json({
+            error: 'Invalid Credentials',
+            message: 'Invalid email or password'
+          });
+        }
+        if (fbError === 'USER_DISABLED') {
+          return res.status(403).json({
+            error: 'Account Disabled',
+            message: 'Your account has been disabled. Please contact support.'
+          });
+        }
+        return res.status(401).json({
+          error: 'Authentication Failed',
+          message: 'Invalid email or password'
+        });
+      }
+
+      // Password verified — now get the full user record from Admin SDK
+      userRecord = await withRetry(() => auth.getUserByEmail(email));
+    } catch (authError) {
+      console.error('Firebase Auth verification failed:', authError.message);
+      return res.status(401).json({
+        error: 'Invalid Credentials',
+        message: 'Invalid email or password'
+      });
+    }
     
     if (!userRecord) {
       return res.status(404).json({
@@ -281,27 +341,29 @@ router.post('/reset-password', asyncHandler(async (req, res) => {
 
 /**
  * POST /api/auth/refresh-token
- * Refresh user token
+ * Refresh user token — requires valid JWT
  */
-router.post('/refresh-token', asyncHandler(async (req, res) => {
-  const { uid } = req.body;
-
-  if (!uid) {
-    return res.status(400).json({
-      error: 'UID Required',
-      message: 'User ID is required'
-    });
-  }
+router.post('/refresh-token', verifyToken, asyncHandler(async (req, res) => {
+  // Only allow refreshing your own token
+  const uid = req.user.uid;
 
   try {
-    const customToken = await withRetry(() => auth.createCustomToken(uid));
+    // Get fresh user data
+    const userDoc = await db.collection('users').doc(uid).get();
+    if (!userDoc.exists) {
+      return res.status(404).json({
+        error: 'User Not Found',
+        message: 'User profile not found'
+      });
+    }
+
+    const userData = userDoc.data();
+    const token = generateToken(uid, req.user.email, userData.userType);
 
     res.json({
       success: true,
       message: 'Token refreshed successfully',
-      data: {
-        customToken
-      }
+      data: { token }
     });
   } catch (error) {
     console.error('Token refresh error:', error);

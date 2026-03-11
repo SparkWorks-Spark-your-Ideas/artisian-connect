@@ -1,8 +1,11 @@
 import jwt from 'jsonwebtoken';
 import { db, auth } from '../config/firebase.js';
 
-// JWT Secret (must match the one in auth routes)
-const JWT_SECRET = process.env.JWT_SECRET || 'artisan-connect-secret-key-2024';
+// JWT Secret — required, no fallback
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error('FATAL: JWT_SECRET environment variable is required.');
+}
 
 /**
  * Middleware to verify JWT token

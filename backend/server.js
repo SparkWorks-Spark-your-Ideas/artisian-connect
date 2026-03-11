@@ -33,16 +33,19 @@ const PORT = process.env.PORT || 3000;
 app.use(helmet());
 
 // CORS configuration
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',')
+  : ['http://localhost:3000'];
+
+// Always include standard dev ports if not already present
+if (process.env.NODE_ENV !== 'production') {
+  ['http://localhost:3001', 'http://localhost:4028', 'http://localhost:5173',
+   'http://127.0.0.1:3000', 'http://127.0.0.1:4028', 'http://127.0.0.1:5173'
+  ].forEach(o => { if (!allowedOrigins.includes(o)) allowedOrigins.push(o); });
+}
+
 const corsOptions = {
-  origin: [
-    'http://localhost:3000',
-    'http://localhost:3001', 
-    'http://localhost:4028',  // Added frontend port
-    'http://localhost:5173',
-    'http://127.0.0.1:3000',
-    'http://127.0.0.1:4028',  // Added frontend port for 127.0.0.1
-    'http://127.0.0.1:5173'
-  ],
+  origin: allowedOrigins,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
